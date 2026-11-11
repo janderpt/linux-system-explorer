@@ -1938,5 +1938,61 @@
   "Nenhuma conexão de rede configurada": {
     "pt": "Nenhuma conexão de rede configurada",
     "en": "No network connections configured"
+  },
+  "A listagem de compartilhamentos foi interrompida.": {
+    "pt": "A listagem de compartilhamentos foi interrompida.",
+    "en": "Share listing was interrupted."
+  },
+  "A resposta do servidor excedeu o tamanho permitido.": {
+    "pt": "A resposta do servidor excedeu o tamanho permitido.",
+    "en": "The server response exceeded the size limit."
+  },
+  "Atualizar lista de compartilhamentos": {
+    "pt": "Atualizar lista de compartilhamentos",
+    "en": "Refresh share list"
+  },
+  "Compartilhamentos disponíveis": {
+    "pt": "Compartilhamentos disponíveis",
+    "en": "Available shares"
+  },
+  "Endereço de servidor inválido.": {
+    "pt": "Endereço de servidor inválido.",
+    "en": "Invalid server address."
+  },
+  "Informe o endereço de um servidor SMB, como smb://servidor/.": {
+    "pt": "Informe o endereço de um servidor SMB, como smb://servidor/.",
+    "en": "Enter an SMB server address, such as smb://server/."
+  },
+  "Listando compartilhamentos…": {
+    "pt": "Listando compartilhamentos…",
+    "en": "Listing shares…"
+  },
+  "Listar compartilhamentos": {
+    "pt": "Listar compartilhamentos",
+    "en": "List shares"
+  },
+  "O servidor não retornou compartilhamentos disponíveis para esta conta.": {
+    "pt": "O servidor não retornou compartilhamentos disponíveis para esta conta.",
+    "en": "The server did not return any shares available to this account."
+  },
+  "O servidor retornou compartilhamentos demais.": {
+    "pt": "O servidor retornou compartilhamentos demais.",
+    "en": "The server returned too many shares."
+  },
+  "O servidor retornou um nome de compartilhamento inválido.": {
+    "pt": "O servidor retornou um nome de compartilhamento inválido.",
+    "en": "The server returned an invalid share name."
+  },
+  "smb://servidor/ ou smb://servidor/compartilhamento": {
+    "pt": "smb://servidor/ ou smb://servidor/compartilhamento",
+    "en": "smb://server/ or smb://server/share"
+  },
+  "Use SMB, SFTP, NFS, FTP, WebDAV ou uma pasta já montada.": {
+    "pt": "Use SMB, SFTP, NFS, FTP, WebDAV ou uma pasta já montada.",
+    "en": "Use SMB, SFTP, NFS, FTP, WebDAV or an existing local mount."
+  },
+  "Para listar os compartilhamentos, informe apenas smb://servidor/.": {
+    "pt": "Para listar os compartilhamentos, informe apenas smb://servidor/.",
+    "en": "To list shares, enter only smb://server/."
   }
 }

@@ -110,7 +110,7 @@ pub fn remote_url(input: &str) -> io::Result<String> {
     } else {
         input.to_owned()
     };
-    let url = Url::parse(&normalized)
+    let mut url = Url::parse(&normalized)
         .map_err(|_| invalid("Informe um endereço como smb://servidor/compartilhamento."))?;
     if !matches!(
         url.scheme(),
@@ -129,7 +129,7 @@ pub fn remote_url(input: &str) -> io::Result<String> {
         ));
     }
     if url.scheme() == "smb" && url.path().trim_matches('/').is_empty() {
-        return Err(invalid("Informe também o nome do compartilhamento SMB."));
+        url.set_path("/");
     }
     Ok(url.to_string())
 }
@@ -190,12 +190,31 @@ fn connect_gvfs(uri: &str, cancel: &Cancellation) -> io::Result<PathBuf> {
     connect_gvfs_with(&std::env::current_exe()?, uri, cancel)
 }
 fn connect_gvfs_with(program: &Path, uri: &str, cancel: &Cancellation) -> io::Result<PathBuf> {
+    let output = run_gvfs_helper(program, "--mount-network", uri, cancel)?;
+    let key: String = serde_json::from_slice(&output).map_err(io::Error::other)?;
+    crate::settings::folder_path(&key)
+        .filter(|p| p.is_absolute() && p.is_dir())
+        .ok_or_else(|| {
+            io::Error::other(crate::i18n::tr(
+                "O sistema não disponibilizou uma pasta local para o compartilhamento.",
+            ))
+        })
+}
+fn run_gvfs_helper(
+    program: &Path,
+    mode: &str,
+    uri: &str,
+    cancel: &Cancellation,
+) -> io::Result<Vec<u8>> {
+    use std::io::{Read, Seek, SeekFrom};
+    let mut stdout = tempfile::tempfile()?;
+    let mut stderr = tempfile::tempfile()?;
     let mut child = Command::new(program)
-        .args(["--mount-network", uri])
+        .args([mode, uri])
         .env("LSE_MOUNT_PARENT", std::process::id().to_string())
         .stdin(Stdio::null())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
+        .stdout(stdout.try_clone()?)
+        .stderr(stderr.try_clone()?)
         .env_remove("G_MESSAGES_DEBUG")
         .spawn()?;
     let deadline = std::time::Instant::now() + Duration::from_secs(120);
@@ -218,22 +237,125 @@ fn connect_gvfs_with(program: &Path, uri: &str, cancel: &Cancellation) -> io::Re
         }
         std::thread::sleep(Duration::from_millis(25));
     }
-    let output = child.wait_with_output()?;
-    if !output.status.success() {
+    let status = child.wait()?;
+    stderr.seek(SeekFrom::Start(0))?;
+    stdout.seek(SeekFrom::Start(0))?;
+    let mut errors = Vec::new();
+    stderr.take(8192).read_to_end(&mut errors)?;
+    if !status.success() {
         return Err(io::Error::other(
-            String::from_utf8_lossy(&output.stderr).trim().to_owned(),
+            String::from_utf8_lossy(&errors).trim().to_owned(),
         ));
     }
-    let key: String = serde_json::from_slice(&output.stdout).map_err(io::Error::other)?;
-    let path = crate::settings::folder_path(&key)
-        .filter(|p| p.is_absolute() && p.is_dir())
-        .ok_or_else(|| {
-            io::Error::other(crate::i18n::tr(
-                "O sistema não disponibilizou uma pasta local para o compartilhamento.",
-            ))
-        })?;
-    Ok(path)
+    let mut bytes = Vec::new();
+    stdout.take(4 * 1024 * 1024 + 1).read_to_end(&mut bytes)?;
+    if bytes.len() > 4 * 1024 * 1024 {
+        return Err(invalid(
+            "A resposta do servidor excedeu o tamanho permitido.",
+        ));
+    }
+    Ok(bytes)
 }
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ServerShare {
+    pub name: String,
+    pub url: String,
+}
+
+pub fn is_smb_server(uri: &str) -> bool {
+    Url::parse(uri).is_ok_and(|url| {
+        url.scheme() == "smb" && url.host_str().is_some() && url.path().trim_matches('/').is_empty()
+    })
+}
+fn shares_from_names(uri: &str, names: Vec<String>) -> io::Result<Vec<ServerShare>> {
+    if names.len() > 10000 {
+        return Err(invalid("O servidor retornou compartilhamentos demais."));
+    }
+    let root = remote_url(uri)?;
+    if !is_smb_server(&root) {
+        return Err(invalid(
+            "Informe o endereço de um servidor SMB, como smb://servidor/.",
+        ));
+    }
+    let root = Url::parse(&root).map_err(io::Error::other)?;
+    let mut result = Vec::new();
+    for name in names {
+        if name.is_empty()
+            || name.len() > 1024
+            || matches!(name.as_str(), "." | "..")
+            || name
+                .chars()
+                .any(|c| c.is_control() || matches!(c, '/' | '\\'))
+        {
+            return Err(invalid(
+                "O servidor retornou um nome de compartilhamento inválido.",
+            ));
+        }
+        let mut url = root.clone();
+        url.path_segments_mut()
+            .map_err(|()| invalid("Endereço de servidor inválido."))?
+            .clear()
+            .push(&name);
+        result.push(ServerShare {
+            name,
+            url: url.into(),
+        });
+    }
+    result.sort_by_key(|share| share.name.to_lowercase());
+    result.dedup_by(|a, b| a.name.eq_ignore_ascii_case(&b.name));
+    Ok(result)
+}
+pub fn browse_server(uri: &str, cancel: &Cancellation) -> io::Result<Vec<ServerShare>> {
+    let uri = remote_url(uri)?;
+    if !is_smb_server(&uri) {
+        return Err(invalid(
+            "Informe o endereço de um servidor SMB, como smb://servidor/.",
+        ));
+    }
+    if cancel.is_cancelled() {
+        return Err(cancelled());
+    }
+    let services = available_services();
+    let names = match choose_backend(
+        is_kde(),
+        services.iter().any(|s| s == "org.kde.KIOFuse"),
+        services.iter().any(|s| s == "org.gtk.vfs.Daemon"),
+    ) {
+        Some(Backend::Kio) => {
+            let path = connect_kio(&uri, cancel)?;
+            let mut names = Vec::new();
+            for entry in std::fs::read_dir(path)? {
+                if cancel.is_cancelled() {
+                    return Err(cancelled());
+                }
+                let entry = entry?;
+                if !entry.file_type()?.is_dir() {
+                    continue;
+                }
+                names.push(entry.file_name().into_string().map_err(|_| {
+                    invalid("O servidor retornou um nome de compartilhamento inválido.")
+                })?);
+            }
+            names
+        }
+        Some(Backend::Gvfs) => {
+            let output =
+                run_gvfs_helper(&std::env::current_exe()?, "--browse-network", &uri, cancel)?;
+            serde_json::from_slice(&output).map_err(io::Error::other)?
+        }
+        None => {
+            return Err(io::Error::other(crate::i18n::tr(
+                "Instale GVfs no GNOME ou KIO Fuse no KDE para conectar a pastas remotas.",
+            )));
+        }
+    };
+    if cancel.is_cancelled() {
+        return Err(cancelled());
+    }
+    shares_from_names(&uri, names)
+}
+
 fn connect_kio(uri: &str, cancel: &Cancellation) -> io::Result<PathBuf> {
     // KIO opens its native authentication dialog; credentials never enter preferences.
     zbus::block_on(async {
@@ -355,12 +477,22 @@ mod tests {
             "smb://server/share/folder"
         );
         assert_eq!(remote_url("//server/share").unwrap(), "smb://server/share");
+        for root in [
+            r"\\server\",
+            r"\\server",
+            "smb://server",
+            "smb://server/",
+            "//server/",
+        ] {
+            assert_eq!(remote_url(root).unwrap(), "smb://server/");
+            assert!(is_smb_server(&remote_url(root).unwrap()));
+        }
+
         assert_eq!(
             remote_url("sftp://user@server/home/user").unwrap(),
             "sftp://user@server/home/user"
         );
         for invalid in [
-            "smb://server",
             "file:///tmp",
             "https://server/share",
             "smb://user:secret@server/share",
@@ -369,6 +501,20 @@ mod tests {
         ] {
             assert!(remote_url(invalid).is_err(), "{invalid}");
         }
+    }
+    #[test]
+    fn discovered_share_names_are_encoded_as_single_components_on_the_requested_server() {
+        let shares = shares_from_names(
+            "smb://user@server:445/",
+            vec!["Docs #1".into(), "C$".into()],
+        )
+        .unwrap();
+        assert_eq!(shares[0].url, "smb://user@server:445/C$");
+        assert_eq!(shares[1].url, "smb://user@server:445/Docs%20%231");
+        for name in ["..", "/other-host/share", "x/y", "x\\y", "a\nb", ""] {
+            assert!(shares_from_names("smb://server/", vec![name.into()]).is_err());
+        }
+        assert!(shares_from_names("smb://user:secret@server/", vec!["Docs".into()]).is_err());
     }
     #[test]
     fn local_mounts_and_sharing_paths_are_validated_without_executing_shell_text() {

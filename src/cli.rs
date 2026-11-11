@@ -7,6 +7,7 @@ pub enum Command {
     Reveal(Vec<PathBuf>, bool),
     FileManagerService,
     MountNetwork(String),
+    BrowseNetwork(String),
     ExportIcon(PathBuf),
     Help,
     Version,
@@ -23,6 +24,7 @@ Usage: linux-system-explorer [OPTIONS] [DIRECTORY]
   --new-window [DIRECTORY] Always open a separate window, even if the folder is open
   --file-manager-service Run the headless FileManager1 D-Bus bridge
   --mount-network URI Internal GIO/GVfs mount helper with native authentication
+  --browse-network URI Internal GIO/GVfs server listing helper
   --export-icon PNG Write the canonical application icon without opening a window
   --               Treat the next argument as a directory, even if it starts with '-'
 
@@ -61,6 +63,12 @@ pub fn parse(args: impl IntoIterator<Item = OsString>) -> Result<Command, &'stat
             args.next()
                 .and_then(|arg| arg.into_string().ok())
                 .ok_or("Expected a network URI after --mount-network")?,
+        )
+    } else if first == "--browse-network" {
+        Command::BrowseNetwork(
+            args.next()
+                .and_then(|arg| arg.into_string().ok())
+                .ok_or("Expected a server URI after --browse-network")?,
         )
     } else if first == "--export-icon" {
         Command::ExportIcon(
@@ -123,6 +131,20 @@ mod tests {
         assert_eq!(
             parse(["--properties".into(), "/tmp/a".into()]),
             Ok(Command::Reveal(vec!["/tmp/a".into()], true))
+        );
+
+        assert_eq!(
+            parse(["--browse-network".into(), "smb://server/".into()]),
+            Ok(Command::BrowseNetwork("smb://server/".into()))
+        );
+        assert!(parse(["--browse-network".into()]).is_err());
+        assert!(
+            parse([
+                "--browse-network".into(),
+                "smb://server/".into(),
+                "extra".into()
+            ])
+            .is_err()
         );
         assert_eq!(parse(["--version".into()]), Ok(Command::Version));
         assert_eq!(parse(["--help".into()]), Ok(Command::Help));

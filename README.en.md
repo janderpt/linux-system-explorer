@@ -129,3 +129,5 @@ license inventory is not a declaration that a maintainer has completed license r
 
 This project has received substantial AI assistance. Human review and channel-specific
 disclosure are required before store submission; see docs/DISTRIBUTION.md.
+
+Enter an SMB server alone (`smb://server/` or `\\server\`) to list its available shares, select one and connect. Listing alone does not create a shortcut; only the selected, successfully mounted share is saved. Ctrl+L also routes network addresses to the connection dialog. KDE lists through KIO Fuse; GNOME enumerates SMB mountables through the GIO/GTK helper without requiring a FUSE path for the server root. Cancellation and errors do not save a connection. Credentials remain in native system authentication. Discovering computers without a specified server is not implemented.

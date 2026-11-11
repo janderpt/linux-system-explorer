@@ -57,6 +57,9 @@ fn kio_connection_uses_the_desktop_api_and_validates_results_in_an_isolated_bus(
         return;
     }
     let root = tempfile::tempdir().unwrap();
+    std::fs::create_dir(root.path().join("Docs")).unwrap();
+    std::fs::create_dir(root.path().join("Shared folder")).unwrap();
+    std::fs::write(root.path().join("not-a-share.txt"), "test").unwrap();
     let requests = Arc::new(Mutex::new(vec![]));
     let properties = Arc::new(Mutex::new(vec![]));
     let nautilus = FakeNautilus {
@@ -83,6 +86,13 @@ fn kio_connection_uses_the_desktop_api_and_validates_results_in_an_isolated_bus(
         drop(connection);
     });
     ready.recv_timeout(Duration::from_secs(5)).unwrap();
+    let shares = browse_server(r"\\server\", &Cancellation::default()).unwrap();
+    assert_eq!(
+        shares.iter().map(|s| s.name.as_str()).collect::<Vec<_>>(),
+        vec!["Docs", "Shared folder"]
+    );
+    assert_eq!(shares[1].url, "smb://server/Shared%20folder");
+    assert_eq!(connect(&shares[0].url).unwrap(), root.path());
     assert_eq!(connect("smb://server/share").unwrap(), root.path());
     assert!(
         connect("smb://server/failure")
@@ -97,6 +107,8 @@ fn kio_connection_uses_the_desktop_api_and_validates_results_in_an_isolated_bus(
     assert_eq!(
         *requests.lock().unwrap(),
         vec![
+            "smb://server/",
+            "smb://server/Docs",
             "smb://server/share",
             "smb://server/failure",
             "smb://server/missing"
@@ -174,4 +186,49 @@ fn cancelling_a_gvfs_connection_stops_and_reaps_its_helper() {
         io::ErrorKind::Interrupted
     );
     assert!(started.elapsed() < Duration::from_secs(2));
+}
+
+#[test]
+fn browse_helper_drains_large_output_and_keeps_the_uri_as_a_literal_argument() {
+    use std::os::unix::fs::PermissionsExt;
+    let root = tempfile::tempdir().unwrap();
+    let helper = root.path().join("browse-helper");
+    std::fs::write(&helper,"#!/usr/bin/python3\nimport json,sys\nfrom pathlib import Path\nPath(sys.argv[0]+'.args').write_text('\\n'.join(sys.argv[1:]))\nsys.stderr.write('x'*200000)\nprint(json.dumps(['Share-'+str(i)+'x'*100 for i in range(1000)]))\n").unwrap();
+    std::fs::set_permissions(&helper, std::fs::Permissions::from_mode(0o700)).unwrap();
+    let output = run_written_helper(|| {
+        run_gvfs_helper(
+            &helper,
+            "--browse-network",
+            "smb://server/",
+            &Cancellation::default(),
+        )
+    })
+    .unwrap();
+    let names: Vec<String> = serde_json::from_slice(&output).unwrap();
+    assert_eq!(names.len(), 1000);
+    assert_eq!(
+        std::fs::read_to_string(helper.with_extension("args")).unwrap(),
+        "--browse-network\nsmb://server/"
+    );
+}
+
+#[test]
+#[ignore = "Explicit read-only SMB integration; requires LSE_TEST_SMB_SERVER"]
+fn live_smb_server_lists_names_without_opening_share_contents() {
+    let server = std::env::var("LSE_TEST_SMB_SERVER")
+        .expect("Set LSE_TEST_SMB_SERVER to an authorized SMB server root");
+    let normalized = remote_url(&server).unwrap();
+    assert!(is_smb_server(&normalized));
+    let shares = browse_server(&server, &Cancellation::default()).unwrap();
+    let host = Url::parse(&normalized).unwrap();
+    for share in &shares {
+        let target = Url::parse(&share.url).unwrap();
+        assert_eq!(target.host_str(), host.host_str());
+        assert!(target.password().is_none());
+        println!("{}", share.name);
+    }
+    assert!(
+        !shares.is_empty(),
+        "Expected shares from the explicitly selected test server"
+    );
 }

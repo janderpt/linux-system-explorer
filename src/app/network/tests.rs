@@ -146,3 +146,95 @@ fn share_over_network_is_available_only_for_folders_in_item_context_menus() {
         );
     }
 }
+
+#[test]
+fn smb_server_listing_requires_selection_and_only_saves_the_chosen_share() {
+    let root = tempfile::tempdir().unwrap();
+    let ctx = egui::Context::default();
+    let mut app = Explorer::with_context(&ctx, root.path().into());
+    complete_navigation(&mut app);
+    let prefs = root.path().join("preferences.json");
+    app.settings_path = Some(prefs.clone());
+    let (sender, receiver) = mpsc::channel();
+    sender
+        .send(Ok(vec![
+            crate::network::ServerShare {
+                name: "Docs".into(),
+                url: "smb://server/Docs".into(),
+            },
+            crate::network::ServerShare {
+                name: "Images".into(),
+                url: "smb://server/Images".into(),
+            },
+        ]))
+        .unwrap();
+    let mut dialog = ConnectDialog::new("smb://server/".into(), "Equipe".into());
+    dialog.url = Some("smb://server/".into());
+    dialog.browse_result = Some(receiver);
+    app.network_dialog = Some(dialog);
+    render(&mut app, &ctx, vec![]);
+    let output = render(&mut app, &ctx, vec![]);
+    assert!(text_center(&output, "Compartilhamentos disponíveis").is_some());
+    assert!(app.sidebar_options.remote.is_empty());
+    let point = text_center(&output, "Docs").unwrap();
+    click(&mut app, &ctx, point, PointerButton::Primary);
+    assert_eq!(app.network_dialog.as_ref().unwrap().selected_share, Some(0));
+    assert!(app.sidebar_options.remote.is_empty());
+    let dialog = app.network_dialog.as_mut().unwrap();
+    let (sender, receiver) = mpsc::channel();
+    sender.send(Ok(root.path().into())).unwrap();
+    dialog.url = Some(dialog.shares.as_ref().unwrap().1[0].url.clone());
+    dialog.result = Some(receiver);
+    render(&mut app, &ctx, vec![]);
+    complete_navigation(&mut app);
+    let prefs = Preferences::load(&prefs).unwrap();
+    assert_eq!(prefs.sidebar.remote.len(), 1);
+    assert_eq!(prefs.sidebar.remote[0].url, "smb://server/Docs");
+}
+
+#[test]
+fn cancelling_server_listing_cancels_work_and_does_not_create_a_shortcut() {
+    let root = tempfile::tempdir().unwrap();
+    let ctx = egui::Context::default();
+    let mut app = Explorer::with_context(&ctx, root.path().into());
+    complete_navigation(&mut app);
+    let (_sender, receiver) = mpsc::channel();
+    let mut dialog = ConnectDialog::new("smb://server/".into(), String::new());
+    let cancel = dialog.cancel.clone();
+    dialog.browse_result = Some(receiver);
+    app.network_dialog = Some(dialog);
+    render(&mut app, &ctx, vec![]);
+    let output = render(&mut app, &ctx, vec![]);
+    click(
+        &mut app,
+        &ctx,
+        text_center(&output, "Cancelar").unwrap(),
+        PointerButton::Primary,
+    );
+    assert!(app.network_dialog.is_none());
+    assert!(app.sidebar_options.remote.is_empty());
+    assert_eq!(
+        crate::network::browse_server("smb://server/", &cancel)
+            .unwrap_err()
+            .kind(),
+        io::ErrorKind::Interrupted
+    );
+}
+
+#[test]
+fn network_address_bar_routes_to_the_connection_dialog_and_rejects_uri_passwords() {
+    let root = tempfile::tempdir().unwrap();
+    let ctx = egui::Context::default();
+    let mut app = Explorer::with_context(&ctx, root.path().into());
+    complete_navigation(&mut app);
+    app.editing_address = true;
+    app.address = "smb://user:secret@server/".into();
+    app.submit_address(&ctx);
+    assert!(!app.editing_address);
+    assert_eq!(app.current, root.path());
+    let dialog = app.network_dialog.as_ref().unwrap();
+    assert!(dialog.error.is_some());
+    assert!(dialog.result.is_none());
+    assert!(dialog.browse_result.is_none());
+    assert!(app.sidebar_options.remote.is_empty());
+}

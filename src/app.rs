@@ -693,7 +693,7 @@ impl Explorer {
                                 self.focus_address = false;
                             }
                             if response.lost_focus() && ui.input(|i| i.key_pressed(Key::Enter)) {
-                                self.navigate(self.expand_address(), Navigation::Visit);
+                                self.submit_address(ui.ctx());
                             }
                             if (response.has_focus() || response.lost_focus())
                                 && ui.input(|i| i.key_pressed(Key::Escape))

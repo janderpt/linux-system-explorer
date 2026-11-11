@@ -9,6 +9,9 @@ pub(super) struct ConnectDialog {
     focus: bool,
     error: Option<String>,
     result: Option<Receiver<io::Result<PathBuf>>>,
+    browse_result: Option<Receiver<io::Result<Vec<crate::network::ServerShare>>>>,
+    shares: Option<(String, Vec<crate::network::ServerShare>)>,
+    selected_share: Option<usize>,
     url: Option<String>,
     ready: Option<PathBuf>,
     cancel: std::sync::Arc<crate::network::Cancellation>,
@@ -21,6 +24,9 @@ impl ConnectDialog {
             focus: true,
             error: None,
             result: None,
+            browse_result: None,
+            shares: None,
+            selected_share: None,
             url: None,
             ready: None,
             cancel: Default::default(),
@@ -33,6 +39,25 @@ impl Drop for ConnectDialog {
     }
 }
 impl Explorer {
+    pub(super) fn submit_address(&mut self, ctx: &egui::Context) {
+        let input = self.address.trim();
+        let remote = input.starts_with("\\\\")
+            || input.starts_with("//")
+            || ["smb://", "sftp://", "nfs://", "ftp://", "dav://", "davs://"]
+                .iter()
+                .any(|prefix| input.to_ascii_lowercase().starts_with(prefix));
+        if remote {
+            let connection = crate::network::Connection {
+                url: input.into(),
+                label: String::new(),
+                mount: None,
+            };
+            self.cancel_address_edit(ctx);
+            self.request_network(Some(connection), ctx);
+        } else {
+            self.navigate(self.expand_address(), Navigation::Visit);
+        }
+    }
     pub(super) fn request_network(
         &mut self,
         connection: Option<crate::network::Connection>,
@@ -54,13 +79,44 @@ impl Explorer {
         } else {
             crate::network::remote_url(&dialog.address).map(Some)
         };
-        let url = match result {
+        let mut url = match result {
             Ok(result) => result,
             Err(error) => {
                 dialog.error = Some(error.to_string());
                 return;
             }
         };
+        if let Some(server) = url
+            .as_ref()
+            .filter(|uri| crate::network::is_smb_server(uri))
+            .cloned()
+        {
+            let selected = dialog
+                .shares
+                .as_ref()
+                .filter(|(address, _)| address == &server)
+                .and_then(|(_, shares)| dialog.selected_share.and_then(|i| shares.get(i)))
+                .cloned();
+            if let Some(share) = selected {
+                url = Some(share.url);
+            } else {
+                let (sender, receiver) = mpsc::channel();
+                let context = ctx.clone();
+                let locale = crate::i18n::current();
+                dialog.cancel = Default::default();
+                let cancel = dialog.cancel.clone();
+                dialog.shares = None;
+                dialog.selected_share = None;
+                dialog.url = Some(server.clone());
+                thread::spawn(move || {
+                    crate::i18n::set_locale(locale);
+                    let _ = sender.send(crate::network::browse_server(&server, &cancel));
+                    context.request_repaint();
+                });
+                dialog.browse_result = Some(receiver);
+                return;
+            }
+        }
         dialog.url = url.clone();
         let input = dialog.address.clone();
         let (sender, receiver) = mpsc::channel();
@@ -133,6 +189,25 @@ impl Explorer {
         let Some(mut dialog) = self.network_dialog.take() else {
             return;
         };
+        if let Some(receiver) = &dialog.browse_result {
+            let result = match receiver.try_recv() {
+                Ok(result) => Some(result),
+                Err(mpsc::TryRecvError::Disconnected) => Some(Err(io::Error::other(
+                    crate::i18n::tr("A listagem de compartilhamentos foi interrompida."),
+                ))),
+                Err(mpsc::TryRecvError::Empty) => None,
+            };
+            if let Some(result) = result {
+                dialog.browse_result = None;
+                match result {
+                    Ok(shares) => {
+                        dialog.shares = Some((dialog.url.clone().unwrap_or_default(), shares));
+                        dialog.selected_share = None;
+                    }
+                    Err(error) => dialog.error = Some(error.to_string()),
+                }
+            }
+        }
         if let Some(receiver) = &dialog.result {
             match receiver.try_recv() {
                 Ok(Ok(path)) => {
@@ -161,27 +236,122 @@ impl Explorer {
         }
         let mut connect = false;
         let mut cancel = false;
-        let busy = dialog.result.is_some() || dialog.ready.is_some();
-        let modal=egui::Modal::new(egui::Id::new("network_connection_dialog")).show(ctx,|ui| {
-            ui.set_width((ctx.content_rect().width()-100.0).clamp(340.0,540.0));
-            ui.spacing_mut().interact_size.y=32.0;
+        let mut refresh = false;
+        let server = crate::network::remote_url(&dialog.address)
+            .ok()
+            .is_some_and(|uri| crate::network::is_smb_server(&uri));
+        let busy =
+            dialog.result.is_some() || dialog.ready.is_some() || dialog.browse_result.is_some();
+        let modal = egui::Modal::new(egui::Id::new("network_connection_dialog")).show(ctx, |ui| {
+            ui.set_width((ctx.content_rect().width() - 100.0).clamp(340.0, 540.0));
+            ui.spacing_mut().interact_size.y = 32.0;
             ui.heading(crate::i18n::tr("Adicionar compartilhamento de rede"));
-            ui.label(crate::i18n::tr("Endereço do compartilhamento ou pasta já montada:"));
-            let response=ui.add_enabled(!busy,egui::TextEdit::singleline(&mut dialog.address).desired_width(f32::INFINITY).vertical_align(Align::Center).hint_text("smb://servidor/compartilhamento"));
-            if dialog.focus {response.request_focus();dialog.focus=false;}
-            ui.add_enabled(!busy,egui::TextEdit::singleline(&mut dialog.label).desired_width(f32::INFINITY).vertical_align(Align::Center).hint_text(crate::i18n::tr("Nome do compartilhamento (opcional)")));
-            ui.weak(crate::i18n::tr("Use SMB, SFTP, NFS, FTP, WebDAV ou uma pasta já montada. O explorador usa GVfs no GNOME e KIO Fuse no KDE."));
-            ui.weak(crate::i18n::tr("O sistema solicitará a autenticação. Senhas não são salvas pelo explorador."));
-            if busy {ui.horizontal(|ui|{ui.spinner();ui.label(crate::i18n::tr("Conectando ao compartilhamento…"));});}
-            if let Some(error)=&dialog.error {ui.colored_label(ui.visuals().error_fg_color,error);}
+            ui.label(crate::i18n::tr(
+                "Endereço do compartilhamento ou pasta já montada:",
+            ));
+            let response = ui.add_enabled(
+                !busy,
+                egui::TextEdit::singleline(&mut dialog.address)
+                    .desired_width(f32::INFINITY)
+                    .vertical_align(Align::Center)
+                    .hint_text(crate::i18n::tr(
+                        "smb://servidor/ ou smb://servidor/compartilhamento",
+                    )),
+            );
+            if response.changed() {
+                dialog.shares = None;
+                dialog.selected_share = None;
+            }
+            if dialog.focus {
+                response.request_focus();
+                dialog.focus = false;
+            }
+            ui.add_enabled(
+                !busy,
+                egui::TextEdit::singleline(&mut dialog.label)
+                    .desired_width(f32::INFINITY)
+                    .vertical_align(Align::Center)
+                    .hint_text(crate::i18n::tr("Nome do compartilhamento (opcional)")),
+            );
+            ui.weak(crate::i18n::tr(
+                "Use SMB, SFTP, NFS, FTP, WebDAV ou uma pasta já montada.",
+            ));
+            ui.weak(crate::i18n::tr(
+                "Para listar os compartilhamentos, informe apenas smb://servidor/.",
+            ));
+            ui.weak(crate::i18n::tr(
+                "O sistema solicitará a autenticação. Senhas não são salvas pelo explorador.",
+            ));
+            if let Some((_, shares)) = &dialog.shares {
+                ui.label(crate::i18n::tr("Compartilhamentos disponíveis"));
+                if shares.is_empty() {
+                    ui.weak(crate::i18n::tr(
+                        "O servidor não retornou compartilhamentos disponíveis para esta conta.",
+                    ));
+                }
+                egui::ScrollArea::vertical()
+                    .id_salt("server_share_choices")
+                    .max_height((ctx.content_rect().height() - 440.0).clamp(80.0, 180.0))
+                    .show(ui, |ui| {
+                        ui.add_enabled_ui(!busy, |ui| {
+                            for (i, share) in shares.iter().enumerate() {
+                                if ui
+                                    .selectable_label(dialog.selected_share == Some(i), &share.name)
+                                    .on_hover_text(&share.url)
+                                    .clicked()
+                                {
+                                    dialog.selected_share = Some(i);
+                                }
+                            }
+                        });
+                    });
+                refresh = ui
+                    .add_enabled(
+                        !busy,
+                        egui::Button::new(crate::i18n::tr("Atualizar lista de compartilhamentos")),
+                    )
+                    .clicked();
+            }
+            if busy {
+                ui.horizontal(|ui| {
+                    ui.spinner();
+                    ui.label(if dialog.browse_result.is_some() {
+                        crate::i18n::tr("Listando compartilhamentos…")
+                    } else {
+                        crate::i18n::tr("Conectando ao compartilhamento…")
+                    });
+                });
+            }
+            if let Some(error) = &dialog.error {
+                ui.colored_label(ui.visuals().error_fg_color, error);
+            }
             ui.separator();
-            ui.with_layout(Layout::right_to_left(Align::Center),|ui| {
-                connect=ui.add_enabled(!busy&&!dialog.address.trim().is_empty(),egui::Button::new(crate::i18n::tr("Conectar e adicionar"))).clicked();
-                cancel=ui.button(crate::i18n::tr("Cancelar")).clicked();
+            ui.horizontal(|ui| {
+                ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
+                    let action = if server && dialog.shares.is_none() {
+                        crate::i18n::tr("Listar compartilhamentos")
+                    } else {
+                        crate::i18n::tr("Conectar e adicionar")
+                    };
+                    let selected =
+                        !server || dialog.shares.is_none() || dialog.selected_share.is_some();
+                    connect = ui
+                        .add_enabled(
+                            !busy && !dialog.address.trim().is_empty() && selected,
+                            egui::Button::new(action),
+                        )
+                        .clicked();
+                    cancel = ui.button(crate::i18n::tr("Cancelar")).clicked();
+                });
             });
         });
         if modal.should_close() || cancel {
             return;
+        }
+        if refresh {
+            dialog.shares = None;
+            dialog.selected_share = None;
+            connect = true;
         }
         if connect {
             Self::start_network_connection(&mut dialog, ctx);

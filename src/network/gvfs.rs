@@ -31,6 +31,12 @@ struct Api {
     init: Init,
     file_new: unsafe extern "C" fn(*const c_char) -> Ptr,
     file_path: unsafe extern "C" fn(Ptr) -> *mut c_char,
+    enumerate: unsafe extern "C" fn(Ptr, *const c_char, c_int, Ptr, *mut *mut GError) -> Ptr,
+    next_file: unsafe extern "C" fn(Ptr, Ptr, *mut *mut GError) -> Ptr,
+    close_enumerator: unsafe extern "C" fn(Ptr, Ptr, *mut *mut GError) -> c_int,
+    info_name: unsafe extern "C" fn(Ptr) -> *const c_char,
+    info_type: unsafe extern "C" fn(Ptr) -> c_int,
+    io_error_quark: unsafe extern "C" fn() -> c_uint,
     mount_new: unsafe extern "C" fn(Ptr) -> Ptr,
     mount: unsafe extern "C" fn(Ptr, c_uint, Ptr, Ptr, Option<Ready>, Ptr),
     finish: unsafe extern "C" fn(Ptr, Ptr, *mut *mut GError) -> c_int,
@@ -77,6 +83,12 @@ impl Api {
                 },
                 file_new: symbol!(gio, "g_file_new_for_uri"),
                 file_path: symbol!(gio, "g_file_get_path"),
+                enumerate: symbol!(gio, "g_file_enumerate_children"),
+                next_file: symbol!(gio, "g_file_enumerator_next_file"),
+                close_enumerator: symbol!(gio, "g_file_enumerator_close"),
+                info_name: symbol!(gio, "g_file_info_get_name"),
+                info_type: symbol!(gio, "g_file_info_get_file_type"),
+                io_error_quark: symbol!(gio, "g_io_error_quark"),
                 mount_new: symbol!(gtk, "gtk_mount_operation_new"),
                 mount: symbol!(gio, "g_file_mount_enclosing_volume"),
                 finish: symbol!(gio, "g_file_mount_enclosing_volume_finish"),
@@ -94,6 +106,83 @@ impl Api {
             })
         }
     }
+    unsafe fn error_message(&self, error: *mut GError) -> String {
+        // SAFETY: GIO transfers ownership of each non-null GError to its caller.
+        if error.is_null() {
+            return "GIO directory enumeration failed".into();
+        }
+        let message = unsafe { CStr::from_ptr((*error).message) }
+            .to_string_lossy()
+            .into_owned();
+        unsafe {
+            (self.error_free)(error);
+        }
+        message
+    }
+    unsafe fn share_names(&self, file: Ptr) -> Result<Vec<String>, String> {
+        // SAFETY: file remains referenced throughout synchronous enumeration. Each
+        // returned GFileInfo and enumerator is unreferenced on success and failure.
+        let mut error = std::ptr::null_mut();
+        let enumerator = unsafe {
+            (self.enumerate)(
+                file,
+                c"standard::name,standard::type".as_ptr(),
+                0,
+                std::ptr::null_mut(),
+                &mut error,
+            )
+        };
+        if enumerator.is_null() {
+            return Err(unsafe { self.error_message(error) });
+        }
+        let result = (|| {
+            let mut names = Vec::new();
+            loop {
+                let mut error = std::ptr::null_mut();
+                let info =
+                    unsafe { (self.next_file)(enumerator, std::ptr::null_mut(), &mut error) };
+                if info.is_null() {
+                    if !error.is_null() {
+                        return Err(unsafe { self.error_message(error) });
+                    }
+                    break;
+                }
+                let kind = unsafe { (self.info_type)(info) };
+                // G_FILE_TYPE_DIRECTORY=2 and G_FILE_TYPE_MOUNTABLE=6. SMB server
+                // roots expose their shares as mountables, without requiring FUSE.
+                let name = if matches!(kind, 2 | 6) {
+                    let raw = unsafe { (self.info_name)(info) };
+                    if raw.is_null() {
+                        None
+                    } else {
+                        Some(
+                            unsafe { CStr::from_ptr(raw) }
+                                .to_str()
+                                .map(str::to_owned)
+                                .map_err(|e| e.to_string()),
+                        )
+                    }
+                } else {
+                    None
+                };
+                unsafe {
+                    (self.unref)(info);
+                }
+                if let Some(name) = name {
+                    names.push(name?);
+                }
+                if names.len() > 10000 {
+                    return Err("Too many SMB shares returned".into());
+                }
+            }
+            Ok(names)
+        })();
+        unsafe {
+            (self.close_enumerator)(enumerator, std::ptr::null_mut(), std::ptr::null_mut());
+            (self.unref)(enumerator);
+        }
+        result
+    }
     unsafe fn local_path(&self, file: Ptr) -> Option<PathBuf> {
         // SAFETY: file is a live GFile; get_path returns an owned NUL-terminated buffer.
         let raw = unsafe { (self.file_path)(file) };
@@ -109,19 +198,24 @@ impl Api {
         path.is_absolute().then_some(path)
     }
 }
+enum Outcome {
+    Path(PathBuf),
+    Names(Vec<String>),
+}
 struct Completion {
     api: &'static Api,
     main_loop: Ptr,
-    result: Option<Result<PathBuf, String>>,
+    browse: bool,
+    result: Option<Result<Outcome, String>>,
 }
 unsafe extern "C" fn mounted(file: Ptr, result: Ptr, user: Ptr) {
     // SAFETY: user points to the boxed Completion kept alive through loop_run;
     // GIO invokes this callback once, on this helper's default main context.
     let state = unsafe { &mut *user.cast::<Completion>() };
     let mut error = std::ptr::null_mut();
-    unsafe {
-        (state.api.finish)(file, result, &mut error);
-    }
+    let succeeded = unsafe { (state.api.finish)(file, result, &mut error) } != 0;
+    let already_mounted = !error.is_null()
+        && unsafe { (*error).domain == (state.api.io_error_quark)() && (*error).code == 17 };
     let path = unsafe { state.api.local_path(file) };
     let message = if error.is_null() {
         None
@@ -134,13 +228,33 @@ unsafe extern "C" fn mounted(file: Ptr, result: Ptr, user: Ptr) {
         }
         Some(message)
     };
-    state.result=Some(path.ok_or_else(||message.unwrap_or_else(||crate::i18n::tr("O GVfs não disponibilizou um caminho local. Verifique se gvfs-fuse está instalado.").into())));
+    state.result = Some(if state.browse {
+        if succeeded || already_mounted {
+            unsafe { state.api.share_names(file) }.map(Outcome::Names)
+        } else {
+            Err(message.unwrap_or_else(|| "GIO mount did not complete".into()))
+        }
+    } else {
+        path.map(Outcome::Path).ok_or_else(|| message.unwrap_or_else(||crate::i18n::tr("O GVfs não disponibilizou um caminho local. Verifique se gvfs-fuse está instalado.").into()))
+    });
     unsafe {
         (state.api.loop_quit)(state.main_loop);
     }
 }
 
 pub fn mount(uri: &str) -> io::Result<PathBuf> {
+    match run(uri, false)? {
+        Outcome::Path(path) => Ok(path),
+        _ => Err(io::Error::other("Unexpected GIO result")),
+    }
+}
+pub fn browse(uri: &str) -> io::Result<Vec<String>> {
+    match run(uri, true)? {
+        Outcome::Names(names) => Ok(names),
+        _ => Err(io::Error::other("Unexpected GIO result")),
+    }
+}
+fn run(uri: &str, browse: bool) -> io::Result<Outcome> {
     // This helper must not leave an authentication dialog behind if the
     // explorer exits, including before the worker gets to observe cancellation.
     let parent = rustix::process::getppid();
@@ -175,9 +289,13 @@ pub fn mount(uri: &str) -> io::Result<PathBuf> {
         if file.is_null() {
             return Err(io::Error::other("GIO could not create a file object"));
         }
-        if let Some(path) = api.local_path(file).filter(|p| p.is_dir()) {
+        if browse && let Ok(names) = api.share_names(file) {
             (api.unref)(file);
-            return Ok(path);
+            return Ok(Outcome::Names(names));
+        }
+        if !browse && let Some(path) = api.local_path(file).filter(|p| p.is_dir()) {
+            (api.unref)(file);
+            return Ok(Outcome::Path(path));
         }
         let operation = (api.mount_new)(std::ptr::null_mut());
         let main_loop = (api.loop_new)(std::ptr::null_mut(), 0);
@@ -196,6 +314,7 @@ pub fn mount(uri: &str) -> io::Result<PathBuf> {
         let mut state = Box::new(Completion {
             api,
             main_loop,
+            browse,
             result: None,
         });
         (api.mount)(
@@ -221,6 +340,20 @@ pub fn mount(uri: &str) -> io::Result<PathBuf> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn gio_enumerates_directory_entries_through_the_public_abi_without_fuse() {
+        let Ok(api) = Api::get() else { return };
+        let root = tempfile::tempdir().unwrap();
+        std::fs::create_dir(root.path().join("Docs")).unwrap();
+        std::fs::write(root.path().join("regular-file"), "test").unwrap();
+        let uri = CString::new(url::Url::from_file_path(root.path()).unwrap().as_str()).unwrap();
+        unsafe {
+            let file = (api.file_new)(uri.as_ptr());
+            let result = api.share_names(file);
+            (api.unref)(file);
+            assert_eq!(result.unwrap(), vec!["Docs"]);
+        }
+    }
     #[test]
     fn gio_abi_round_trips_a_local_path_without_a_display() {
         let Ok(api) = Api::get() else { return };

@@ -80,6 +80,30 @@ fn main() -> eframe::Result {
             }
             return Ok(());
         }
+        Ok(cli::Command::BrowseNetwork(uri)) => {
+            let language = settings::Preferences::path()
+                .and_then(|p| settings::Preferences::load(&p).ok())
+                .unwrap_or_default()
+                .language;
+            i18n::set_locale(language.resolve());
+            let result = network::remote_url(&uri).and_then(|uri| {
+                if !network::is_smb_server(&uri) {
+                    return Err(std::io::Error::other("Expected an SMB server URI"));
+                }
+                network::gvfs::browse(&uri)
+            });
+            match result {
+                Ok(names) => println!(
+                    "{}",
+                    serde_json::to_string(&names).expect("serializable share names")
+                ),
+                Err(error) => {
+                    eprintln!("{error}");
+                    std::process::exit(1);
+                }
+            }
+            return Ok(());
+        }
         Ok(cli::Command::ExportIcon(path)) => {
             std::fs::write(path, system_style::APPLICATION_ICON_PNG)
                 .map_err(|e| eframe::Error::AppCreation(Box::new(e)))?;
