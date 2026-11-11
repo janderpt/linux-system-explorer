@@ -255,6 +255,7 @@ mod tests {
             include_str!("app/network.rs"),
             include_str!("local_shares.rs"),
             include_str!("app/local_shares.rs"),
+            include_str!("app/local_shares/sidebar_cache.rs"),
             include_str!("settings.rs"),
             include_str!("columns.rs"),
             include_str!("filesystem.rs"),

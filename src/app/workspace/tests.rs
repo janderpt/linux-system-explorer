@@ -388,3 +388,24 @@ fn restored_session_is_saved_from_real_workspace_rendering_after_tab_switch() {
     assert_eq!(saved.active, 0);
     assert_eq!(saved.paths().unwrap(), vec![a, b]);
 }
+
+#[test]
+fn tabs_share_one_local_share_sidebar_and_observe_renames_and_removals() {
+    let root = tempfile::tempdir().unwrap();
+    let ctx = egui::Context::default();
+    let mut app = workspace(&ctx, root.path().into());
+    let mut share = crate::local_shares::Share::new(root.path().into());
+    share.name = "published".into();
+    app.tabs[0].publish_local_share_sidebar(vec![share.clone()]);
+    app.add_tab(root.path().into(), &ctx);
+    assert!(std::sync::Arc::ptr_eq(
+        &app.tabs[0].local_share_sidebar,
+        &app.tabs[1].local_share_sidebar
+    ));
+    assert_eq!(app.tabs[1].local_share_entries(), vec![share.clone()]);
+    share.name = "renamed".into();
+    app.tabs[1].publish_local_share_sidebar(vec![share.clone()]);
+    assert_eq!(app.tabs[0].local_share_entries(), vec![share]);
+    app.tabs[0].publish_local_share_sidebar(vec![]);
+    assert!(app.tabs[1].local_share_entries().is_empty());
+}

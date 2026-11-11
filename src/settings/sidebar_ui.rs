@@ -62,6 +62,11 @@ impl Editor {
         });
         ui.separator();
         ui.checkbox(
+            &mut self.draft.sidebar.show_local_shares,
+            crate::i18n::tr("Exibir seção Compartilhamentos locais"),
+        );
+        ui.separator();
+        ui.checkbox(
             &mut self.draft.sidebar.show_network,
             crate::i18n::tr("Exibir seção Rede"),
         );

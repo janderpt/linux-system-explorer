@@ -2,6 +2,8 @@
 
 ## Unreleased — 0.1.0 experimental
 
+- Separate Local shares sidebar section with local folder navigation, independent visibility, immediate manager updates across tabs and periodic background refresh for other windows/external changes.
+
 - Integrated Samba user-share manager: list, create, rename, edit per-user/group permissions, copy SMB/Windows addresses and stop sharing with confirmation, ownership and stale-edit checks, and rename rollback.
 
 - Linux file manager written in Rust, with native X11 and Wayland windows.

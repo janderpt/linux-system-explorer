@@ -101,6 +101,7 @@ impl Workspace {
     }
     fn append_tab(&mut self, path: PathBuf, ctx: &egui::Context) {
         let mut tab = Explorer::with_context(ctx, path);
+        tab.local_share_sidebar = self.tabs[self.active].local_share_sidebar.clone();
         tab.tab_id = self.next_id;
         self.next_id += 1;
         tab.settings_path = self.settings_path.clone();

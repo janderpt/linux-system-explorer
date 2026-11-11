@@ -202,3 +202,81 @@ fn pending_changes_finish_when_polled_in_background() {
     assert!(app.local_shares.as_ref().unwrap().pending.is_none());
     assert_eq!(app.local_shares.as_ref().unwrap().shares.len(), 1);
 }
+
+#[test]
+fn sidebar_separates_local_shares_from_remote_connections_and_opens_local_folder() {
+    let root = tempfile::tempdir().unwrap();
+    let folder = root.path().join("shared");
+    std::fs::create_dir(&folder).unwrap();
+    let ctx = egui::Context::default();
+    let mut app = Explorer::with_context(&ctx, root.path().into());
+    complete_navigation(&mut app);
+    app.sidebar_options.visible.clear();
+    app.sidebar_options.show_trash = false;
+    app.sidebar_options.show_pinned = false;
+    let mut share = Share::new(folder.clone());
+    share.name = "Publicado aqui".into();
+    app.publish_local_share_sidebar(vec![share]);
+    render(&mut app, &ctx, vec![]);
+    let output = render(&mut app, &ctx, vec![]);
+    assert!(text_center(&output, "Compartilhamentos locais").is_some());
+    assert!(text_center(&output, "REDE").is_some());
+    assert!(text_center(&output, "Nenhuma conexão de rede configurada").is_some());
+    let point = text_center(&output, "Publicado aqui").unwrap();
+    click(&mut app, &ctx, point);
+    complete_navigation(&mut app);
+    assert_eq!(app.current, folder);
+    app.sidebar_options.show_local_shares = false;
+    assert!(
+        !app.sidebar_entries()
+            .iter()
+            .any(|e| matches!(e.id, sidebar::Location::LocalShare(_)))
+    );
+    let output = render(&mut app, &ctx, vec![]);
+    assert!(text_center(&output, "Compartilhamentos locais").is_none());
+}
+
+#[test]
+fn manager_results_immediately_replace_sidebar_entries_after_create_rename_and_stop() {
+    let (_root, _ctx, mut app) = setup();
+    let mut share = app.local_shares.as_ref().unwrap().shares[0].clone();
+    for name in [Some("created"), Some("renamed"), None] {
+        let list = if let Some(name) = name {
+            share.name = name.into();
+            vec![share.clone()]
+        } else {
+            vec![]
+        };
+        let (sender, receiver) = mpsc::channel();
+        app.local_shares.as_mut().unwrap().pending = Some(receiver);
+        sender
+            .send(Ok((list.clone(), vec!["localhost".into()])))
+            .unwrap();
+        app.poll();
+        assert_eq!(app.local_share_entries(), list);
+        let labels = app
+            .sidebar_entries()
+            .into_iter()
+            .filter(|e| matches!(e.id, sidebar::Location::LocalShare(_)))
+            .map(|e| e.label)
+            .collect::<Vec<_>>();
+        assert_eq!(
+            labels,
+            name.into_iter().map(str::to_owned).collect::<Vec<_>>()
+        );
+    }
+}
+
+#[test]
+fn local_share_visibility_defaults_on_and_persists_independently_of_network() {
+    let mut prefs: locations::Preferences =
+        serde_json::from_str(r#"{"show_network":false}"#).unwrap();
+    assert!(prefs.show_local_shares);
+    assert!(!prefs.show_network);
+    prefs.show_local_shares = false;
+    prefs.show_network = true;
+    let restored: locations::Preferences =
+        serde_json::from_str(&serde_json::to_string(&prefs).unwrap()).unwrap();
+    assert!(!restored.show_local_shares);
+    assert!(restored.show_network);
+}

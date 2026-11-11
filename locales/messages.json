@@ -1914,5 +1914,29 @@
   "Atualize a lista para conferir os dois nomes.": {
     "pt": "Atualize a lista para conferir os dois nomes.",
     "en": "Refresh the list to check both names."
+  },
+  "A atualização dos compartilhamentos locais foi interrompida.": {
+    "pt": "A atualização dos compartilhamentos locais foi interrompida.",
+    "en": "The local shares update was interrupted."
+  },
+  "Exibir seção Compartilhamentos locais": {
+    "pt": "Exibir seção Compartilhamentos locais",
+    "en": "Show Local shares section"
+  },
+  "Não foi possível atualizar os compartilhamentos locais.": {
+    "pt": "Não foi possível atualizar os compartilhamentos locais.",
+    "en": "Could not refresh local shares."
+  },
+  "Nenhuma pasta local compartilhada": {
+    "pt": "Nenhuma pasta local compartilhada",
+    "en": "No local folders shared"
+  },
+  "Carregando compartilhamentos locais…": {
+    "pt": "Carregando compartilhamentos locais…",
+    "en": "Loading local shares…"
+  },
+  "Nenhuma conexão de rede configurada": {
+    "pt": "Nenhuma conexão de rede configurada",
+    "en": "No network connections configured"
   }
 }

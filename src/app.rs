@@ -77,6 +77,7 @@ pub struct Explorer {
     rename: Option<rename::RenameDialog>,
     network_dialog: Option<network::ConnectDialog>,
     local_shares: Option<local_shares::Manager>,
+    local_share_sidebar: local_shares::sidebar_cache::SharedSidebar,
     dnd: drag_drop::DragDrop,
     focus_address: bool,
     query: String,
@@ -154,6 +155,10 @@ impl Explorer {
             }
         }
         app.activation = crate::activation::Activation::attach(cc);
+        app.local_share_sidebar
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .enabled = true;
         app
     }
 
@@ -209,6 +214,7 @@ impl Explorer {
             rename: None,
             network_dialog: None,
             local_shares: None,
+            local_share_sidebar: Default::default(),
             dnd: drag_drop::DragDrop::default(),
             focus_address: false,
             query: String::new(),
@@ -299,6 +305,10 @@ impl Explorer {
     }
 
     fn refresh(&mut self) {
+        self.local_share_sidebar
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .invalidate();
         self.places = locations::available_places();
         self.network_mounts = locations::network_mounts();
         let (path, navigation) = if self.current.as_os_str().is_empty() {

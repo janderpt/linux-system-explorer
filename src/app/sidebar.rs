@@ -6,6 +6,7 @@ pub(super) enum Location {
     Pinned(usize),
     Network(usize),
     Remote(usize),
+    LocalShare(usize),
     Trash,
 }
 
@@ -64,6 +65,16 @@ impl Explorer {
                     }),
             );
         }
+        if self.sidebar_options.show_local_shares {
+            entries.extend(self.local_share_entries().into_iter().enumerate().map(
+                |(index, share)| SidebarEntry {
+                    id: Location::LocalShare(index),
+                    label: share.name,
+                    path: share.path,
+                    icon: Icon::ShareFolder,
+                },
+            ));
+        }
         if self.sidebar_options.show_network {
             let mut seen = BTreeSet::new();
             for (index, remote) in self.sidebar_options.remote.iter().enumerate() {
@@ -105,6 +116,9 @@ impl Explorer {
     }
 
     pub(super) fn sidebar(&mut self, ctx: &egui::Context) {
+        if self.sidebar_options.show_local_shares {
+            self.refresh_local_share_sidebar(ctx);
+        }
         let entries = self.sidebar_entries();
         let active = closest(&self.current, &entries);
         egui::SidePanel::left("places").default_width(205.0).min_width(170.0).max_width(280.0).show(ctx,|ui| {
@@ -128,12 +142,24 @@ impl Explorer {
                     if self.menu_item(ui,Icon::Pin,crate::i18n::tr("Fixar pasta atual"),"",enabled,false).clicked() {self.pin_folder(self.current.clone());}
                     ui.add_space(12.0);
                 }
+                if self.sidebar_options.show_local_shares {
+                    sidebar_heading(ui,crate::i18n::tr("Compartilhamentos locais"));
+                    let local: Vec<_> = entries.iter().filter(|e| matches!(e.id, Location::LocalShare(_))).collect();
+                    for entry in &local { self.sidebar_place(ui,entry,active==Some(entry.id)); }
+                    let (loaded,error) = { let cache=self.local_share_sidebar.lock().unwrap_or_else(|e|e.into_inner()); (cache.loaded,cache.error.clone()) };
+                    if let Some(error) = error {
+                        ui.label(RichText::new(crate::i18n::tr("Não foi possível atualizar os compartilhamentos locais.")).small().weak()).on_hover_text(error);
+                    } else if local.is_empty() {
+                        ui.label(RichText::new(if loaded {crate::i18n::tr("Nenhuma pasta local compartilhada")} else {crate::i18n::tr("Carregando compartilhamentos locais…")} ).small().weak());
+                    }
+                    if self.menu_item(ui,Icon::ShareFolder,crate::i18n::tr("Gerenciar compartilhamentos locais"),"",!self.loading,false).on_hover_text(crate::i18n::tr("Gerenciar compartilhamentos locais")).clicked(){self.request_local_shares(None,ui.ctx());}
+                    ui.add_space(12.0);
+                }
                 if self.sidebar_options.show_network {
                     sidebar_heading(ui,crate::i18n::tr("REDE"));
                     let network:Vec<_>=entries.iter().filter(|e|matches!(e.id,Location::Network(_)|Location::Remote(_))).collect();
-                    if network.is_empty() {ui.label(RichText::new(crate::i18n::tr("Nenhum compartilhamento configurado")).small().weak());}
+                    if network.is_empty() {ui.label(RichText::new(crate::i18n::tr("Nenhuma conexão de rede configurada")).small().weak());}
                     for entry in network {self.sidebar_place(ui,entry,active==Some(entry.id));}
-                    if self.menu_item(ui,Icon::ShareFolder,crate::i18n::tr("Gerenciar compartilhamentos locais"),"",!self.loading,false).clicked(){self.request_local_shares(None,ui.ctx());}
                     if self.menu_item(ui,Icon::AddNetwork,crate::i18n::tr("Adicionar compartilhamento de rede"),"",!self.loading,false).on_hover_text(crate::i18n::tr("Adicionar compartilhamento de rede")).clicked(){self.request_network(None,ui.ctx());}
                 }
             });

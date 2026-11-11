@@ -5,6 +5,8 @@ use std::io;
 #[cfg(test)]
 mod tests;
 
+pub(super) mod sidebar_cache;
+
 type Loaded = (Vec<Share>, Vec<String>);
 
 pub(super) struct Manager {
@@ -109,6 +111,7 @@ impl Explorer {
                 manager.pending = None;
                 match result {
                     Ok((shares, hosts)) => {
+                        self.publish_local_share_sidebar(shares.clone());
                         manager.accept(shares, hosts);
                         if let Some(notice) = manager.success.take() {
                             self.post_notice(crate::i18n::tr(notice).into());
