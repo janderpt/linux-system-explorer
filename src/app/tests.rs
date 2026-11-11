@@ -549,6 +549,87 @@ fn external_properties_and_missing_items_are_reported_after_directory_read() {
 }
 
 #[test]
+fn reused_windows_refresh_select_new_hidden_files_and_request_foreground() {
+    use crate::file_manager::{OpenRequest, window::Request};
+    let directory = tempfile::tempdir().unwrap();
+    let ctx = egui::Context::default();
+    let mut app = Explorer::with_context(&ctx, directory.path().to_owned());
+    complete_navigation(&mut app);
+    // The download did not exist at the time of the original listing.
+    let downloaded = directory.path().join(".new download.pdf");
+    std::fs::write(&downloaded, b"pdf").unwrap();
+    app.query = "old filter".into();
+    app.editing_address = true;
+    let (request, reply) = Request::for_test(OpenRequest {
+        folder: directory.path().to_owned(),
+        selected: vec![downloaded.clone()],
+        properties: false,
+    });
+    let mut request = Some(request);
+    let output = ctx.run(egui::RawInput::default(), |ctx| {
+        if let Some(request) = request.take() {
+            app.accept_external(request, ctx);
+        }
+    });
+    assert!(reply.recv().unwrap());
+    assert!(app.loading && !app.editing_address);
+    let commands = &output.viewport_output[&egui::ViewportId::ROOT].commands;
+    assert!(
+        commands
+            .iter()
+            .any(|c| matches!(c, egui::ViewportCommand::Minimized(false)))
+    );
+    assert!(
+        commands
+            .iter()
+            .any(|c| matches!(c, egui::ViewportCommand::Focus))
+    );
+    complete_navigation(&mut app);
+    assert_eq!(app.selected, BTreeSet::from([downloaded]));
+    assert!(app.reveal_selection && app.hidden_visible() && app.query.is_empty());
+    assert!(!app.show_hidden);
+    // A request for another directory cannot redirect this window.
+    let (request, reply) = Request::for_test(OpenRequest {
+        folder: directory.path().join("other"),
+        selected: vec![],
+        properties: false,
+    });
+    app.accept_external(request, &ctx);
+    assert!(!reply.recv().unwrap());
+    assert_eq!(app.current, directory.path());
+}
+
+#[test]
+fn reused_windows_accept_a_pending_destination_but_reject_the_previous_folder() {
+    use crate::file_manager::{OpenRequest, window::Request};
+    let directory = tempfile::tempdir().unwrap();
+    let next = directory.path().join("next");
+    std::fs::create_dir(&next).unwrap();
+    let item = next.join("file.txt");
+    std::fs::write(&item, b"test").unwrap();
+    let ctx = egui::Context::default();
+    let mut app = Explorer::with_context(&ctx, directory.path().to_owned());
+    complete_navigation(&mut app);
+    app.navigate(next.clone(), Navigation::Visit);
+    let (request, reply) = Request::for_test(OpenRequest {
+        folder: directory.path().to_owned(),
+        selected: vec![],
+        properties: false,
+    });
+    app.accept_external(request, &ctx);
+    assert!(!reply.recv().unwrap());
+    let (request, reply) = Request::for_test(OpenRequest {
+        folder: next,
+        selected: vec![item.clone()],
+        properties: false,
+    });
+    app.accept_external(request, &ctx);
+    assert!(reply.recv().unwrap());
+    complete_navigation(&mut app);
+    assert_eq!(app.selected, BTreeSet::from([item]));
+}
+
+#[test]
 fn folders_restore_independent_layouts_through_history_refresh_errors_and_restart() {
     let directory = tempfile::tempdir().unwrap();
     let folder_a = directory.path().join("a");

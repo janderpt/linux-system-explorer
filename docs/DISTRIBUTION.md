@@ -72,6 +72,13 @@ grouping selections by parent folder. Its private Quit interface stops only the 
 leaving GUI windows intact. This is independent
 of package-manager installation, which does not change defaults automatically.
 
+GUI windows own versioned private D-Bus names while running. The bridge asks them to
+accept requests for their current/loading folder before creating another process.
+Selection is refreshed asynchronously and activation uses xdg-activation-v1 on the
+native Wayland surface, or the standard viewport focus request on X11. The supplied
+activation token is forwarded without changing global environment variables. Closing
+a window drops its registration; earlier GUI versions must be reopened after updating.
+
 Packaged installations and native windows use the same project SVG, rasterized to PNG
 at build time. The user installer refreshes desktop and icon caches, including KDE's
 icon-change notification. Uninstalled development builds register the same icon and

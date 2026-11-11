@@ -86,6 +86,15 @@ o próximo login. A restauração recupera também o registro D-Bus anterior, pr
 alterações posteriores feitas pelo usuário. A instalação de pacotes nativos não muda
 essa preferência automaticamente.
 
+Se uma janela desta versão já estiver na pasta solicitada, **Mostrar na pasta** a
+reutiliza, atualiza a listagem, seleciona e revela os itens, limpa o filtro e solicita
+o primeiro plano. Janelas em outras pastas permanecem onde estão. Sem uma janela
+correspondente, abre uma nova. A pasta é conferida na própria janela, inclusive
+durante uma navegação; janelas fechadas deixam de participar automaticamente.
+No Wayland, a ativação usa o token enviado pelo aplicativo solicitante e respeita
+a política de foco do compositor. Janelas de versões anteriores devem ser reabertas
+após a atualização para participar dessa integração.
+
 É necessário um ambiente gráfico Linux com OpenGL e bibliotecas de X11 ou Wayland. A abertura de arquivos usa `gio open`, das ferramentas GIO, e os aplicativos associados no sistema. Se GIO não estiver instalado, usa `xdg-open`, normalmente fornecido pelo pacote `xdg-utils`. Em um ambiente mínimo Ubuntu/Debian, as dependências de compilação e execução podem ser instaladas com:
 
 ```bash

@@ -1323,6 +1323,8 @@ dependencies = [
  "trash",
  "url",
  "uzers",
+ "wayland-client",
+ "wayland-protocols",
  "x11rb",
  "zbus",
 ]

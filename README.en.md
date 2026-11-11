@@ -62,6 +62,14 @@ An already running file-manager service keeps its bus name until it exits or the
 login. Rollback restores the previous service registration as well as the folder handler.
 Native package installation alone does not change these defaults.
 
+Show in Folder reuses a responsive window already displaying (or loading) the
+requested directory. It refreshes the listing, clears the filter, selects/reveals
+the items and requests foreground activation without changing other windows' folders.
+It opens a new window when no matching window is available. Each window verifies its
+own current destination and unregisters when closed. Wayland activation forwards the
+caller's token through xdg-activation; compositor focus policies still apply. Reopen
+windows from earlier versions after updating to enable reuse.
+
 Window, launcher and taskbar icons share one project SVG and its build-generated PNG.
 The application ID, desktop filename and icon name match on Wayland and X11. The user
 installer refreshes KDE's application and icon caches; reopen older windows after updating.

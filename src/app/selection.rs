@@ -1,6 +1,47 @@
 use super::*;
 
 impl Explorer {
+    pub(super) fn poll_external(&mut self, ctx: &egui::Context) {
+        let requests = self
+            .external_window
+            .as_ref()
+            .map(|window| window.pending())
+            .unwrap_or_default();
+        for request in requests {
+            self.accept_external(request, ctx);
+        }
+    }
+
+    pub(super) fn accept_external(
+        &mut self,
+        request: crate::file_manager::window::Request,
+        ctx: &egui::Context,
+    ) {
+        let folder = self.loading_path.as_deref().unwrap_or(&self.current);
+        let Some((request, token)) = request.accept(folder) else {
+            return;
+        };
+        self.editing_address = false;
+        self.focus_address = false;
+        self.focus_search = false;
+        if let Some(id) = ctx.memory(|memory| memory.focused()) {
+            ctx.memory_mut(|memory| memory.surrender_focus(id));
+        }
+        if !request.selected.is_empty() {
+            self.reveal_external(request.selected, request.properties);
+            // Refresh stale listings before applying the requested selection.
+            if !self.loading {
+                self.refresh();
+            }
+        }
+        ctx.send_viewport_cmd(egui::ViewportCommand::Visible(true));
+        ctx.send_viewport_cmd(egui::ViewportCommand::Minimized(false));
+        ctx.send_viewport_cmd(egui::ViewportCommand::Focus);
+        if let Some(activation) = &mut self.activation {
+            activation.activate(&token);
+        }
+    }
+
     /// Applied only after the asynchronous initial directory read has completed.
     pub fn reveal_external(&mut self, paths: Vec<PathBuf>, properties: bool) {
         if !paths.is_empty() {

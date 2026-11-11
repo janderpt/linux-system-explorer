@@ -180,6 +180,73 @@ with tempfile.NamedTemporaryFile(mode='w',dir={:?},delete=False) as f:
         serde_json::json!([hex("--"), hex("/tmp/folder")])
     );
     assert!(folder["startup"].is_null());
+    // A real per-window endpoint must suppress process creation and receive the
+    // original token and complete selection, including non-UTF-8 names.
+    let window = window::Window::with_name(
+        &eframe::egui::Context::default(),
+        "io.github.janderpt.LinuxSystemExplorer.Window1.p1",
+    )
+    .unwrap();
+    let current = std::sync::Arc::new(std::sync::Mutex::new(PathBuf::from("/tmp/a folder")));
+    let (accepted_tx, accepted_rx) = mpsc::channel();
+    let (stop_tx, stop_rx) = mpsc::channel();
+    let worker_current = current.clone();
+    let worker = thread::spawn(move || {
+        while stop_rx.try_recv().is_err() {
+            for queued in window.pending() {
+                if let Some(request) = queued.accept(&worker_current.lock().unwrap()) {
+                    accepted_tx.send(request).unwrap();
+                }
+            }
+            thread::sleep(Duration::from_millis(1));
+        }
+    });
+    let raw = PathBuf::from(OsString::from_vec(b"/tmp/a folder/raw-\xff.pdf".to_vec()));
+    call(
+        "ShowItems",
+        vec!["file:///tmp/a%20folder/report%23.pdf".into(), uri(&raw)],
+        "reuse-token",
+    )
+    .unwrap();
+    let (reused, token) = accepted_rx.recv_timeout(Duration::from_secs(2)).unwrap();
+    assert_eq!(
+        reused.selected,
+        vec![PathBuf::from("/tmp/a folder/report#.pdf"), raw]
+    );
+    assert_eq!(token, "reuse-token");
+    call(
+        "ShowFolders",
+        vec!["file:///tmp/a%20folder".into()],
+        "folder-token",
+    )
+    .unwrap();
+    assert!(
+        accepted_rx
+            .recv_timeout(Duration::from_secs(2))
+            .unwrap()
+            .0
+            .selected
+            .is_empty()
+    );
+    assert_eq!(
+        fs::read_dir(&log).unwrap().count(),
+        3,
+        "reused windows must not launch a new GUI"
+    );
+    // Navigating the window invalidates its previous folder immediately.
+    *current.lock().unwrap() = PathBuf::from("/tmp/elsewhere");
+    let request = OpenRequest {
+        folder: "/tmp/a folder".into(),
+        selected: vec![],
+        properties: false,
+    };
+    assert!(!zbus::block_on(window::reuse(&client, &request, "")));
+    stop_tx.send(()).unwrap();
+    worker.join().unwrap();
+    assert!(
+        !zbus::block_on(window::reuse(&client, &request, "")),
+        "closed windows must disappear from discovery"
+    );
     zbus::block_on(client.call_method(Some(BUS_NAME), OBJECT_PATH, Some(CONTROL), "Quit", &()))
         .unwrap();
     stopped.recv_timeout(Duration::from_secs(2)).unwrap();

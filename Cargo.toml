@@ -30,6 +30,8 @@ raw-window-handle = "0.6"
 x11rb = "0.13"
 url = "2"
 zbus = "6.2.1"
+wayland-client = { version = "0.31.15", features = ["system"] }
+wayland-protocols = { version = "0.32.13", features = ["client", "staging"] }
 
 [profile.release]
 lto = "thin"

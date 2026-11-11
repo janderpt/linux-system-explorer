@@ -10,6 +10,7 @@ use std::{
     time::Duration,
 };
 use url::Url;
+pub mod window;
 
 pub const BUS_NAME: &str = "org.freedesktop.FileManager1";
 pub const OBJECT_PATH: &str = "/org/freedesktop/FileManager1";
@@ -117,8 +118,9 @@ struct FileManager {
 }
 
 impl FileManager {
-    fn dispatch(
+    async fn dispatch(
         &self,
+        connection: &zbus::Connection,
         operation: Operation,
         uris: &[String],
         startup_id: &str,
@@ -129,6 +131,9 @@ impl FileManager {
             ));
         }
         for request in plan(operation, uris)? {
+            if window::reuse(connection, &request, startup_id).await {
+                continue;
+            }
             let mut command = Command::new(&self.executable);
             command
                 .args(request.arguments())
@@ -153,14 +158,32 @@ impl FileManager {
 
 #[zbus::interface(name = "org.freedesktop.FileManager1")]
 impl FileManager {
-    fn show_folders(&self, uris: Vec<String>, startup_id: String) -> zbus::fdo::Result<()> {
-        self.dispatch(Operation::Folders, &uris, &startup_id)
+    async fn show_folders(
+        &self,
+        uris: Vec<String>,
+        startup_id: String,
+        #[zbus(connection)] connection: &zbus::Connection,
+    ) -> zbus::fdo::Result<()> {
+        self.dispatch(connection, Operation::Folders, &uris, &startup_id)
+            .await
     }
-    fn show_items(&self, uris: Vec<String>, startup_id: String) -> zbus::fdo::Result<()> {
-        self.dispatch(Operation::Items, &uris, &startup_id)
+    async fn show_items(
+        &self,
+        uris: Vec<String>,
+        startup_id: String,
+        #[zbus(connection)] connection: &zbus::Connection,
+    ) -> zbus::fdo::Result<()> {
+        self.dispatch(connection, Operation::Items, &uris, &startup_id)
+            .await
     }
-    fn show_item_properties(&self, uris: Vec<String>, startup_id: String) -> zbus::fdo::Result<()> {
-        self.dispatch(Operation::Properties, &uris, &startup_id)
+    async fn show_item_properties(
+        &self,
+        uris: Vec<String>,
+        startup_id: String,
+        #[zbus(connection)] connection: &zbus::Connection,
+    ) -> zbus::fdo::Result<()> {
+        self.dispatch(connection, Operation::Properties, &uris, &startup_id)
+            .await
     }
 }
 
@@ -184,6 +207,7 @@ fn start(executable: &Path) -> Result<(zbus::Connection, Receiver<()>), String> 
     let (stop, stopped) = mpsc::channel();
     let connection = zbus::block_on(
         zbus::connection::Builder::session()
+            .method_timeout(Duration::from_secs(3))
             .allow_name_replacements(false)
             .replace_existing_names(false)
             .name(BUS_NAME)

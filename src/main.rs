@@ -1,3 +1,4 @@
+mod activation;
 mod app;
 mod applications;
 mod cli;

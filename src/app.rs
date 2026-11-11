@@ -55,6 +55,9 @@ enum Event {
 }
 
 pub struct Explorer {
+    external_window: Option<crate::file_manager::window::Window>,
+    activation: Option<crate::activation::Activation>,
+    loading_path: Option<PathBuf>,
     current: PathBuf,
     entries: Vec<Entry>,
     history: History,
@@ -138,6 +141,11 @@ impl Explorer {
                 }
             }
         }
+        app.activation = crate::activation::Activation::attach(cc);
+        match crate::file_manager::window::Window::attach(&cc.egui_ctx) {
+            Ok(window) => app.external_window = Some(window),
+            Err(error) => eprintln!("Could not register the explorer window: {error}"),
+        }
         app
     }
 
@@ -173,6 +181,9 @@ impl Explorer {
         });
         let places = locations::available_places();
         let mut app = Self {
+            external_window: None,
+            activation: None,
+            loading_path: None,
             current: PathBuf::new(),
             entries: Vec::new(),
             history: History::default(),
@@ -244,6 +255,7 @@ impl Explorer {
         if self.loading {
             return;
         }
+        let loading_path = filesystem::absolute_path(&path).unwrap_or_else(|_| path.clone());
         if self
             .requests
             .send(ReadRequest {
@@ -254,6 +266,7 @@ impl Explorer {
             .is_ok()
         {
             self.loading = true;
+            self.loading_path = Some(loading_path);
             self.error = None;
         } else {
             self.error = Some(
@@ -276,6 +289,7 @@ impl Explorer {
             match event {
                 Event::Listed(result, navigation) => {
                     self.loading = false;
+                    self.loading_path = None;
                     match result {
                         Ok(listing) => {
                             let changed = self.current != listing.path;
@@ -1430,6 +1444,7 @@ impl Explorer {
 impl eframe::App for Explorer {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         crate::i18n::set_locale(self.language.resolve());
+        self.poll_external(ctx);
         self.poll();
         self.begin_drag_drop(ctx);
         self.handle_transfer_close(ctx);
