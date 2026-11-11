@@ -102,7 +102,7 @@ impl Explorer {
         self.address = if self.is_trash() {
             "trash:///".into()
         } else {
-            self.current.display().to_string()
+            self.location().display().to_string()
         };
         ctx.memory_mut(|memory| {
             if let Some(id) = memory.focused() {
@@ -113,8 +113,8 @@ impl Explorer {
 
     pub(super) fn open_folder_picker(&mut self, ctx: &egui::Context) {
         // Retain exact bytes for an unchanged non-UTF-8 address.
-        let initial = if self.address == self.current.display().to_string() {
-            self.current.clone()
+        let initial = if self.address == self.location().display().to_string() {
+            self.location().to_owned()
         } else {
             self.expand_address()
         };

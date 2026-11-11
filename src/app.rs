@@ -64,6 +64,7 @@ pub struct Explorer {
     tab_id: u64,
     activation: Option<crate::activation::Activation>,
     loading_path: Option<PathBuf>,
+    initial_path: PathBuf,
     current: PathBuf,
     entries: Vec<Entry>,
     history: History,
@@ -188,6 +189,11 @@ impl Explorer {
             tab_id: 0,
             activation: None,
             loading_path: None,
+            initial_path: if crate::trashbin::is_location(&initial) {
+                initial.clone()
+            } else {
+                filesystem::absolute_path(&initial).unwrap_or_else(|_| initial.clone())
+            },
             current: PathBuf::new(),
             entries: Vec::new(),
             history: History::default(),
@@ -259,7 +265,11 @@ impl Explorer {
         if self.loading {
             return;
         }
-        let loading_path = filesystem::absolute_path(&path).unwrap_or_else(|_| path.clone());
+        let loading_path = if crate::trashbin::is_location(&path) {
+            path.clone()
+        } else {
+            filesystem::absolute_path(&path).unwrap_or_else(|_| path.clone())
+        };
         if self
             .requests
             .send(ReadRequest {
@@ -283,9 +293,12 @@ impl Explorer {
     fn refresh(&mut self) {
         self.places = locations::available_places();
         self.network_mounts = locations::network_mounts();
-        if !self.current.as_os_str().is_empty() {
-            self.navigate(self.current.clone(), Navigation::Refresh);
-        }
+        let (path, navigation) = if self.current.as_os_str().is_empty() {
+            (self.initial_path.clone(), Navigation::Visit)
+        } else {
+            (self.current.clone(), Navigation::Refresh)
+        };
+        self.navigate(path, navigation);
     }
 
     fn poll(&mut self) {
@@ -438,7 +451,7 @@ impl Explorer {
             self.address = if self.is_trash() {
                 "trash:///".into()
             } else {
-                self.current.display().to_string()
+                self.location().display().to_string()
             };
         }
         if search {
@@ -900,6 +913,9 @@ impl Explorer {
 
     fn expand_address(&self) -> PathBuf {
         let text = self.address.trim();
+        if text == self.location().display().to_string() {
+            return self.location().to_owned();
+        }
         if matches!(text, "trash:" | "trash://" | "trash:///") {
             return crate::trashbin::location();
         }

@@ -64,7 +64,7 @@ impl Explorer {
         self.post_typed_notice(NoticeKind::Success, text);
     }
 
-    fn post_typed_notice(&mut self, kind: NoticeKind, text: String) {
+    pub(super) fn post_typed_notice(&mut self, kind: NoticeKind, text: String) {
         self.enqueue_notice(kind, text, None, None);
     }
 

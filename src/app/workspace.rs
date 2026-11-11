@@ -8,6 +8,7 @@ pub struct Workspace {
     settings_path: Option<PathBuf>,
     window: Option<crate::file_manager::window::Window>,
     closing: bool,
+    session: crate::session::Store,
 }
 impl Workspace {
     pub fn new(
@@ -15,8 +16,15 @@ impl Workspace {
         path: PathBuf,
         selection: Vec<PathBuf>,
         properties: bool,
+        startup: crate::session::Startup,
     ) -> Self {
-        let mut first = Explorer::new(cc, path);
+        let first_path = startup
+            .saved
+            .as_ref()
+            .and_then(|state| state.paths().ok())
+            .and_then(|paths| paths.into_iter().next())
+            .unwrap_or(path);
+        let mut first = Explorer::new(cc, first_path);
         first.reveal_external(selection, properties);
         let shared = first.stored_preferences(&first.preferences());
         let settings_path = first.settings_path.clone();
@@ -27,7 +35,7 @@ impl Workspace {
                 None
             }
         };
-        Self {
+        let mut app = Self {
             tabs: vec![first],
             active: 0,
             next_id: 1,
@@ -35,7 +43,21 @@ impl Workspace {
             settings_path,
             window,
             closing: false,
+            session: startup.store,
+        };
+        if let Some(saved) = startup.saved {
+            app.restore_tabs(&saved, &cc.egui_ctx);
         }
+        if let Some(error) = startup.error {
+            app.tabs[app.active].post_typed_notice(
+                toast::NoticeKind::Error,
+                crate::i18n::message(
+                    "Não foi possível carregar a sessão de abas: {error}",
+                    &[error],
+                ),
+            );
+        }
+        app
     }
     fn capture(&mut self, ctx: &egui::Context) {
         let active = &mut self.tabs[self.active];
@@ -68,6 +90,10 @@ impl Workspace {
     }
     fn add_tab(&mut self, path: PathBuf, ctx: &egui::Context) {
         self.capture(ctx);
+        self.append_tab(path, ctx);
+        self.activate(self.tabs.len() - 1, ctx);
+    }
+    fn append_tab(&mut self, path: PathBuf, ctx: &egui::Context) {
         let mut tab = Explorer::with_context(ctx, path);
         tab.tab_id = self.next_id;
         self.next_id += 1;
@@ -77,7 +103,37 @@ impl Workspace {
         tab.file_clipboard_text = self.tabs[self.active].file_clipboard_text.clone();
         tab.clipboard_serial = self.tabs[self.active].clipboard_serial;
         self.tabs.push(tab);
-        self.activate(self.tabs.len() - 1, ctx);
+    }
+    fn restore_tabs(&mut self, state: &crate::session::State, ctx: &egui::Context) {
+        let Ok(paths) = state.paths() else { return };
+        for path in paths.into_iter().skip(1) {
+            self.append_tab(path, ctx);
+        }
+        self.activate(state.active.min(self.tabs.len() - 1), ctx);
+        self.share();
+    }
+    fn session_state(&self) -> crate::session::State {
+        crate::session::State::from_paths(
+            self.tabs.iter().map(|tab| {
+                if tab.current.as_os_str().is_empty() {
+                    tab.initial_path.clone()
+                } else {
+                    tab.current.clone()
+                }
+            }),
+            self.active,
+        )
+    }
+    fn persist_session(&mut self, force: bool) {
+        if let Err(error) = self.session.save(self.session_state(), force) {
+            self.tabs[self.active].post_typed_notice(
+                toast::NoticeKind::Error,
+                crate::i18n::message(
+                    "Não foi possível salvar a sessão de abas: {error}",
+                    &[error.to_string()],
+                ),
+            );
+        }
     }
     fn close_tab(&mut self, index: usize, ctx: &egui::Context) {
         if self.tabs[index].busy() {
@@ -292,16 +348,26 @@ impl Workspace {
             });
             ctx.request_repaint_after(std::time::Duration::from_millis(30));
         }
+        self.persist_session(false);
     }
 }
 impl eframe::App for Workspace {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         self.show(ctx);
     }
+    fn on_exit(&mut self, _gl: Option<&eframe::glow::Context>) {
+        self.persist_session(true);
+    }
 }
 impl Explorer {
-    fn location(&self) -> &Path {
-        self.loading_path.as_deref().unwrap_or(&self.current)
+    pub(super) fn location(&self) -> &Path {
+        self.loading_path.as_deref().unwrap_or_else(|| {
+            if self.current.as_os_str().is_empty() {
+                &self.initial_path
+            } else {
+                &self.current
+            }
+        })
     }
     fn busy(&self) -> bool {
         self.active_transfer.is_some()

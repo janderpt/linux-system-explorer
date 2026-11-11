@@ -12,6 +12,7 @@ fn workspace(ctx: &egui::Context, path: PathBuf) -> Workspace {
         settings_path: None,
         window: None,
         closing: false,
+        session: crate::session::Store::at(None),
     }
 }
 #[test]
@@ -256,4 +257,126 @@ fn cut_and_paste_between_tabs_refreshes_both_directories_and_clears_shared_cut()
         "contents"
     );
     assert!(app.tabs.iter().all(|tab| tab.file_clipboard.is_none()));
+}
+
+#[test]
+fn session_restores_order_duplicates_active_tab_and_tracks_close_and_navigation() {
+    let root = tempfile::tempdir().unwrap();
+    let a = root.path().join("a");
+    let b = root.path().join("b");
+    let nested = a.join("nested");
+    std::fs::create_dir_all(&nested).unwrap();
+    std::fs::create_dir(&b).unwrap();
+    let file = root.path().join("state/session.json");
+    let ctx = egui::Context::default();
+    let mut first = workspace(&ctx, a.clone());
+    first.session = crate::session::Store::at(Some(file.clone()));
+    first.add_tab(b.clone(), &ctx);
+    complete_navigation(&mut first.tabs[1]);
+    first.add_tab(a.clone(), &ctx);
+    complete_navigation(&mut first.tabs[2]);
+    first.activate(1, &ctx);
+    first.persist_session(false);
+    let saved = crate::session::State::load(&file).unwrap().unwrap();
+    assert_eq!(
+        saved.paths().unwrap(),
+        vec![a.clone(), b.clone(), a.clone()]
+    );
+    assert_eq!(saved.active, 1);
+    drop(first);
+    let ctx = egui::Context::default();
+    let mut reopened = workspace(&ctx, a.clone());
+    reopened.session = crate::session::Store::at(Some(file.clone()));
+    reopened.restore_tabs(&saved, &ctx);
+    for tab in &mut reopened.tabs {
+        complete_navigation(tab);
+    }
+    assert_eq!(reopened.active, 1);
+    assert_eq!(
+        reopened
+            .tabs
+            .iter()
+            .map(|t| t.current.clone())
+            .collect::<Vec<_>>(),
+        vec![a.clone(), b, a.clone()]
+    );
+    assert!(reopened.tabs.iter().all(|t| t.terminal.is_none()));
+    reopened.close_tab(1, &ctx);
+    reopened.persist_session(false);
+    let saved = crate::session::State::load(&file).unwrap().unwrap();
+    assert_eq!(saved.paths().unwrap(), vec![a.clone(), a.clone()]);
+    assert_eq!(saved.active, 0);
+    reopened.tabs[0].navigate(nested.clone(), Navigation::Visit);
+    assert_eq!(reopened.session_state().paths().unwrap()[0], a);
+    complete_navigation(&mut reopened.tabs[0]);
+    reopened.persist_session(false);
+    assert_eq!(
+        crate::session::State::load(&file)
+            .unwrap()
+            .unwrap()
+            .paths()
+            .unwrap()[0],
+        nested
+    );
+    reopened.tabs[0].navigate(root.path().join("missing"), Navigation::Visit);
+    complete_navigation(&mut reopened.tabs[0]);
+    assert_eq!(reopened.session_state().paths().unwrap()[0], nested);
+}
+
+#[test]
+fn unavailable_restored_folders_remain_saved_and_can_be_retried() {
+    let root = tempfile::tempdir().unwrap();
+    let available = root.path().join("available");
+    let unavailable = root.path().join("temporarily-unmounted");
+    std::fs::create_dir(&available).unwrap();
+    let saved = crate::session::State::from_paths(vec![available.clone(), unavailable.clone()], 1);
+    let ctx = egui::Context::default();
+    let mut app = workspace(&ctx, available);
+    app.restore_tabs(&saved, &ctx);
+    complete_navigation(&mut app.tabs[1]);
+    assert_eq!(app.active, 1);
+    assert_eq!(app.tabs[1].location(), unavailable);
+    assert!(app.tabs[1].error.is_some());
+    assert_eq!(app.session_state(), saved);
+    std::fs::create_dir(&unavailable).unwrap();
+    app.tabs[1].refresh();
+    complete_navigation(&mut app.tabs[1]);
+    assert_eq!(app.tabs[1].current, unavailable);
+    assert!(app.tabs[1].error.is_none());
+}
+
+#[test]
+fn restored_session_is_saved_from_real_workspace_rendering_after_tab_switch() {
+    let root = tempfile::tempdir().unwrap();
+    let a = root.path().join("a");
+    let b = root.path().join("b");
+    std::fs::create_dir(&a).unwrap();
+    std::fs::create_dir(&b).unwrap();
+    let file = root.path().join("session.json");
+    let ctx = egui::Context::default();
+    let mut app = workspace(&ctx, a.clone());
+    app.session = crate::session::Store::at(Some(file.clone()));
+    app.add_tab(b.clone(), &ctx);
+    complete_navigation(&mut app.tabs[1]);
+    let _ = ctx.run(egui::RawInput::default(), |ctx| app.show(ctx));
+    assert_eq!(
+        crate::session::State::load(&file).unwrap().unwrap().active,
+        1
+    );
+    let _ = ctx.run(
+        egui::RawInput {
+            events: vec![egui::Event::Key {
+                key: Key::Tab,
+                physical_key: None,
+                pressed: true,
+                repeat: false,
+                modifiers: egui::Modifiers::CTRL,
+            }],
+            ..Default::default()
+        },
+        |ctx| app.show(ctx),
+    );
+    let saved = crate::session::State::load(&file).unwrap().unwrap();
+    assert_eq!(saved.active, 0);
+    assert_eq!(saved.paths().unwrap(), vec![a, b]);
 }

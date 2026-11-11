@@ -6,7 +6,7 @@ impl Explorer {
         request: crate::file_manager::window::Request,
         ctx: &egui::Context,
     ) {
-        let folder = self.loading_path.as_deref().unwrap_or(&self.current);
+        let folder = self.location();
         let Some((request, token)) = request.accept(folder) else {
             return;
         };
@@ -22,6 +22,8 @@ impl Explorer {
             if !self.loading {
                 self.refresh();
             }
+        } else if self.current.as_os_str().is_empty() && !self.loading {
+            self.refresh();
         }
         ctx.send_viewport_cmd(egui::ViewportCommand::Visible(true));
         ctx.send_viewport_cmd(egui::ViewportCommand::Minimized(false));

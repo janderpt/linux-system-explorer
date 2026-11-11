@@ -13,6 +13,7 @@ mod icons;
 mod native_dnd;
 mod navigation;
 mod renames;
+mod session;
 mod settings;
 mod sidebar;
 mod system_style;
@@ -27,9 +28,11 @@ fn main() -> eframe::Result {
     let mut selection = Vec::new();
     let mut properties = false;
     let mut browse = false;
+    let mut resume = false;
     let path = match cli::parse(std::env::args_os().skip(1)) {
         Ok(cli::Command::Browse(path)) => {
             browse = true;
+            resume = path.is_none();
             path
         }
         Ok(cli::Command::NewWindow(path)) => path,
@@ -78,7 +81,13 @@ fn main() -> eframe::Result {
         .unwrap_or_else(|| PathBuf::from("/"));
     // Desktop Exec handlers (including GIO/xdg-open) launch the executable with
     // a directory, rather than going through the FileManager1 bridge.
-    if browse && file_manager::window::reuse_folder(&initial_path, &activation::startup_token()) {
+    let startup = session::Startup::load(resume);
+    let reuse_path = startup
+        .saved
+        .as_ref()
+        .and_then(session::State::active_folder)
+        .unwrap_or_else(|| initial_path.clone());
+    if browse && file_manager::window::reuse_folder(&reuse_path, &activation::startup_token()) {
         return Ok(());
     }
     let language = settings::Preferences::path()
@@ -106,6 +115,7 @@ fn main() -> eframe::Result {
                 initial_path,
                 selection,
                 properties,
+                startup,
             )))
         }),
     )
