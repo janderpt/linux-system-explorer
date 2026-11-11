@@ -86,3 +86,99 @@ fn explicit_directory_launch_does_not_restore_saved_tabs() {
     assert!(Startup::at(Some(path.clone()), false).saved.is_none());
     assert_eq!(Startup::at(Some(path), true).saved, Some(saved));
 }
+
+#[test]
+fn persisted_closed_context_preserves_raw_paths_and_normalizes_history_layout_and_limit() {
+    use crate::{
+        navigation::{History, Navigation},
+        settings::{FolderLayout, View},
+    };
+    let root = tempfile::tempdir().unwrap();
+    let raw = root
+        .path()
+        .join(std::ffi::OsString::from_vec(b"closed-\xff".to_vec()));
+    let selected = raw.join(std::ffi::OsString::from_vec(b"selected-\xfe".to_vec()));
+    let mut history = History::default();
+    history.commit(root.path().to_owned(), Navigation::Visit);
+    history.commit(raw.clone(), Navigation::Visit);
+    let mut state = State::from_paths(vec![root.path().to_owned()], 0);
+    state.closed_tabs.push_back(closed::ClosedTab {
+        id: 1,
+        position: 0,
+        left: None,
+        right: Some(0),
+        path: raw.clone(),
+        context: Some(closed::BrowsingContext {
+            history,
+            layout: FolderLayout {
+                view: View::Icons,
+                item_scale: 1.75,
+                ..Default::default()
+            },
+            query: "selected".into(),
+            selected: BTreeSet::from([selected.clone()]),
+            anchor: Some(selected.clone()),
+            cursor: Some(selected.clone()),
+            reveal_hidden: false,
+        }),
+    });
+    let file = root.path().join("session.json");
+    state.save(&file).unwrap();
+    assert_eq!(State::load(&file).unwrap().unwrap(), state);
+    let context = State::load(&file)
+        .unwrap()
+        .unwrap()
+        .closed_tabs
+        .pop_back()
+        .unwrap()
+        .context
+        .unwrap();
+    assert_eq!(context.history.back(), Some(root.path()));
+    assert!(context.selected.contains(&selected));
+    let mut data = serde_json::to_value(&state).unwrap();
+    data["closed_tabs"][0]["context"]["history"]["cursor"] = serde_json::json!(usize::MAX);
+    data["closed_tabs"][0]["context"]["layout"]["item_scale"] = serde_json::json!(99.0);
+    std::fs::write(&file, serde_json::to_vec(&data).unwrap()).unwrap();
+    let loaded = State::load(&file).unwrap().unwrap();
+    assert_eq!(
+        loaded.closed_tabs[0]
+            .context
+            .as_ref()
+            .unwrap()
+            .layout
+            .item_scale,
+        2.0
+    );
+    assert_eq!(
+        loaded.closed_tabs[0]
+            .context
+            .as_ref()
+            .unwrap()
+            .history
+            .back(),
+        Some(root.path())
+    );
+    let template = state.closed_tabs[0].clone();
+    state.closed_tabs = (1..=30)
+        .map(|id| closed::ClosedTab {
+            id,
+            ..template.clone()
+        })
+        .collect();
+    state.save(&file).unwrap();
+    let loaded = State::load(&file).unwrap().unwrap();
+    assert_eq!(loaded.closed_tabs.len(), 25);
+    assert_eq!(loaded.closed_tabs[0].id, 6);
+    for invalid in [
+        serde_json::json!({"id":1,"position":0,"left":null,"right":null,"path":"relative","context":null}),
+        serde_json::json!({"id":0,"position":0,"left":null,"right":null,"path":"/tmp","context":null}),
+    ] {
+        let data = serde_json::json!({"tabs":["/tmp"],"closed_tabs":[invalid]});
+        let text = serde_json::to_string(&data).unwrap();
+        std::fs::write(&file, &text).unwrap();
+        let mut startup = Startup::at(Some(file.clone()), true);
+        assert!(startup.error.is_some());
+        startup.store.save(State::default(), true).unwrap();
+        assert_eq!(std::fs::read_to_string(&file).unwrap(), text);
+    }
+}

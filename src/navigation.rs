@@ -1,8 +1,9 @@
 use std::path::{Path, PathBuf};
 
 /// History changes only after the requested directory has been read successfully.
-#[derive(Clone, Default)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct History {
+    #[serde(with = "crate::session::paths::list")]
     paths: Vec<PathBuf>,
     cursor: usize,
 }
@@ -16,6 +17,12 @@ pub enum Navigation {
 }
 
 impl History {
+    pub(crate) fn normalize(&mut self) {
+        self.cursor = self.cursor.min(self.paths.len().saturating_sub(1));
+    }
+    pub(crate) fn paths(&self) -> &[PathBuf] {
+        &self.paths
+    }
     pub fn rename_folder(&mut self, old: &Path, new: &Path) {
         for path in &mut self.paths {
             if let Ok(relative) = path.strip_prefix(old) {

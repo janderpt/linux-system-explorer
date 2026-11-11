@@ -1,25 +1,41 @@
 use super::*;
 
-// Keep browsing data only: closing a tab must still drop its workers and PTYs.
-pub(super) struct ClosedTab {
-    id: u64,
-    position: usize,
-    left: Option<u64>,
-    right: Option<u64>,
-    path: PathBuf,
-    context: Option<BrowsingContext>,
-}
-struct BrowsingContext {
-    history: History,
-    layout: FolderLayout,
-    query: String,
-    selected: BTreeSet<PathBuf>,
-    anchor: Option<PathBuf>,
-    cursor: Option<PathBuf>,
-    reveal_hidden: bool,
-}
+use crate::session::closed::BrowsingContext;
+pub(super) use crate::session::closed::ClosedTab;
 
 impl Workspace {
+    pub(super) fn restore_closed_history(
+        &mut self,
+        saved: &std::collections::VecDeque<ClosedTab>,
+        restore_open: bool,
+    ) {
+        let mut ids: BTreeMap<u64, u64> = if restore_open {
+            self.tabs
+                .iter()
+                .enumerate()
+                .map(|(i, tab)| (i as u64, tab.tab_id))
+                .collect()
+        } else {
+            BTreeMap::new()
+        };
+        for tab in saved.iter().rev().take(25).rev() {
+            ids.insert(tab.id, self.next_id);
+            self.next_id += 1;
+        }
+        self.closed_tabs = saved
+            .iter()
+            .rev()
+            .take(25)
+            .rev()
+            .cloned()
+            .map(|mut tab| {
+                tab.id = ids[&tab.id];
+                tab.left = tab.left.and_then(|id| ids.get(&id).copied());
+                tab.right = tab.right.and_then(|id| ids.get(&id).copied());
+                tab
+            })
+            .collect();
+    }
     pub(super) fn remember_closed(&mut self, index: usize) {
         let tab = &self.tabs[index];
         let context =

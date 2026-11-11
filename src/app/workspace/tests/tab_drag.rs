@@ -194,7 +194,18 @@ fn tabs_have_shared_contours_centered_contents_and_distinct_active_style_in_both
         );
         assert_eq!(background, ctx.style().visuals.panel_fill);
         assert_ne!(shapes[0].fill, shapes[1].fill);
-        assert_ne!(shapes[0].stroke.color, shapes[1].stroke.color);
+        assert_eq!(
+            shapes[0].stroke.color, shapes[1].stroke.color,
+            "active tab has no accent border"
+        );
+        assert_eq!(
+            shapes[1].fill,
+            ctx.style().visuals.panel_fill.lerp_to_gamma(
+                crate::system_style::accent_color(ctx.style().visuals.selection.stroke.color),
+                if dark { 0.18 } else { 0.16 }
+            )
+        );
+        assert!(!output.shapes.iter().any(|s|matches!(&s.shape,Shape::LineSegment {points,stroke} if stroke.width==3.0 && points[0].y==points[1].y)),"active tab has no thick accent stripe");
         let title = text_center(&output, "Short").unwrap();
         assert!((title.y - shapes[0].rect.center().y).abs() < 0.5);
         assert!(

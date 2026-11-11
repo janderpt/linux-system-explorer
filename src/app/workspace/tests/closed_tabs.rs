@@ -170,3 +170,89 @@ fn unavailable_non_utf8_closed_folder_can_be_reopened_without_losing_its_path() 
     assert_eq!(app.tabs[0].current, raw);
     assert!(app.tabs[0].error.is_none());
 }
+
+#[test]
+fn closed_history_survives_multiple_restarts_and_persists_each_reopened_pop() {
+    let root = tempfile::tempdir().unwrap();
+    let file = root.path().join("session.json");
+    let ctx = egui::Context::default();
+    let mut app = three_tabs(root.path(), &ctx);
+    let selected = root.path().join("Beta/selected.txt");
+    std::fs::write(&selected, "test").unwrap();
+    app.tabs[1].refresh();
+    complete_navigation(&mut app.tabs[1]);
+    app.tabs[1].query = "selected".into();
+    app.tabs[1].selected.insert(selected.clone());
+    app.tabs[1].selection_cursor = Some(selected.clone());
+    app.tabs[1].selection_anchor = Some(selected.clone());
+    app.tabs[1].view = View::List;
+    app.tabs[1].item_scale = 1.75;
+    let output = menu(&mut app, &ctx, "Gamma");
+    choose(&mut app, &ctx, &output, "Fechar outras abas");
+    let saved = crate::session::State::load(&file).unwrap().unwrap();
+    assert_eq!(saved.closed_tabs.len(), 2);
+    drop(app);
+    let ctx = egui::Context::default();
+    let mut app = workspace(&ctx, saved.paths().unwrap()[0].clone());
+    app.session = crate::session::Store::at(Some(file.clone()));
+    app.restore_tabs(&saved, &ctx);
+    let output = menu(&mut app, &ctx, "Gamma");
+    choose(&mut app, &ctx, &output, "Reabrir aba fechada");
+    complete_navigation(&mut app.tabs[0]);
+    assert_eq!(app.tabs[0].query, "selected");
+    assert!(app.tabs[0].selected.contains(&selected));
+    assert!(app.tabs[0].view == View::List);
+    assert_eq!(app.tabs[0].item_scale, 1.75);
+    let saved = crate::session::State::load(&file).unwrap().unwrap();
+    assert_eq!(
+        saved.closed_tabs.len(),
+        1,
+        "popping a saved closure is itself autosaved"
+    );
+    drop(app);
+    let ctx = egui::Context::default();
+    let mut app = workspace(&ctx, saved.paths().unwrap()[0].clone());
+    app.session = crate::session::Store::at(Some(file.clone()));
+    app.restore_tabs(&saved, &ctx);
+    reopen(&mut app, &ctx);
+    assert_eq!(
+        app.session_state().paths().unwrap(),
+        ["Alpha", "Beta", "Gamma"].map(|s| root.path().join(s))
+    );
+    assert!(
+        crate::session::State::load(&file)
+            .unwrap()
+            .unwrap()
+            .closed_tabs
+            .is_empty()
+    );
+    app.add_tab(root.path().to_owned(), &ctx);
+    let ids: BTreeSet<_> = app.tabs.iter().map(|tab| tab.tab_id).collect();
+    assert_eq!(
+        ids.len(),
+        app.tabs.len(),
+        "restored identifiers cannot collide with new tabs"
+    );
+}
+
+#[test]
+fn starting_at_home_or_an_explicit_directory_retains_closed_history_without_restoring_other_open_tabs()
+ {
+    let root = tempfile::tempdir().unwrap();
+    let file = root.path().join("session.json");
+    let ctx = egui::Context::default();
+    let mut app = three_tabs(root.path(), &ctx);
+    app.close_tab(1, &ctx);
+    app.persist_session(true);
+    drop(app);
+    let startup = crate::session::Startup::at(Some(file.clone()), false);
+    assert!(startup.saved.is_none());
+    assert_eq!(startup.closed_tabs.len(), 1);
+    let ctx = egui::Context::default();
+    let mut app = workspace(&ctx, root.path().to_owned());
+    app.restore_closed_history(&startup.closed_tabs, false);
+    assert_eq!(app.tabs.len(), 1);
+    reopen(&mut app, &ctx);
+    assert_eq!(app.tabs.len(), 2);
+    assert_eq!(app.tabs[app.active].location(), root.path().join("Beta"));
+}

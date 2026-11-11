@@ -51,6 +51,8 @@ impl Workspace {
         };
         if let Some(saved) = startup.saved {
             app.restore_tabs(&saved, &cc.egui_ctx);
+        } else {
+            app.restore_closed_history(&startup.closed_tabs, false);
         }
         if let Some(error) = startup.error {
             app.tabs[app.active].post_typed_notice(
@@ -115,9 +117,10 @@ impl Workspace {
         }
         self.activate(state.active.min(self.tabs.len() - 1), ctx);
         self.share();
+        self.restore_closed_history(&state.closed_tabs, true);
     }
     fn session_state(&self) -> crate::session::State {
-        crate::session::State::from_paths(
+        let mut state = crate::session::State::from_paths(
             self.tabs.iter().map(|tab| {
                 if tab.current.as_os_str().is_empty() {
                     tab.initial_path.clone()
@@ -126,7 +129,29 @@ impl Workspace {
                 }
             }),
             self.active,
-        )
+        );
+        // Serialized open IDs are their indices. Canonicalizing keeps snapshots stable
+        // after a restart and avoids restoring arbitrary counters from disk.
+        let ids: BTreeMap<_, _> = self
+            .tabs
+            .iter()
+            .map(|tab| tab.tab_id)
+            .chain(self.closed_tabs.iter().map(|tab| tab.id))
+            .enumerate()
+            .map(|(i, id)| (id, i as u64))
+            .collect();
+        state.closed_tabs = self
+            .closed_tabs
+            .iter()
+            .cloned()
+            .map(|mut tab| {
+                tab.id = ids[&tab.id];
+                tab.left = tab.left.and_then(|id| ids.get(&id).copied());
+                tab.right = tab.right.and_then(|id| ids.get(&id).copied());
+                tab
+            })
+            .collect();
+        state
     }
     fn persist_session(&mut self, force: bool) {
         if let Err(error) = self.session.save(self.session_state(), force) {

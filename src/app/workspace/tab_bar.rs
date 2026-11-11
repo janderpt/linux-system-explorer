@@ -405,17 +405,16 @@ fn tab_widget(
     );
     let visuals = ui.visuals();
     let fill = if active {
-        visuals.panel_fill
+        visuals.panel_fill.lerp_to_gamma(
+            crate::system_style::accent_color(visuals.selection.stroke.color),
+            if visuals.dark_mode { 0.18 } else { 0.16 },
+        )
     } else if response.hovered() {
         visuals.widgets.hovered.bg_fill
     } else {
         visuals.widgets.inactive.bg_fill
     };
-    let border = if active {
-        visuals.selection.stroke.color
-    } else {
-        visuals.widgets.noninteractive.bg_stroke.color
-    };
+    let border = visuals.widgets.noninteractive.bg_stroke.color;
     ui.painter().rect(
         rect,
         egui::CornerRadius {
@@ -428,15 +427,6 @@ fn tab_widget(
         (1.0, border),
         egui::StrokeKind::Inside,
     );
-    if active {
-        ui.painter().line_segment(
-            [
-                rect.left_top() + Vec2::new(8.0, 1.5),
-                rect.right_top() + Vec2::new(-8.0, 1.5),
-            ],
-            (3.0, border),
-        );
-    }
     let color = if enabled {
         visuals.text_color()
     } else {

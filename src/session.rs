@@ -1,20 +1,24 @@
 //! Window-session state is independent of preferences and shell processes.
 use crate::settings;
 use serde::{Deserialize, Serialize};
+pub(crate) mod closed;
+pub(crate) mod paths;
 use std::{
+    collections::{BTreeSet, VecDeque},
     fs,
     io::{self, Read, Write},
-    os::unix::ffi::OsStrExt,
     path::{Path, PathBuf},
 };
 
 const MAX_BYTES: u64 = 4 * 1024 * 1024;
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct State {
     pub version: u32,
     pub tabs: Vec<String>,
     pub active: usize,
+    #[serde(skip_serializing_if = "VecDeque::is_empty")]
+    pub closed_tabs: VecDeque<closed::ClosedTab>,
 }
 impl Default for State {
     fn default() -> Self {
@@ -22,6 +26,7 @@ impl Default for State {
             version: 1,
             tabs: vec![],
             active: 0,
+            closed_tabs: Default::default(),
         }
     }
 }
@@ -35,26 +40,25 @@ impl State {
             version: 1,
             active: active.min(tabs.len().saturating_sub(1)),
             tabs,
+            closed_tabs: Default::default(),
         }
     }
     pub fn paths(&self) -> io::Result<Vec<PathBuf>> {
         if self.version != 1 {
             return Err(invalid("Unsupported window-session version"));
         }
+        let mut ids = BTreeSet::new();
+        for closed in &self.closed_tabs {
+            closed.validate().map_err(|e| invalid(&e))?;
+            if closed.id < self.tabs.len() as u64 || !ids.insert(closed.id) {
+                return Err(invalid(
+                    "Closed tab identifiers conflict with the saved session",
+                ));
+            }
+        }
         self.tabs
             .iter()
-            .map(|key| {
-                let path = settings::folder_path(key)
-                    .ok_or_else(|| invalid("Invalid saved folder path"))?;
-                if (!path.is_absolute() && !crate::trashbin::is_location(&path))
-                    || path.as_os_str().as_bytes().contains(&0)
-                {
-                    return Err(invalid(
-                        "Saved tabs must contain absolute local paths or Trash",
-                    ));
-                }
-                Ok(path)
-            })
+            .map(|key| paths::decode(key).map_err(|e| invalid(&e)))
             .collect()
     }
     pub fn active_folder(&self) -> Option<PathBuf> {
@@ -77,6 +81,12 @@ impl State {
         let mut state: Self =
             serde_json::from_slice(&bytes).map_err(|e| invalid(&e.to_string()))?;
         state.paths()?;
+        while state.closed_tabs.len() > 25 {
+            state.closed_tabs.pop_front();
+        }
+        for closed in &mut state.closed_tabs {
+            closed.normalize();
+        }
         state.active = state.active.min(state.tabs.len().saturating_sub(1));
         Ok(Some(state))
     }
@@ -143,6 +153,7 @@ impl Store {
 
 pub struct Startup {
     pub saved: Option<State>,
+    pub closed_tabs: VecDeque<closed::ClosedTab>,
     pub store: Store,
     pub error: Option<String>,
 }
@@ -152,6 +163,12 @@ impl Startup {
     }
     pub fn at(path: Option<PathBuf>, restore: bool) -> Self {
         let loaded = path.as_ref().map(|p| State::load(p)).unwrap_or(Ok(None));
+        let closed_tabs = loaded
+            .as_ref()
+            .ok()
+            .and_then(|state| state.as_ref())
+            .map(|state| state.closed_tabs.clone())
+            .unwrap_or_default();
         let (saved, error) = match loaded {
             Ok(saved) => (if restore { saved } else { None }, None),
             Err(e) => (None, Some(e.to_string())),
@@ -159,6 +176,7 @@ impl Startup {
         let blocked = error.is_some();
         Self {
             saved,
+            closed_tabs,
             store: Store {
                 path,
                 last_attempted: None,

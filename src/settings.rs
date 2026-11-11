@@ -14,7 +14,7 @@ use std::{
 };
 mod sidebar_ui;
 
-#[derive(Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum View {
     #[default]
@@ -23,7 +23,7 @@ pub enum View {
     List,
 }
 
-#[derive(Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct FolderLayout {
     pub view: View,
@@ -48,7 +48,7 @@ impl Default for FolderLayout {
 }
 
 impl FolderLayout {
-    fn normalize(&mut self) {
+    pub(crate) fn normalize(&mut self) {
         self.item_scale = if self.item_scale.is_finite() {
             (self.item_scale.clamp(0.75, 2.0) * 4.0).round() / 4.0
         } else {
