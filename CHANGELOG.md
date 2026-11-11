@@ -16,6 +16,7 @@
 - Details, list and icon views, configurable columns, zoom and per-folder layouts.
 - Multiple selection, keyboard navigation, copy, move, rename and Trash operations.
 - Native drag and drop, system default applications and an Open With chooser.
+- Add network share dialog with persistent addresses, native GVfs/GIO authentication on GNOME or KIO on KDE, cancellation and reconnect actions; native Nautilus/KDE Samba folder-sharing configuration from folder context menus.
 - Configurable sidebar, pinned folders, mounted network shares and Trash.
 - Portuguese and English interfaces, with configurable Font Awesome icons.
 - Stacked notifications with per-type appearance, timing and configuration previews.

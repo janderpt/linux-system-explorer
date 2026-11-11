@@ -85,6 +85,24 @@ impl Editor {
             }
         }
         shortcut_list(ui, &mut self.draft.sidebar.network, "network_choices");
+        let mut remove_remote = None;
+        for (index, remote) in self.draft.sidebar.remote.iter().enumerate() {
+            ui.push_id(("remote_connection", index), |ui| {
+                ui.horizontal(|ui| {
+                    ui.add_sized(
+                        [(ui.available_width() - 90.0).max(120.0), 32.0],
+                        egui::Label::new(format!("{} · {}", remote.title(), remote.url)).truncate(),
+                    )
+                    .on_hover_text(&remote.url);
+                    if ui.button(crate::i18n::tr("Remover")).clicked() {
+                        remove_remote = Some(index);
+                    }
+                });
+            });
+        }
+        if let Some(index) = remove_remote {
+            self.draft.sidebar.remote.remove(index);
+        }
         ui.weak(crate::i18n::tr("Adicione o caminho local onde o compartilhamento está ou será montado, por exemplo /mnt/servidor."));
         ui.add_sized(
             [ui.available_width(), 32.0],

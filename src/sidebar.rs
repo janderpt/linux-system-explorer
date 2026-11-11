@@ -118,6 +118,7 @@ pub struct Preferences {
     pub show_network: bool,
     pub pinned: Vec<Shortcut>,
     pub network: Vec<Shortcut>,
+    pub remote: Vec<crate::network::Connection>,
     pub hidden_network: BTreeSet<String>,
 }
 
@@ -130,6 +131,7 @@ impl Default for Preferences {
             show_network: true,
             pinned: Vec::new(),
             network: Vec::new(),
+            remote: Vec::new(),
             hidden_network: BTreeSet::new(),
         }
     }
@@ -137,6 +139,18 @@ impl Default for Preferences {
 
 impl Preferences {
     pub fn normalize(&mut self) {
+        let mut seen = BTreeSet::new();
+        self.remote.retain_mut(|remote| {
+            let Ok(url) = crate::network::remote_url(&remote.url) else {
+                return false;
+            };
+            remote.url = url;
+            remote.label = remote.label.trim().to_owned();
+            if remote.mount.as_ref().is_some_and(|p| !p.is_absolute()) {
+                remote.mount = None;
+            }
+            seen.insert(remote.url.clone())
+        });
         for shortcuts in [&mut self.pinned, &mut self.network] {
             let mut seen = BTreeSet::new();
             shortcuts.retain(|shortcut| {

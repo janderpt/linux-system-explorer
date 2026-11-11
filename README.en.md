@@ -15,8 +15,9 @@ desktop file explorers. **Currently experimental; no stable release or store app
 - Portuguese/English UI, themes and configurable Font Awesome icons.
 - Stacked success/warning/error notifications with separate timing and live previews.
 
-Network shares in the sidebar are existing local mounts; the app does not mount remote
-servers. System clipboard file MIME interoperability is still pending; copy/cut/paste
+**Add network share** in the sidebar accepts SMB/UNC, SFTP, NFS, FTP and WebDAV addresses or an existing local mount. Remote connections select **GIO/GVfs in GNOME**, with GTK native authentication in a helper process, or **KIO Fuse in KDE**, using installed protocol modules. Work runs in the background, and Cancel stops waiting and terminates the GNOME helper; saved connection addresses/names reconnect when clicked. Passwords in URLs are rejected and never stored in preferences. Connection shortcuts can be removed from their context menu or Settings. Server discovery is not implemented.
+
+**Share over the network** in folder context menus opens native folder properties through **Nautilus/nautilus-share in GNOME** or **kioclient/kdenetwork-filesharing in KDE**; use the sharing section for Samba permissions and setup. A configured Samba server is required. The explorer does not automatically publish folders, install a server, change firewall rules or alter permissions. Remote mounting requires `gvfs-backends`, `gvfs-fuse` and GTK 3/4 on GNOME, or `kio-fuse` and suitable `kio-extras` modules on KDE; existing local mounts work in other desktop environments. System clipboard file MIME interoperability is still pending; copy/cut/paste
 currently tracks transfers inside this app and exports path text. Drag and drop is a
 separate native integration. Flatpak/Snap sandbox compatibility has not been certified.
 

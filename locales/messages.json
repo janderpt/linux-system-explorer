@@ -39,6 +39,18 @@
     "en": "The system default association will be changed for this file type.",
     "pt": "A associação padrão do sistema será alterada para este tipo de arquivo."
   },
+  "A conexão com o compartilhamento excedeu o tempo limite.": {
+    "en": "The connection to the share timed out.",
+    "pt": "A conexão com o compartilhamento excedeu o tempo limite."
+  },
+  "A conexão de rede foi interrompida.": {
+    "en": "The network connection was interrupted.",
+    "pt": "A conexão de rede foi interrompida."
+  },
+  "A configuração de compartilhamento do sistema não pôde ser aberta.": {
+    "en": "The system sharing configuration could not be opened.",
+    "pt": "A configuração de compartilhamento do sistema não pôde ser aberta."
+  },
   "A exclusão permanente (Shift+Del) sempre pede confirmação.": {
     "en": "Permanent deletion (Shift+Del) always requires confirmation.",
     "pt": "A exclusão permanente (Shift+Del) sempre pede confirmação."
@@ -106,6 +118,10 @@
   "Abrir terminal aqui": {
     "en": "Open terminal here",
     "pt": "Abrir terminal aqui"
+  },
+  "Adicionar compartilhamento de rede": {
+    "en": "Add network share",
+    "pt": "Adicionar compartilhamento de rede"
   },
   "Adicionar à Rede": {
     "en": "Add to Network",
@@ -271,6 +287,10 @@
     "en": "Folder to pin: /path or ~/folder",
     "pt": "Caminho da pasta a fixar: /caminho ou ~/pasta"
   },
+  "Caminho de pasta inválido para compartilhar.": {
+    "en": "Invalid folder path for sharing.",
+    "pt": "Caminho de pasta inválido para compartilhar."
+  },
   "Caminho de preferências inválido": {
     "en": "Invalid preferences path",
     "pt": "Caminho de preferências inválido"
@@ -339,6 +359,10 @@
     "en": "Columns",
     "pt": "Colunas"
   },
+  "Compartilhamento adicionado à Rede.": {
+    "en": "Share added to Network.",
+    "pt": "Compartilhamento adicionado à Rede."
+  },
   "Compartilhamentos de rede": {
     "en": "Network shares",
     "pt": "Compartilhamentos de rede"
@@ -346,6 +370,26 @@
   "Compartilhamentos montados no Linux são detectados automaticamente. F5 atualiza essa lista.": {
     "en": "Network shares mounted on Linux are detected automatically. Press F5 to refresh this list.",
     "pt": "Compartilhamentos montados no Linux são detectados automaticamente. F5 atualiza essa lista."
+  },
+  "Compartilhar pela rede": {
+    "en": "Share over the network",
+    "pt": "Compartilhar pela rede"
+  },
+  "Conectando ao compartilhamento…": {
+    "en": "Connecting to share…",
+    "pt": "Conectando ao compartilhamento…"
+  },
+  "Conectar ao compartilhamento": {
+    "en": "Connect to share",
+    "pt": "Conectar ao compartilhamento"
+  },
+  "Conectar e adicionar": {
+    "en": "Connect and add",
+    "pt": "Conectar e adicionar"
+  },
+  "Conexão cancelada.": {
+    "en": "Connection cancelled.",
+    "pt": "Conexão cancelada."
   },
   "Configurações": {
     "en": "Settings",
@@ -491,6 +535,10 @@
     "en": "Edit path · Ctrl+L",
     "pt": "Editar caminho · Ctrl+L"
   },
+  "Endereço do compartilhamento ou pasta já montada:": {
+    "en": "Share address or an already mounted folder:",
+    "pt": "Endereço do compartilhamento ou pasta já montada:"
+  },
   "Enviar para a lixeira?": {
     "en": "Move to Trash?",
     "pt": "Enviar para a lixeira?"
@@ -506,6 +554,14 @@
   "Escolha os atalhos e as seções da barra lateral.": {
     "en": "Choose sidebar shortcuts and sections.",
     "pt": "Escolha os atalhos e as seções da barra lateral."
+  },
+  "Escolha um ponto de montagem que seja uma pasta existente.": {
+    "en": "Choose a mount point that is an existing folder.",
+    "pt": "Escolha um ponto de montagem que seja uma pasta existente."
+  },
+  "Escolha uma pasta existente para compartilhar.": {
+    "en": "Choose an existing folder to share.",
+    "pt": "Escolha uma pasta existente para compartilhar."
   },
   "Escolha uma pasta existente para fixar": {
     "en": "Choose an existing folder to pin",
@@ -683,9 +739,17 @@
     "en": "Indicates that POSIX write bits are absent. ACLs, privileges and mount settings also affect access.",
     "pt": "Indica ausência dos bits POSIX de escrita. ACLs, privilégios e montagem também afetam o acesso."
   },
+  "Informe também o nome do compartilhamento SMB.": {
+    "en": "Include the SMB share name.",
+    "pt": "Informe também o nome do compartilhamento SMB."
+  },
   "Informe um caminho absoluto, como /mnt/servidor, ou use ~/pasta": {
     "en": "Enter an absolute path, such as /mnt/server, or use ~/folder",
     "pt": "Informe um caminho absoluto, como /mnt/servidor, ou use ~/pasta"
+  },
+  "Informe um endereço como smb://servidor/compartilhamento.": {
+    "en": "Enter an address such as smb://server/share.",
+    "pt": "Informe um endereço como smb://servidor/compartilhamento."
   },
   "Informe um nome sem barras, diferente de . e ..": {
     "en": "Enter a name without slashes, other than . or ..",
@@ -694,6 +758,22 @@
   "Iniciar sempre na pasta pessoal": {
     "en": "Always start in the home folder",
     "pt": "Iniciar sempre na pasta pessoal"
+  },
+  "Instale GIO, GTK, gvfs-backends e gvfs-fuse para acessar compartilhamentos no GNOME.": {
+    "en": "Install GIO, GTK, gvfs-backends and gvfs-fuse to access shares in GNOME.",
+    "pt": "Instale GIO, GTK, gvfs-backends e gvfs-fuse para acessar compartilhamentos no GNOME."
+  },
+  "Instale GVfs no GNOME ou KIO Fuse no KDE para conectar a pastas remotas.": {
+    "en": "Install GVfs in GNOME or KIO Fuse in KDE to connect to remote folders.",
+    "pt": "Instale GVfs no GNOME ou KIO Fuse no KDE para conectar a pastas remotas."
+  },
+  "Instale Nautilus e nautilus-share no GNOME, ou kioclient e kdenetwork-filesharing no KDE, para configurar o compartilhamento Samba.": {
+    "en": "Install Nautilus and nautilus-share in GNOME, or kioclient and kdenetwork-filesharing in KDE, to configure Samba sharing.",
+    "pt": "Instale Nautilus e nautilus-share no GNOME, ou kioclient e kdenetwork-filesharing no KDE, para configurar o compartilhamento Samba."
+  },
+  "Instale as ferramentas do KDE e kdenetwork-filesharing para configurar o compartilhamento Samba pelo sistema.": {
+    "en": "Install the KDE tools and kdenetwork-filesharing to configure Samba sharing using the system.",
+    "pt": "Instale as ferramentas do KDE e kdenetwork-filesharing para configurar o compartilhamento Samba pelo sistema."
   },
   "Interromper após este item": {
     "en": "Stop after this item",
@@ -819,6 +899,10 @@
     "en": "Music",
     "pt": "Músicas"
   },
+  "Na janela do sistema, use a aba Compartilhar para configurar o Samba. O sistema pode solicitar instalação ou permissões de administrador.": {
+    "en": "In the system window, use the Share tab to configure Samba. The system may request installation or administrator permissions.",
+    "pt": "Na janela do sistema, use a aba Compartilhar para configurar o Samba. O sistema pode solicitar instalação ou permissões de administrador."
+  },
   "Nascimento do arquivo (btime), quando fornecido pelo sistema de arquivos.": {
     "en": "File birth time (btime), when provided by the file system.",
     "pt": "Nascimento do arquivo (btime), quando fornecido pelo sistema de arquivos."
@@ -927,6 +1011,10 @@
     "en": "Could not load preferences: {0}",
     "pt": "Não foi possível carregar as preferências: {0}"
   },
+  "Não foi possível conectar pelo KIO Fuse: {}. Verifique a rede e a instalação de kio-fuse e kio-extras.": {
+    "en": "Could not connect using KIO Fuse: {0}. Check the network and the installation of kio-fuse and kio-extras.",
+    "pt": "Não foi possível conectar pelo KIO Fuse: {0}. Verifique a rede e a instalação de kio-fuse e kio-extras."
+  },
   "Não foi possível criar a pasta: {error}": {
     "en": "Could not create the folder: {0}",
     "pt": "Não foi possível criar a pasta: {0}"
@@ -958,6 +1046,10 @@
   "Não foi possível identificar um tipo MIME válido para salvar a associação.": {
     "en": "Could not identify a valid MIME type to save the association.",
     "pt": "Não foi possível identificar um tipo MIME válido para salvar a associação."
+  },
+  "Não foi possível iniciar a autenticação gráfica do GNOME.": {
+    "en": "Could not initialize GNOME graphical authentication.",
+    "pt": "Não foi possível iniciar a autenticação gráfica do GNOME."
   },
   "Não foi possível iniciar a exclusão: {error}": {
     "en": "Could not start deletion: {0}",
@@ -1011,9 +1103,17 @@
     "en": "Could not save: {0}",
     "pt": "Não foi possível salvar: {0}"
   },
+  "Não inclua senhas no endereço. A autenticação será solicitada pelo sistema.": {
+    "en": "Do not include passwords in the address. The system will request authentication.",
+    "pt": "Não inclua senhas no endereço. A autenticação será solicitada pelo sistema."
+  },
   "Não é possível transferir a raiz do sistema": {
     "en": "The file system root cannot be transferred",
     "pt": "Não é possível transferir a raiz do sistema"
+  },
+  "O GVfs não disponibilizou um caminho local. Verifique se gvfs-fuse está instalado.": {
+    "en": "GVfs did not provide a local path. Check that gvfs-fuse is installed.",
+    "pt": "O GVfs não disponibilizou um caminho local. Verifique se gvfs-fuse está instalado."
   },
   "O aplicativo de origem não permite a operação solicitada para os arquivos arrastados.": {
     "en": "The source application does not allow the requested operation for the dragged files.",
@@ -1058,6 +1158,14 @@
   "O serviço de renomeação foi encerrado.": {
     "en": "The rename service stopped.",
     "pt": "O serviço de renomeação foi encerrado."
+  },
+  "O sistema não disponibilizou uma pasta local para o compartilhamento.": {
+    "en": "The system did not provide a local folder for the share.",
+    "pt": "O sistema não disponibilizou uma pasta local para o compartilhamento."
+  },
+  "O sistema solicitará a autenticação. Senhas não são salvas pelo explorador.": {
+    "en": "The system will request authentication. Passwords are not saved by the explorer.",
+    "pt": "O sistema solicitará a autenticação. Senhas não são salvas pelo explorador."
   },
   "Ocultar compartilhamento": {
     "en": "Hide share",
@@ -1394,6 +1502,18 @@
   "Usar sempre este aplicativo para este tipo de arquivo": {
     "en": "Always use this application for this file type",
     "pt": "Usar sempre este aplicativo para este tipo de arquivo"
+  },
+  "Use SMB, SFTP, NFS, FTP, WebDAV ou um ponto de montagem local. A conexão remota usa KIO Fuse.": {
+    "en": "Use SMB, SFTP, NFS, FTP, WebDAV or a local mount point. Remote connections use KIO Fuse.",
+    "pt": "Use SMB, SFTP, NFS, FTP, WebDAV ou um ponto de montagem local. A conexão remota usa KIO Fuse."
+  },
+  "Use SMB, SFTP, NFS, FTP, WebDAV ou uma pasta já montada. O explorador usa GVfs no GNOME e KIO Fuse no KDE.": {
+    "en": "Use SMB, SFTP, NFS, FTP, WebDAV or an already mounted folder. The explorer uses GVfs in GNOME and KIO Fuse in KDE.",
+    "pt": "Use SMB, SFTP, NFS, FTP, WebDAV ou uma pasta já montada. O explorador usa GVfs no GNOME e KIO Fuse no KDE."
+  },
+  "Use um endereço SMB, SFTP, NFS, FTP ou WebDAV válido.": {
+    "en": "Use a valid SMB, SFTP, NFS, FTP or WebDAV address.",
+    "pt": "Use um endereço SMB, SFTP, NFS, FTP ou WebDAV válido."
   },
   "Versão de preferências não suportada": {
     "en": "Unsupported preferences version",

@@ -53,6 +53,8 @@ pub enum Icon {
     Pin,
     Unpin,
     Network,
+    AddNetwork,
+    ShareFolder,
     Trash,
     DeletePermanently,
     CancelEdit,
@@ -88,7 +90,7 @@ pub enum Icon {
 }
 
 impl Icon {
-    pub const ALL: [Self; 77] = [
+    pub const ALL: [Self; 79] = [
         Self::Home,
         Self::Desktop,
         Self::Download,
@@ -134,6 +136,8 @@ impl Icon {
         Self::Pin,
         Self::Unpin,
         Self::Network,
+        Self::AddNetwork,
+        Self::ShareFolder,
         Self::Trash,
         Self::DeletePermanently,
         Self::CancelEdit,
@@ -215,6 +219,8 @@ impl Icon {
             Self::Pin => crate::i18n::tr("Fixar pasta"),
             Self::Unpin => crate::i18n::tr("Desafixar pasta"),
             Self::Network => crate::i18n::tr("Compartilhamentos de rede"),
+            Self::AddNetwork => crate::i18n::tr("Adicionar compartilhamento de rede"),
+            Self::ShareFolder => crate::i18n::tr("Compartilhar pela rede"),
             Self::Trash => crate::i18n::tr("Mover para a lixeira"),
             Self::DeletePermanently => crate::i18n::tr("Excluir permanentemente"),
             Self::CancelEdit => crate::i18n::tr("Sair da edição do caminho"),
@@ -297,6 +303,8 @@ impl Icon {
             Self::Pin => "thumbtack",
             Self::Unpin => "minus",
             Self::Network => "network-wired",
+            Self::AddNetwork => "folder-plus",
+            Self::ShareFolder => "share-nodes",
             Self::Trash => "trash-can",
             Self::DeletePermanently => "circle-xmark",
             Self::CancelEdit => "xmark",

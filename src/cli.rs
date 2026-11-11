@@ -6,6 +6,7 @@ pub enum Command {
     NewWindow(Option<PathBuf>),
     Reveal(Vec<PathBuf>, bool),
     FileManagerService,
+    MountNetwork(String),
     ExportIcon(PathBuf),
     Help,
     Version,
@@ -21,6 +22,7 @@ Usage: linux-system-explorer [OPTIONS] [DIRECTORY]
   --properties FILE Open its parent folder and show its properties
   --new-window [DIRECTORY] Always open a separate window, even if the folder is open
   --file-manager-service Run the headless FileManager1 D-Bus bridge
+  --mount-network URI Internal GIO/GVfs mount helper with native authentication
   --export-icon PNG Write the canonical application icon without opening a window
   --               Treat the next argument as a directory, even if it starts with '-'
 
@@ -54,6 +56,12 @@ pub fn parse(args: impl IntoIterator<Item = OsString>) -> Result<Command, &'stat
         return Ok(Command::Reveal(paths, first == "--properties"));
     } else if first == "--file-manager-service" {
         Command::FileManagerService
+    } else if first == "--mount-network" {
+        Command::MountNetwork(
+            args.next()
+                .and_then(|arg| arg.into_string().ok())
+                .ok_or("Expected a network URI after --mount-network")?,
+        )
     } else if first == "--export-icon" {
         Command::ExportIcon(
             args.next()
@@ -97,6 +105,12 @@ mod tests {
             Ok(Command::FileManagerService)
         );
         assert!(parse(["--file-manager-service".into(), "extra".into()]).is_err());
+        assert_eq!(
+            parse(["--mount-network".into(), "smb://server/share".into()]),
+            Ok(Command::MountNetwork("smb://server/share".into()))
+        );
+        assert!(parse(["--mount-network".into()]).is_err());
+        assert!(parse(["--mount-network".into(), "one".into(), "two".into()]).is_err());
         assert!(parse(["--select".into()]).is_err());
         assert!(parse(["--properties".into(), "a".into(), "b".into()]).is_err());
         assert_eq!(

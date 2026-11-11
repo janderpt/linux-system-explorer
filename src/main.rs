@@ -12,6 +12,7 @@ mod i18n;
 mod icons;
 mod native_dnd;
 mod navigation;
+mod network;
 mod renames;
 mod session;
 mod settings;
@@ -55,6 +56,26 @@ fn main() -> eframe::Result {
             if let Err(error) = file_manager::serve() {
                 eprintln!("{error}");
                 std::process::exit(1);
+            }
+            return Ok(());
+        }
+        Ok(cli::Command::MountNetwork(uri)) => {
+            let language = settings::Preferences::path()
+                .and_then(|p| settings::Preferences::load(&p).ok())
+                .unwrap_or_default()
+                .language;
+            i18n::set_locale(language.resolve());
+            let result = network::remote_url(&uri).and_then(|uri| network::gvfs::mount(&uri));
+            match result {
+                Ok(path) => println!(
+                    "{}",
+                    serde_json::to_string(&settings::folder_key(&path))
+                        .expect("serializable mount path")
+                ),
+                Err(error) => {
+                    eprintln!("{error}");
+                    std::process::exit(1);
+                }
             }
             return Ok(());
         }

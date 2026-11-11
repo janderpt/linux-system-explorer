@@ -60,5 +60,19 @@ impl Explorer {
             self.open_terminal(path.to_owned(), ui.ctx());
             ui.close();
         }
+        if self
+            .menu_item(
+                ui,
+                Icon::ShareFolder,
+                crate::i18n::tr("Compartilhar pela rede"),
+                "",
+                path.is_absolute(),
+                false,
+            )
+            .clicked()
+        {
+            self.configure_network_sharing(path.to_owned(), ui.ctx());
+            ui.close();
+        }
     }
 }

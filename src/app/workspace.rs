@@ -331,6 +331,7 @@ impl Explorer {
             || self.folder_picker.is_some()
             || self.open_with.is_some()
             || self.rename.is_some()
+            || self.network_dialog.is_some()
     }
 }
 #[cfg(test)]

@@ -250,6 +250,9 @@ mod tests {
         let sources = [
             include_str!("app.rs"),
             include_str!("main.rs"),
+            include_str!("network.rs"),
+            include_str!("network/gvfs.rs"),
+            include_str!("app/network.rs"),
             include_str!("settings.rs"),
             include_str!("columns.rs"),
             include_str!("filesystem.rs"),

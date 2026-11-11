@@ -5,6 +5,7 @@ pub(super) enum Location {
     Standard(locations::Item),
     Pinned(usize),
     Network(usize),
+    Remote(usize),
     Trash,
 }
 
@@ -65,6 +66,18 @@ impl Explorer {
         }
         if self.sidebar_options.show_network {
             let mut seen = BTreeSet::new();
+            for (index, remote) in self.sidebar_options.remote.iter().enumerate() {
+                let path = remote.mount.clone().unwrap_or_default();
+                if path.is_absolute() {
+                    seen.insert(path.clone());
+                }
+                entries.push(SidebarEntry {
+                    id: Location::Remote(index),
+                    label: remote.title(),
+                    path,
+                    icon: Icon::Network,
+                });
+            }
             // Explicit names take priority over automatically discovered mount names.
             for (index, shortcut) in self
                 .sidebar_options
@@ -117,9 +130,10 @@ impl Explorer {
                 }
                 if self.sidebar_options.show_network {
                     sidebar_heading(ui,crate::i18n::tr("REDE"));
-                    let network:Vec<_>=entries.iter().filter(|e|matches!(e.id,Location::Network(_))).collect();
+                    let network:Vec<_>=entries.iter().filter(|e|matches!(e.id,Location::Network(_)|Location::Remote(_))).collect();
                     if network.is_empty() {ui.label(RichText::new(crate::i18n::tr("Nenhum compartilhamento configurado")).small().weak());}
                     for entry in network {self.sidebar_place(ui,entry,active==Some(entry.id));}
+                    if self.menu_item(ui,Icon::AddNetwork,crate::i18n::tr("Adicionar compartilhamento de rede"),"",!self.loading,false).on_hover_text(crate::i18n::tr("Adicionar compartilhamento de rede")).clicked(){self.request_network(None,ui.ctx());}
                 }
             });
             ui.add_space(5.0);
@@ -180,12 +194,56 @@ impl Explorer {
                 response
             })
             .inner
-            .on_hover_text(entry.path.display().to_string());
+            .on_hover_text(if let Location::Remote(i) = entry.id {
+                self.sidebar_options.remote[i].url.clone()
+            } else {
+                entry.path.display().to_string()
+            });
         if response.clicked() {
-            self.navigate(entry.path.clone(), Navigation::Visit);
+            if let Location::Remote(i) = entry.id {
+                self.request_network(Some(self.sidebar_options.remote[i].clone()), ui.ctx());
+            } else {
+                self.navigate(entry.path.clone(), Navigation::Visit);
+            }
         }
-        self.register_drop_target(ui, response.rect, entry.path.clone());
+        if entry.path.is_absolute() {
+            self.register_drop_target(ui, response.rect, entry.path.clone());
+        }
         response.context_menu(|ui| {
+            if let Location::Remote(i) = entry.id {
+                if self
+                    .menu_item(
+                        ui,
+                        Icon::Network,
+                        crate::i18n::tr("Conectar ao compartilhamento"),
+                        "",
+                        !self.loading,
+                        false,
+                    )
+                    .clicked()
+                {
+                    self.request_network(Some(self.sidebar_options.remote[i].clone()), ui.ctx());
+                    ui.close();
+                }
+                if entry.path.is_absolute() {
+                    self.folder_actions_menu(ui, &entry.path);
+                }
+                if self
+                    .menu_item(
+                        ui,
+                        Icon::Unpin,
+                        crate::i18n::tr("Remover da Rede"),
+                        "",
+                        true,
+                        false,
+                    )
+                    .clicked()
+                {
+                    self.sidebar_options.remote.remove(i);
+                    ui.close();
+                }
+                return;
+            }
             if self
                 .menu_item(ui, Icon::Open, crate::i18n::tr("Abrir"), "", true, false)
                 .clicked()

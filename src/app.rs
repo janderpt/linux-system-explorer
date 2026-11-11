@@ -20,6 +20,7 @@ mod drag_drop;
 mod empty_trash;
 mod folder_actions;
 mod folder_picker;
+mod network;
 mod open_with;
 mod rename;
 mod selection;
@@ -73,6 +74,7 @@ pub struct Explorer {
     folder_picker: Option<folder_picker::FolderPicker>,
     open_with: Option<open_with::Chooser>,
     rename: Option<rename::RenameDialog>,
+    network_dialog: Option<network::ConnectDialog>,
     dnd: drag_drop::DragDrop,
     focus_address: bool,
     query: String,
@@ -203,6 +205,7 @@ impl Explorer {
             folder_picker: None,
             open_with: None,
             rename: None,
+            network_dialog: None,
             dnd: drag_drop::DragDrop::default(),
             focus_address: false,
             query: String::new(),
@@ -417,6 +420,7 @@ impl Explorer {
             || self.folder_picker.is_some()
             || self.open_with.is_some()
             || self.rename.is_some()
+            || self.network_dialog.is_some()
         {
             return;
         }
@@ -1563,6 +1567,7 @@ impl Explorer {
         self.folder_picker_dialog(ctx);
         self.open_with_dialog(ctx);
         self.rename_dialog(ctx);
+        self.network_dialog(ctx);
         self.show_notice_toast(ctx);
         self.persist_preferences(ctx);
     }
