@@ -53,6 +53,13 @@ impl NoticeToast {
 }
 
 impl Explorer {
+    pub(super) fn receive_notices(&mut self, notices: Vec<NoticeToast>) {
+        for mut notice in notices {
+            self.toast_serial = self.toast_serial.wrapping_add(1);
+            notice.id = self.toast_serial;
+            self.notice_toasts.push(notice);
+        }
+    }
     pub(super) fn post_notice(&mut self, text: String) {
         self.post_typed_notice(NoticeKind::Success, text);
     }

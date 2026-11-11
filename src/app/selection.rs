@@ -1,17 +1,6 @@
 use super::*;
 
 impl Explorer {
-    pub(super) fn poll_external(&mut self, ctx: &egui::Context) {
-        let requests = self
-            .external_window
-            .as_ref()
-            .map(|window| window.pending())
-            .unwrap_or_default();
-        for request in requests {
-            self.accept_external(request, ctx);
-        }
-    }
-
     pub(super) fn accept_external(
         &mut self,
         request: crate::file_manager::window::Request,

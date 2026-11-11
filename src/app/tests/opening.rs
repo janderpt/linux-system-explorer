@@ -209,3 +209,47 @@ fn double_click_and_context_open_use_the_system_launcher() {
     assert_eq!(captures(&capture).len(), 3);
     assert!(app.error.is_none());
 }
+
+#[test]
+fn folder_context_menu_offers_tabs_windows_and_terminal_but_files_do_not() {
+    let root = tempfile::tempdir().unwrap();
+    let folder = root.path().join("folder");
+    std::fs::create_dir(&folder).unwrap();
+    std::fs::write(root.path().join("note.txt"), "note").unwrap();
+    let ctx = egui::Context::default();
+    let mut app = Explorer::with_context(&ctx, root.path().to_owned());
+    complete_navigation(&mut app);
+    render(&mut app, &ctx, vec![]);
+    let output = render(&mut app, &ctx, vec![]);
+    let point = text_center(&output, "folder").unwrap();
+    pointer(&mut app, &ctx, point, PointerButton::Secondary);
+    let output = render(&mut app, &ctx, vec![]);
+    for label in [
+        "Abrir em nova aba",
+        "Abrir em nova janela",
+        "Abrir terminal aqui",
+    ] {
+        assert!(text_center(&output, label).is_some(), "{label}");
+    }
+    let point = text_center(&output, "Abrir em nova aba").unwrap();
+    pointer(&mut app, &ctx, point, PointerButton::Primary);
+    assert_eq!(app.requested_tabs, vec![folder]);
+    assert_eq!(app.current, root.path());
+    for _ in 0..10 {
+        render(&mut app, &ctx, vec![]);
+    }
+    let output = render(&mut app, &ctx, vec![]);
+    let point = text_center(&output, "note.txt").unwrap();
+    pointer(&mut app, &ctx, point, PointerButton::Secondary);
+    let output = render(&mut app, &ctx, vec![]);
+    for label in [
+        "Abrir em nova aba",
+        "Abrir em nova janela",
+        "Abrir terminal aqui",
+    ] {
+        assert!(
+            text_center(&output, label).is_none(),
+            "file menu should not contain {label}"
+        );
+    }
+}

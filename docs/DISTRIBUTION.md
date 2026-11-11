@@ -144,3 +144,9 @@ actual extent and disclose it accurately; no independent human review is claimed
 - https://www.debian.org/doc/debian-policy/
 
 Policies were checked on 2026-11-11 and must be checked again before submission.
+
+## Tabs and terminal lifecycle
+
+One versioned private D-Bus endpoint belongs to each native window. It routes reveal requests to the matching active or inactive folder tab and activates that tab before returning success. Tabs share the native drag/drop and activation controllers while maintaining independent directory readers and UI state. Explicit `--new-window` launches bypass reuse. Folder paths are passed as arguments without a shell.
+
+Integrated terminals use portable-pty and a bounded vt100 screen with 5,000 scrollback rows. Each session starts in an explicit working directory, inherits the user's shell environment and runs the configured shell interactively. The PTY is nonblocking; a worker handles output and queued input, while resizing updates the PTY and emulator together. Hiding a dock leaves its sessions running. Closing the owning tab/window stops the workers, closes their PTYs and reaps the shells. Terminal sessions and the set of open folder tabs are intentionally not persisted across restarts. General preferences and per-directory layouts retain their existing persistence.

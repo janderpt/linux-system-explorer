@@ -42,7 +42,7 @@ pub enum Mode {
     Cut,
 }
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct Clipboard {
     pub id: u64,
     pub mode: Mode,

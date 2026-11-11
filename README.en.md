@@ -7,7 +7,7 @@ desktop file explorers. **Currently experimental; no stable release or store app
 
 ## Features
 
-- X11 and Wayland windows, keyboard navigation and a compact toolbar.
+- X11 and Wayland windows, folder tabs, keyboard navigation and a compact toolbar.
 - Details, list and icon views, resizable/reorderable columns and folder-specific layouts.
 - Zoom, sorting, filtering, multiple selection and configurable sidebar sections.
 - Copy, move, rename, Trash, restore and confirmed permanent deletion.
@@ -35,6 +35,12 @@ cargo build --locked --release
 `--help` and `--version` work without opening a window. Use `-- DIRECTORY` for a path
 beginning with a dash. File opening relies on GIO, with xdg-open as the default-opening
 fallback. Actual functionality follows the user's permissions and installed applications.
+
+## Tabs, new windows and integrated terminal
+
+Folder context menus, sidebar shortcuts and the current-folder background offer **Open in new tab**, **Open in new window** and **Open terminal here**, with configurable icons. Tabs keep independent folders, history, selection, filters, scrolling and layouts; clipboard transfers and notifications are shared within a window. Use **Ctrl+T**, **Ctrl+W**, **Ctrl+Tab** and **Ctrl+Shift+Tab** to manage tabs. New windows bypass reuse explicitly (`--new-window -- DIRECTORY`); normal system opening and Show in Folder also locate and activate matching inactive tabs. File operations continue in background tabs and prevent closing their tab until finished. Folder layouts remain persistent; the list of open tabs is not restored after restarting.
+
+The terminal is a resizable bottom dock within the application, backed by a real PTY and VT100 screen. It starts the user's shell in the folder chosen from the menu; shell directory changes and explorer navigation are independent. ANSI colors, interactive keyboard input, output scrollback, text selection, clipboard input and Ctrl+C are supported. Explorer keyboard shortcuts are suppressed while the terminal has focus. **F4** or the panel's close button hides it without terminating commands. Starting a session in another folder preserves the previous session in the selector; closing its explorer tab or window closes its terminals. Shell sessions do not auto-restore, and external terminal profiles (e.g. Konsole) are not embedded.
 
 ## Packaging
 

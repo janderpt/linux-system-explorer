@@ -16,8 +16,10 @@ mod renames;
 mod settings;
 mod sidebar;
 mod system_style;
+mod terminal;
 mod transfers;
 mod trashbin;
+mod windows;
 
 use std::path::PathBuf;
 
@@ -30,6 +32,7 @@ fn main() -> eframe::Result {
             browse = true;
             path
         }
+        Ok(cli::Command::NewWindow(path)) => path,
         Ok(cli::Command::Reveal(paths, show_properties)) => {
             selection = paths
                 .into_iter()
@@ -98,9 +101,12 @@ fn main() -> eframe::Result {
         crate::i18n::tr("Explorador de Arquivos"),
         options,
         Box::new(move |cc| {
-            let mut app = app::Explorer::new(cc, initial_path);
-            app.reveal_external(selection, properties);
-            Ok(Box::new(app))
+            Ok(Box::new(app::Workspace::new(
+                cc,
+                initial_path,
+                selection,
+                properties,
+            )))
         }),
     )
 }

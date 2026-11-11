@@ -211,6 +211,7 @@ impl Explorer {
                 }
                 return;
             }
+            self.folder_actions_menu(ui, &entry.path);
             self.pin_menu(ui, &entry.path);
             if matches!(entry.id, Location::Network(_)) {
                 let custom = self

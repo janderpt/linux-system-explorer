@@ -39,6 +39,9 @@ pub enum Icon {
     Up,
     Refresh,
     Open,
+    NewWindow,
+    NewTab,
+    Terminal,
     OpenWith,
     Rename,
     CopyPath,
@@ -81,7 +84,7 @@ pub enum Icon {
 }
 
 impl Icon {
-    pub const ALL: [Self; 70] = [
+    pub const ALL: [Self; 73] = [
         Self::Home,
         Self::Desktop,
         Self::Download,
@@ -113,6 +116,9 @@ impl Icon {
         Self::File,
         Self::Link,
         Self::Open,
+        Self::NewWindow,
+        Self::NewTab,
+        Self::Terminal,
         Self::OpenWith,
         Self::Rename,
         Self::CopyPath,
@@ -187,6 +193,9 @@ impl Icon {
             Self::Up => crate::i18n::tr("Pasta acima"),
             Self::Refresh => crate::i18n::tr("Atualizar"),
             Self::Open => crate::i18n::tr("Abrir item"),
+            Self::NewWindow => crate::i18n::tr("Abrir em nova janela"),
+            Self::NewTab => crate::i18n::tr("Abrir em nova aba"),
+            Self::Terminal => crate::i18n::tr("Abrir terminal aqui"),
             Self::OpenWith => crate::i18n::tr("Abrir com outro aplicativo"),
             Self::Rename => crate::i18n::tr("Renomear"),
             Self::CopyPath => crate::i18n::tr("Copiar caminho"),
@@ -262,6 +271,9 @@ impl Icon {
             Self::Up => "arrow-up",
             Self::Refresh => "arrows-rotate",
             Self::Open => "folder-open",
+            Self::NewWindow => "window-restore",
+            Self::NewTab => "square-plus",
+            Self::Terminal => "terminal",
             Self::OpenWith => "window-restore",
             Self::Rename => "file-pen",
             Self::CopyPath => "link",

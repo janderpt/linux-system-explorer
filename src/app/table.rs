@@ -151,7 +151,7 @@ impl Explorer {
         ui.scope(|ui| {
             ui.spacing_mut().item_spacing.y = 2.0 * scale;
             egui::ScrollArea::vertical()
-                .id_salt((&self.current, "list"))
+                .id_salt((self.tab_id, &self.current, "list"))
                 .auto_shrink([false, false])
                 .show_rows(ui, row_height, visible.len(), |ui, range| {
                     self.reveal_selected_row(ui, visible, range.start, row_height, 1);

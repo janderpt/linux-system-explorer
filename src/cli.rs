@@ -3,6 +3,7 @@ use std::{ffi::OsString, path::PathBuf};
 #[derive(Debug, PartialEq, Eq)]
 pub enum Command {
     Browse(Option<PathBuf>),
+    NewWindow(Option<PathBuf>),
     Reveal(Vec<PathBuf>, bool),
     FileManagerService,
     ExportIcon(PathBuf),
@@ -18,6 +19,7 @@ Usage: linux-system-explorer [OPTIONS] [DIRECTORY]
   -V, --version    Print the version without opening a window
   --select FILE... Open the parent folder with the given items selected
   --properties FILE Open its parent folder and show its properties
+  --new-window [DIRECTORY] Always open a separate window, even if the folder is open
   --file-manager-service Run the headless FileManager1 D-Bus bridge
   --export-icon PNG Write the canonical application icon without opening a window
   --               Treat the next argument as a directory, even if it starts with '-'
@@ -31,7 +33,20 @@ pub fn parse(args: impl IntoIterator<Item = OsString>) -> Result<Command, &'stat
     let Some(first) = args.next() else {
         return Ok(Command::Browse(None));
     };
-    let command = if first == "--select" || first == "--properties" {
+    let command = if first == "--new-window" {
+        let next = args.next();
+        let path = if next.as_deref() == Some(std::ffi::OsStr::new("--")) {
+            Some(args.next().ok_or("Expected a directory after --")?.into())
+        } else if next
+            .as_ref()
+            .is_some_and(|value| value.as_encoded_bytes().starts_with(b"-"))
+        {
+            return Err("Use --new-window -- DIRECTORY for a path beginning with '-'");
+        } else {
+            next.map(PathBuf::from)
+        };
+        Command::NewWindow(path)
+    } else if first == "--select" || first == "--properties" {
         let paths: Vec<PathBuf> = args.map(PathBuf::from).collect();
         if paths.is_empty() || (first == "--properties" && paths.len() != 1) {
             return Err("Expected files after --select or exactly one file after --properties");
@@ -70,6 +85,13 @@ mod tests {
 
     #[test]
     fn routes_headless_commands_and_preserves_special_paths() {
+        assert_eq!(parse(["--new-window".into()]), Ok(Command::NewWindow(None)));
+        assert_eq!(
+            parse(["--new-window".into(), "--".into(), "-folder".into()]),
+            Ok(Command::NewWindow(Some("-folder".into())))
+        );
+        assert!(parse(["--new-window".into(), "--".into()]).is_err());
+        assert!(parse(["--new-window".into(), "one".into(), "two".into()]).is_err());
         assert_eq!(
             parse(["--file-manager-service".into()]),
             Ok(Command::FileManagerService)

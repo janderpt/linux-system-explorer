@@ -18,18 +18,22 @@ mod breadcrumbs;
 mod deletions;
 mod drag_drop;
 mod empty_trash;
+mod folder_actions;
 mod folder_picker;
 mod open_with;
 mod rename;
 mod selection;
 mod sidebar;
 mod table;
+mod terminal_panel;
 #[cfg(test)]
 mod tests;
 mod toast;
 mod toolbar;
 mod transfers;
 mod trash;
+mod workspace;
+pub use workspace::Workspace;
 
 const BLUE: Color32 = Color32::from_rgb(0, 103, 192);
 
@@ -55,7 +59,9 @@ enum Event {
 }
 
 pub struct Explorer {
-    external_window: Option<crate::file_manager::window::Window>,
+    terminal: Option<terminal_panel::Panel>,
+    requested_tabs: Vec<PathBuf>,
+    tab_id: u64,
     activation: Option<crate::activation::Activation>,
     loading_path: Option<PathBuf>,
     current: PathBuf,
@@ -142,10 +148,6 @@ impl Explorer {
             }
         }
         app.activation = crate::activation::Activation::attach(cc);
-        match crate::file_manager::window::Window::attach(&cc.egui_ctx) {
-            Ok(window) => app.external_window = Some(window),
-            Err(error) => eprintln!("Could not register the explorer window: {error}"),
-        }
         app
     }
 
@@ -181,7 +183,9 @@ impl Explorer {
         });
         let places = locations::available_places();
         let mut app = Self {
-            external_window: None,
+            terminal: None,
+            requested_tabs: vec![],
+            tab_id: 0,
             activation: None,
             loading_path: None,
             current: PathBuf::new(),
@@ -285,6 +289,9 @@ impl Explorer {
     }
 
     fn poll(&mut self) {
+        if let Some(panel) = &mut self.terminal {
+            panel.poll();
+        }
         while let Ok(event) = self.events.try_recv() {
             match event {
                 Event::Listed(result, navigation) => {
@@ -396,6 +403,17 @@ impl Explorer {
             || self.open_with.is_some()
             || self.rename.is_some()
         {
+            return;
+        }
+        if ctx.input_mut(|i| i.consume_key(egui::Modifiers::NONE, Key::F4)) {
+            if let Some(panel) = &mut self.terminal {
+                panel.toggle(ctx, self.tab_id);
+            } else if !self.is_trash() && !self.current.as_os_str().is_empty() {
+                self.open_terminal(self.current.clone(), ctx);
+            }
+            return;
+        }
+        if self.terminal_focused(ctx) {
             return;
         }
         self.transfer_shortcuts(ctx);
@@ -992,6 +1010,7 @@ impl Explorer {
                     self.paste_menu(ui);
                     if !self.current.as_os_str().is_empty() && !self.loading && !self.is_trash() {
                         ui.separator();
+                        self.folder_actions_menu(ui, &self.current.clone());
                         self.pin_menu(ui, &self.current.clone());
                     }
                 });
@@ -1045,7 +1064,7 @@ impl Explorer {
         let width = columns.iter().map(|(_, width)| width).sum::<f32>()
             + ui.spacing().item_spacing.x * columns.len().saturating_sub(1) as f32;
         egui::ScrollArea::horizontal()
-            .id_salt("detail_columns_scroll")
+            .id_salt((self.tab_id, "detail_columns_scroll"))
             .scroll_bar_visibility(if width > viewport_width + 0.5 {
                 egui::scroll_area::ScrollBarVisibility::AlwaysVisible
             } else {
@@ -1059,7 +1078,7 @@ impl Explorer {
                 ui.scope(|ui| {
                     ui.spacing_mut().item_spacing.y = 8.0;
                     egui::ScrollArea::vertical()
-                        .id_salt((&self.current, "details"))
+                        .id_salt((self.tab_id, &self.current, "details"))
                         .auto_shrink([false, false])
                         .show_rows(ui, row_height, visible.len(), |ui, range| {
                             self.reveal_selected_row(ui, visible, range.start, row_height, 1);
@@ -1132,7 +1151,7 @@ impl Explorer {
         let columns = (((ui.available_width() + gap) / (tile_width + gap)) as usize).max(1);
         let row_count = visible.len().div_ceil(columns);
         egui::ScrollArea::vertical()
-            .id_salt((&self.current, "icons"))
+            .id_salt((self.tab_id, &self.current, "icons"))
             .auto_shrink([false, false])
             .show_rows(ui, row_height, row_count, |ui, range| {
                 self.reveal_selected_row(ui, visible, range.start, row_height, columns);
@@ -1249,6 +1268,9 @@ impl Explorer {
             {
                 self.choose_application(entry, ui.ctx());
                 ui.close();
+            }
+            if entry.is_dir {
+                self.folder_actions_menu(ui, &entry.path);
             }
             self.file_transfer_menu(ui, entry);
             if self
@@ -1441,10 +1463,9 @@ impl Explorer {
     }
 }
 
-impl eframe::App for Explorer {
-    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+impl Explorer {
+    fn show(&mut self, ctx: &egui::Context) {
         crate::i18n::set_locale(self.language.resolve());
-        self.poll_external(ctx);
         self.poll();
         self.begin_drag_drop(ctx);
         self.handle_transfer_close(ctx);
@@ -1507,6 +1528,7 @@ impl eframe::App for Explorer {
                 });
             });
         });
+        self.terminal_panel(ctx);
         self.sidebar(ctx);
         self.contents(ctx, &visible);
         self.finish_drag_drop(ctx);

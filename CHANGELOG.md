@@ -3,6 +3,9 @@
 ## Unreleased — 0.1.0 experimental
 
 - Linux file manager written in Rust, with native X11 and Wayland windows.
+- Folder tabs with independent navigation, shared clipboard/notifications and system-opening reuse of inactive tabs.
+- Explicit Open in new window and Open in new tab folder context actions.
+- Resizable integrated terminal dock with real PTY sessions, shell input, ANSI output and independent working directories.
 - Details, list and icon views, configurable columns, zoom and per-folder layouts.
 - Multiple selection, keyboard navigation, copy, move, rename and Trash operations.
 - Native drag and drop, system default applications and an Open With chooser.

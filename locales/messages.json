@@ -79,6 +79,14 @@
     "en": "Open with…",
     "pt": "Abrir com…"
   },
+  "Abrir em nova aba": {
+    "en": "Open in new tab",
+    "pt": "Abrir em nova aba"
+  },
+  "Abrir em nova janela": {
+    "en": "Open in new window",
+    "pt": "Abrir em nova janela"
+  },
   "Abrir este item": {
     "en": "Open this item",
     "pt": "Abrir este item"
@@ -90,6 +98,10 @@
   "Abrir item": {
     "en": "Open item",
     "pt": "Abrir item"
+  },
+  "Abrir terminal aqui": {
+    "en": "Open terminal here",
+    "pt": "Abrir terminal aqui"
   },
   "Adicionar à Rede": {
     "en": "Add to Network",
@@ -591,6 +603,10 @@
     "en": "Close",
     "pt": "Fechar"
   },
+  "Fechar aba · Ctrl+W": {
+    "en": "Close tab · Ctrl+W",
+    "pt": "Fechar aba · Ctrl+W"
+  },
   "Fechar aviso": {
     "en": "Dismiss",
     "pt": "Fechar aviso"
@@ -835,6 +851,10 @@
     "en": "Notifications",
     "pt": "Notificações"
   },
+  "Nova aba · Ctrl+T": {
+    "en": "New tab · Ctrl+T",
+    "pt": "Nova aba · Ctrl+T"
+  },
   "Nova pasta": {
     "en": "New folder",
     "pt": "Nova pasta"
@@ -847,9 +867,17 @@
     "en": "No",
     "pt": "Não"
   },
+  "Não foi possível abrir a nova janela: {error}": {
+    "en": "Could not open the new window: {0}",
+    "pt": "Não foi possível abrir a nova janela: {0}"
+  },
   "Não foi possível abrir a pasta: {error}": {
     "en": "Could not open the folder: {0}",
     "pt": "Não foi possível abrir a pasta: {0}"
+  },
+  "Não foi possível abrir o terminal: {error}": {
+    "en": "Could not open the terminal: {0}",
+    "pt": "Não foi possível abrir o terminal: {0}"
   },
   "Não foi possível abrir {} (xdg-open: {status}).": {
     "en": "Could not open {0} (xdg-open: {1}).",
@@ -1003,6 +1031,10 @@
     "en": "Hide share",
     "pt": "Ocultar compartilhamento"
   },
+  "Ocultar terminal · F4": {
+    "en": "Hide terminal · F4",
+    "pt": "Ocultar terminal · F4"
+  },
   "Oculto": {
     "en": "Hidden",
     "pt": "Oculto"
@@ -1042,6 +1074,10 @@
   "Pasta acima · Alt+↑": {
     "en": "Up one level · Alt+↑",
     "pt": "Pasta acima · Alt+↑"
+  },
+  "Pasta do terminal independente da navegação": {
+    "en": "The terminal directory is independent of folder navigation",
+    "pt": "Pasta do terminal independente da navegação"
   },
   "Pasta não configurada no sistema": {
     "en": "Folder not configured in the system",
@@ -1195,6 +1231,10 @@
     "en": "No write bits",
     "pt": "Sem bits de escrita"
   },
+  "Sessão encerrada · código {}": {
+    "en": "Session ended · exit code {0}",
+    "pt": "Sessão encerrada · código {0}"
+  },
   "Sim": {
     "en": "Yes",
     "pt": "Sim"
@@ -1254,6 +1294,10 @@
   "Tentar novamente": {
     "en": "Try again",
     "pt": "Tentar novamente"
+  },
+  "Terminal": {
+    "en": "Terminal",
+    "pt": "Terminal"
   },
   "Testar aviso": {
     "en": "Test warning",

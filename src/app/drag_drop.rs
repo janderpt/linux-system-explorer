@@ -34,6 +34,12 @@ pub(super) struct DragDrop {
 }
 
 impl Explorer {
+    pub(super) fn drag_blocks_tabs(&self) -> bool {
+        self.dnd.native_active
+            || self.dnd.pending.is_some()
+            || self.dnd.completion.is_some()
+            || self.dnd.trash_prepare.is_some()
+    }
     fn finish_native_drop(&mut self, success: bool) {
         if let Some(pending) = self.dnd.completion.take()
             && let Some(native) = &self.dnd.native

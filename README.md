@@ -107,6 +107,18 @@ aplica a mesma regra à pasta pessoal. Sem uma janela correspondente, abre norma
 sudo apt install build-essential pkg-config libx11-dev libxi-dev libxcursor-dev libxrandr-dev libxkbcommon-dev libwayland-dev libegl1-mesa-dev xdg-utils libglib2.0-bin
 ```
 
+## Abas, janelas e terminal integrado
+
+O menu de contexto de pastas oferece **Abrir em nova aba**, **Abrir em nova janela** e **Abrir terminal aqui**, também nos atalhos da barra lateral e na área vazia da pasta corrente. As três ações têm ícones Font Awesome configuráveis.
+
+Cada aba mantém sua pasta, histórico, seleção, filtro, rolagem, modo de exibição e zoom. **+** ou **Ctrl+T** cria uma aba na pasta pessoal; **Ctrl+Tab** e **Ctrl+Shift+Tab** alternam entre abas; **×** ou **Ctrl+W** fecha a aba ativa. Operações de arquivos continuam nas abas em segundo plano; copiar e colar e os avisos são compartilhados entre abas da mesma janela. Uma aba com uma operação de arquivos em andamento permanece aberta até a conclusão. As preferências gerais, como tema e idioma, valem para todas as abas. Os layouts por pasta continuam sendo salvos; a lista de abas não é restaurada automaticamente após fechar a janela.
+
+**Abrir em nova janela** sempre cria uma janela independente, mesmo que a pasta já esteja aberta. O equivalente no terminal é `linux-system-explorer --new-window -- /caminho/da/pasta`. A abertura comum pelo sistema e **Mostrar na pasta** continuam procurando uma pasta já aberta, inclusive em abas inativas; nesse caso, ativam a aba correspondente e solicitam o primeiro plano.
+
+**Abrir terminal aqui** mostra um painel inferior redimensionável, abaixo da área de exploração, reduzindo a altura dela. É um terminal integrado com pseudoterminal real, iniciado na pasta escolhida e usando o shell do usuário (`SHELL`, cadastro do usuário ou `/bin/sh`). A navegação da aba e os comandos `cd` do terminal são independentes. O painel suporta entrada interativa, cores ANSI, histórico de saída com rolagem, seleção de texto, **Ctrl+Shift+C** para copiar, colagem e sinais como **Ctrl+C**. Atalhos de arquivos, como Delete e copiar, não são executados enquanto o terminal tem o foco.
+
+**F4** ou **×** oculta o painel sem encerrar os comandos. Abrir o terminal em outra pasta mantém a sessão anterior disponível no seletor do painel. `exit` encerra a sessão; fechar a aba ou a janela fecha seus terminais. As sessões não são restauradas ao reiniciar. O painel usa seu próprio emulador; não incorpora os perfis nem a interface do Konsole ou de outro aplicativo de terminal.
+
 ## Primeira versão
 
 - Pastas reais do sistema, com leitura em uma thread dedicada.
@@ -274,7 +286,7 @@ A operação usa a lista confirmada: itens enviados à lixeira depois dessa list
 
 ## Configurações e metadados Linux
 
-A engrenagem abre as abas **Geral**, **Barra lateral**, **Colunas** e **Aparência e ícones**, nessa ordem, começando por **Geral**. Todas mantêm a mesma altura, com rolagem independente no conteúdo de cada aba e botões em posições estáveis. Os elementos são centralizados verticalmente em suas linhas. **Aplicar** salva as alterações e mantém a janela aberta; **Salvar e fechar** também fecha a janela. **Cancelar** descarta as alterações ainda não aplicadas. O catálogo permite buscar pelo nome Font Awesome (por exemplo, `house`, `folder` ou `gear`) e escolher o ícone de cada uma das 70 ações, locais e notificações configuráveis. São 1.407 ícones do estilo Free Solid, incorporados ao executável e disponíveis sem conexão. A licença e a origem estão em [assets/fontawesome](assets/fontawesome/README.md). Os menus de contexto usam essas mesmas escolhas para Abrir, Abrir com, Copiar, Recortar, Colar, Renomear, Copiar caminho, Propriedades, Fixar, Desafixar e as duas ações de exclusão.
+A engrenagem abre as abas **Geral**, **Barra lateral**, **Colunas** e **Aparência e ícones**, nessa ordem, começando por **Geral**. Todas mantêm a mesma altura, com rolagem independente no conteúdo de cada aba e botões em posições estáveis. Os elementos são centralizados verticalmente em suas linhas. **Aplicar** salva as alterações e mantém a janela aberta; **Salvar e fechar** também fecha a janela. **Cancelar** descarta as alterações ainda não aplicadas. O catálogo permite buscar pelo nome Font Awesome (por exemplo, `house`, `folder` ou `gear`) e escolher o ícone de cada uma das 73 ações, locais e notificações configuráveis. São 1.407 ícones do estilo Free Solid, incorporados ao executável e disponíveis sem conexão. A licença e a origem estão em [assets/fontawesome](assets/fontawesome/README.md). Os menus de contexto usam essas mesmas escolhas para Abrir, Abrir com, Copiar, Recortar, Colar, Renomear, Copiar caminho, Propriedades, Fixar, Desafixar e as duas ações de exclusão.
 
 ### Ícones de arquivos e abertura no aplicativo padrão
 

@@ -16,6 +16,9 @@ pub struct Request {
 }
 
 impl Request {
+    pub fn folder(&self) -> &Path {
+        &self.request.folder
+    }
     #[cfg(test)]
     pub(crate) fn for_test(request: OpenRequest) -> (Self, Receiver<bool>) {
         let (reply, response) = mpsc::sync_channel(1);
