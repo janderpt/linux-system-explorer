@@ -52,6 +52,33 @@ O Git local e o remoto SSH são preparados para `janderpt/linux-system-explorer`
 Consulte [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md) e
 [CHANGELOG.md](CHANGELOG.md).
 
+## Instalar pelo código do GitHub
+
+Depois de instalar as dependências de compilação, Python 3.11+, `desktop-file-utils`
+e `appstream`, em uma pasta para guardar o código:
+
+```bash
+git clone https://github.com/janderpt/linux-system-explorer.git
+cd linux-system-explorer
+cargo build --locked --release
+python3 scripts/install-user.py install --set-default
+```
+
+A instalação fica em `~/.local/bin` e nos diretórios XDG do seu usuário, sem `sudo`.
+O parâmetro `--set-default` torna o aplicativo o padrão para abrir pastas
+(`inode/directory`). Sem ele, apenas instala. O Dolphin permanece disponível.
+Os arquivos anteriores e as associações são preservados em um backup; o estado fica
+em `~/.local/state/linux-system-explorer/install-state.json`.
+
+Para retornar ao explorador anterior sem alterar outras associações:
+
+```bash
+python3 scripts/install-user.py restore-default
+```
+
+A troca do padrão de pastas não substitui serviços D-Bus específicos de outros
+gerenciadores, usados por alguns aplicativos para ações como “Mostrar na pasta”.
+
 É necessário um ambiente gráfico Linux com OpenGL e bibliotecas de X11 ou Wayland. A abertura de arquivos usa `gio open`, das ferramentas GIO, e os aplicativos associados no sistema. Se GIO não estiver instalado, usa `xdg-open`, normalmente fornecido pelo pacote `xdg-utils`. Em um ambiente mínimo Ubuntu/Debian, as dependências de compilação e execução podem ser instaladas com:
 
 ```bash

@@ -60,6 +60,13 @@ its runtime libraries are installed. No automatic installation or uninstaller mo
 personal preferences. Native package installation is managed by the OS package manager.
 The installer does not change the user's default file manager or MIME associations.
 
+For an explicitly requested per-user installation, `scripts/install-user.py install`
+installs under `~/.local/bin` and XDG data directories. Its optional `--set-default`
+flag changes only the default handler of `inode/directory`, with backups and recorded
+rollback information under the XDG state directory. `restore-default` restores that
+previous handler only while this app remains the current default. This is independent
+of package-manager installation, which does not change defaults automatically.
+
 Packaged installations use their installed launcher and static project icon. X11 still
 receives a window icon using the system accent. Uninstalled development builds retain
 the generated accent-colored Wayland launcher. The new app ID does not change the

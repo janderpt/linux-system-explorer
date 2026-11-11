@@ -9,6 +9,7 @@ cargo fmt --all --check
 cargo clippy --locked --all-targets -- -D warnings
 cargo test --locked
 python3 scripts/package.py check
+python3 -m unittest discover -s scripts -p 'test_*.py'
 ```
 
 The metadata check needs Python 3.11+, `desktop-file-utils` and `appstream`.

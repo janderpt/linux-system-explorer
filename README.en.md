@@ -38,6 +38,24 @@ fallback. Actual functionality follows the user's permissions and installed appl
 
 ## Packaging
 
+To install a build from this repository for the current user:
+
+```sh
+git clone https://github.com/janderpt/linux-system-explorer.git
+cd linux-system-explorer
+cargo build --locked --release
+python3 scripts/install-user.py install --set-default
+```
+
+Install the build and metadata-validation prerequisites listed below first.
+The installer uses `~/.local/bin` and the user's XDG data directories, without sudo.
+`--set-default` explicitly changes the `inode/directory` handler. Omit it to install
+without changing defaults. It backs up previous files and records the previous folder
+handler. To return to that handler: `python3 scripts/install-user.py restore-default`.
+It leaves any newer folder-handler choice untouched. Other MIME associations and user
+preferences are preserved. Application-specific D-Bus "Show in Folder" services are a
+separate integration and may still invoke another installed file manager.
+
 On a Debian/Ubuntu build host, install Python 3.11+, `dpkg-dev`, `desktop-file-utils`
 and `appstream`, then:
 
