@@ -455,7 +455,6 @@ fn tab_widget(
         color,
         &tab.appearance,
     );
-    let path = tab.location();
     let title = tab_title(tab);
     response.widget_info(|| {
         egui::WidgetInfo::selected(egui::WidgetType::SelectableLabel, enabled, active, &title)
@@ -496,7 +495,7 @@ fn tab_widget(
         rect,
         response.on_hover_text(crate::i18n::message(
             "{}\nArraste para reorganizar a aba.",
-            &[path.display().to_string()],
+            &[tab.display_address(tab.location())],
         )),
         x.on_hover_text(crate::i18n::tr("Fechar aba · Ctrl+W")),
     )
@@ -554,15 +553,7 @@ fn new_tab_button(
 }
 
 fn tab_title(tab: &Explorer) -> String {
-    let path = tab.location();
-    let mut title = if crate::trashbin::is_location(path) {
-        crate::i18n::tr("Lixeira").to_owned()
-    } else {
-        path.file_name()
-            .unwrap_or(path.as_os_str())
-            .to_string_lossy()
-            .into_owned()
-    };
+    let mut title = tab.display_title(tab.location());
     if tab.busy() {
         title.push_str(" ·");
     }

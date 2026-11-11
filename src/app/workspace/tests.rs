@@ -20,6 +20,42 @@ fn workspace(ctx: &egui::Context, path: PathBuf) -> Workspace {
         closed_tabs: Default::default(),
     }
 }
+
+#[test]
+fn remote_tab_titles_show_share_or_subfolder_instead_of_mount_directory() {
+    let root = tempfile::tempdir().unwrap();
+    let mount = root.path().join("internal-gvfs-mount");
+    let child = mount.join("Reports");
+    std::fs::create_dir_all(&child).unwrap();
+    let ctx = egui::Context::default();
+    let mut app = workspace(&ctx, mount.clone());
+    app.tabs[0]
+        .sidebar_options
+        .remote
+        .push(crate::network::Connection {
+            url: "smb://server/Shared%20folder".into(),
+            label: "Custom sidebar label".into(),
+            mount: Some(mount),
+        });
+    for (path, title) in [
+        (app.tabs[0].current.clone(), "Shared folder"),
+        (child, "Reports"),
+    ] {
+        app.tabs[0].navigate(path, Navigation::Visit);
+        complete_navigation(&mut app.tabs[0]);
+        let render = || egui::RawInput {
+            screen_rect: Some(egui::Rect::from_min_size(
+                egui::Pos2::ZERO,
+                Vec2::new(1180.0, 760.0),
+            )),
+            ..Default::default()
+        };
+        let _ = ctx.run(render(), |ctx| app.tab_bar(ctx));
+        let output = ctx.run(render(), |ctx| app.tab_bar(ctx));
+        assert!(crate::app::tests::text_center(&output, title).is_some());
+        assert!(crate::app::tests::text_center(&output, "internal-gvfs-mount").is_none());
+    }
+}
 #[test]
 fn tabs_keep_independent_navigation_selection_filter_layout_and_share_clipboard() {
     let root = tempfile::tempdir().unwrap();

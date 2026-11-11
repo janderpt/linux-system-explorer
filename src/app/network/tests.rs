@@ -314,3 +314,45 @@ fn removing_a_remote_shortcut_from_its_menu_keeps_other_entries_and_current_fold
         assert!(app.network_dialog.is_none());
     }
 }
+
+#[test]
+fn network_breadcrumbs_show_remote_names_and_navigate_to_real_mount_ancestors() {
+    let root = tempfile::tempdir().unwrap();
+    let mount = root.path().join("internal-mount");
+    let child = mount.join("Projetos");
+    std::fs::create_dir_all(&child).unwrap();
+    let ctx = egui::Context::default();
+    let mut app = Explorer::with_context(&ctx, child.clone());
+    complete_navigation(&mut app);
+    app.sidebar_options.remote = vec![crate::network::Connection {
+        url: "smb://Administrador@server/D/".into(),
+        label: String::new(),
+        mount: Some(mount.clone()),
+    }];
+    app.sidebar_options.show_network = false;
+    app.sidebar_options.show_pinned = false;
+    app.sidebar_options.show_local_shares = false;
+    app.cancel_address_edit(&ctx);
+    assert_eq!(app.address, "smb://Administrador@server/D/Projetos");
+    render(&mut app, &ctx, vec![]);
+    let output = render(&mut app, &ctx, vec![]);
+    assert!(text_center(&output, "smb://Administrador@server").is_some());
+    assert!(text_center(&output, "Projetos").is_some());
+    assert!(text_center(&output, "internal-mount").is_none());
+    let share = text_center(&output, "D").unwrap();
+    click(&mut app, &ctx, share, PointerButton::Primary);
+    complete_navigation(&mut app);
+    assert_eq!(app.current, mount);
+    assert_eq!(app.address, "smb://Administrador@server/D");
+    assert_eq!(app.display_title(&app.current), "D");
+    app.editing_address = true;
+    app.submit_address(&ctx);
+    complete_navigation(&mut app);
+    assert!(app.network_dialog.is_none());
+    assert_eq!(app.sidebar_options.remote.len(), 1);
+    app.navigate(child, Navigation::Visit);
+    complete_navigation(&mut app);
+    app.navigate_up(&ctx);
+    complete_navigation(&mut app);
+    assert_eq!(app.current, mount);
+}

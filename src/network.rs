@@ -8,6 +8,7 @@ use std::{
 };
 use url::Url;
 pub mod gvfs;
+pub mod location;
 #[derive(Default)]
 pub struct Cancellation {
     cancelled: std::sync::atomic::AtomicBool,

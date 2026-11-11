@@ -131,16 +131,9 @@ impl Workspace {
                         for tab in self.closed_tabs.iter().rev() {
                             ui.push_id(tab.id, |ui| {
                                 let trash = crate::trashbin::is_location(&tab.path);
-                                let title = if trash {
-                                    crate::i18n::tr("Lixeira").to_owned()
-                                } else {
-                                    tab.path
-                                        .file_name()
-                                        .unwrap_or(tab.path.as_os_str())
-                                        .to_string_lossy()
-                                        .into_owned()
-                                };
-                                let path = tab.path.display().to_string();
+                                let active = &self.tabs[self.active];
+                                let title = active.display_title(&tab.path);
+                                let path = active.display_address(&tab.path);
                                 let width =
                                     (ui.available_width() - appearance.size - 32.0).max(40.0);
                                 let mut title_job = egui::text::LayoutJob::simple_singleline(

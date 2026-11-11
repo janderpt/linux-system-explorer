@@ -2,6 +2,8 @@
 
 ## Unreleased — 0.1.0 experimental
 
+- Show network addresses in breadcrumbs, address editing and tab tooltips, and share/folder names in tabs and recently closed tabs. Keep breadcrumb and Up navigation within the remote hierarchy while retaining local paths for filesystem operations.
+
 - Keep the window open when removing a remote sidebar shortcut: defer removal until the sidebar snapshot finishes rendering. Left-align names in the full-width server share list.
 
 - Apply the GVfs fallback to SMB server-root listings as well as share connections, preserving the supplied username in share URLs and respecting cancellation.

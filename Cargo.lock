@@ -1344,6 +1344,7 @@ dependencies = [
  "freedesktop-desktop-entry",
  "guth-wayland-dnd",
  "libloading",
+ "percent-encoding",
  "portable-pty",
  "raw-window-handle",
  "resvg",

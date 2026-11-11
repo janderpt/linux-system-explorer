@@ -99,11 +99,7 @@ impl Explorer {
     pub(super) fn cancel_address_edit(&mut self, ctx: &egui::Context) {
         self.editing_address = false;
         self.focus_address = false;
-        self.address = if self.is_trash() {
-            "trash:///".into()
-        } else {
-            self.location().display().to_string()
-        };
+        self.address = self.display_address(self.location());
         ctx.memory_mut(|memory| {
             if let Some(id) = memory.focused() {
                 memory.surrender_focus(id);
@@ -113,7 +109,7 @@ impl Explorer {
 
     pub(super) fn open_folder_picker(&mut self, ctx: &egui::Context) {
         // Retain exact bytes for an unchanged non-UTF-8 address.
-        let initial = if self.address == self.location().display().to_string() {
+        let initial = if self.address == self.display_address(self.location()) {
             self.location().to_owned()
         } else {
             self.expand_address()

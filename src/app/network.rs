@@ -39,6 +39,63 @@ impl Drop for ConnectDialog {
     }
 }
 impl Explorer {
+    pub(super) fn network_location(
+        &self,
+        path: &Path,
+    ) -> Option<crate::network::location::Location> {
+        crate::network::location::resolve(path, &self.sidebar_options.remote)
+    }
+
+    pub(super) fn display_address(&self, path: &Path) -> String {
+        if crate::trashbin::is_location(path) {
+            "trash:///".into()
+        } else {
+            self.network_location(path)
+                .map(|l| l.address)
+                .unwrap_or_else(|| path.display().to_string())
+        }
+    }
+
+    pub(super) fn display_title(&self, path: &Path) -> String {
+        if crate::trashbin::is_location(path) {
+            crate::i18n::tr("Lixeira").into()
+        } else {
+            self.network_location(path)
+                .map(|l| l.title)
+                .unwrap_or_else(|| {
+                    path.file_name()
+                        .unwrap_or(path.as_os_str())
+                        .to_string_lossy()
+                        .into_owned()
+                })
+        }
+    }
+
+    pub(super) fn navigate_up(&mut self, ctx: &egui::Context) {
+        if self.is_trash() {
+            return;
+        }
+        if let Some(mut location) = self.network_location(&self.current) {
+            location.crumbs.pop();
+            if let Some(parent) = location.crumbs.pop() {
+                if let Some(path) = parent.local {
+                    self.navigate(path, Navigation::Visit);
+                } else {
+                    self.request_network(
+                        Some(crate::network::Connection {
+                            url: parent.address,
+                            label: String::new(),
+                            mount: None,
+                        }),
+                        ctx,
+                    );
+                }
+            }
+        } else if let Some(path) = self.current.parent() {
+            self.navigate(path.to_owned(), Navigation::Visit);
+        }
+    }
+
     pub(super) fn submit_address(&mut self, ctx: &egui::Context) {
         let input = self.address.trim();
         let remote = input.starts_with("\\\\")
@@ -47,6 +104,12 @@ impl Explorer {
                 .iter()
                 .any(|prefix| input.to_ascii_lowercase().starts_with(prefix));
         if remote {
+            if input == self.display_address(self.location()) {
+                let path = self.location().to_owned();
+                self.cancel_address_edit(ctx);
+                self.navigate(path, Navigation::Visit);
+                return;
+            }
             let connection = crate::network::Connection {
                 url: input.into(),
                 label: String::new(),

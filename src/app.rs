@@ -340,11 +340,7 @@ impl Explorer {
                             }
                             self.entries = listing.entries;
                             self.skipped = listing.skipped;
-                            self.address = if self.is_trash() {
-                                "trash:///".into()
-                            } else {
-                                self.current.display().to_string()
-                            };
+                            self.address = self.display_address(&self.current);
                             self.editing_address = false;
                             if changed {
                                 self.query.clear();
@@ -467,11 +463,7 @@ impl Explorer {
         if address {
             self.editing_address = true;
             self.focus_address = true;
-            self.address = if self.is_trash() {
-                "trash:///".into()
-            } else {
-                self.location().display().to_string()
-            };
+            self.address = self.display_address(self.location());
         }
         if search {
             self.focus_search = true;
@@ -482,11 +474,8 @@ impl Explorer {
         if forward && let Some(path) = self.history.forward() {
             self.navigate(path.to_owned(), Navigation::Forward);
         }
-        if up
-            && !self.is_trash()
-            && let Some(path) = self.current.parent()
-        {
-            self.navigate(path.to_owned(), Navigation::Visit);
+        if up {
+            self.navigate_up(ctx);
         }
         if refresh {
             self.refresh();
@@ -564,9 +553,8 @@ impl Explorer {
                     )
                     .on_hover_text(crate::i18n::tr("Pasta acima · Alt+↑"))
                     .clicked()
-                    && let Some(path) = self.current.parent()
                 {
-                    self.navigate(path.to_owned(), Navigation::Visit);
+                    self.navigate_up(ui.ctx());
                 }
                 if self
                     .navigation_button(
@@ -585,6 +573,7 @@ impl Explorer {
                 {
                     self.editing_address = true;
                     self.focus_address = true;
+                    self.address = self.display_address(self.location());
                 }
                 ui.add_space(10.0);
                 let controls_width =
@@ -708,6 +697,22 @@ impl Explorer {
                                 .clicked()
                             {
                                 self.open_folder_picker(ui.ctx());
+                            }
+                        } else if let Some(location) = self.network_location(&self.current) {
+                            match breadcrumbs::show_network(ui, location) {
+                                Some(breadcrumbs::Destination::Folder(path)) => {
+                                    self.navigate(path, Navigation::Visit)
+                                }
+                                Some(breadcrumbs::Destination::Network(url)) => self
+                                    .request_network(
+                                        Some(crate::network::Connection {
+                                            url,
+                                            label: String::new(),
+                                            mount: None,
+                                        }),
+                                        ui.ctx(),
+                                    ),
+                                None => (),
                             }
                         } else if let Some(path) = breadcrumbs::show(ui, &self.current) {
                             self.navigate(path, Navigation::Visit);
