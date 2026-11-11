@@ -301,7 +301,7 @@ impl Explorer {
                                         ui.add(
                                             egui::Button::selectable(
                                                 dialog.selected_share == Some(i),
-                                                &share.name,
+                                                (share.name.as_str(), egui::Atom::grow()),
                                             )
                                             .min_size(Vec2::new(ui.available_width(), 32.0))
                                             .truncate(),

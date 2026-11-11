@@ -2,6 +2,8 @@
 
 ## Unreleased — 0.1.0 experimental
 
+- Keep the window open when removing a remote sidebar shortcut: defer removal until the sidebar snapshot finishes rendering. Left-align names in the full-width server share list.
+
 - Apply the GVfs fallback to SMB server-root listings as well as share connections, preserving the supplied username in share URLs and respecting cancellation.
 
 - Verify remote folder readability before saving connections; retry failed or unreadable KDE SMB mounts through GVfs when available, supporting temporary authentication without requiring stored passwords.

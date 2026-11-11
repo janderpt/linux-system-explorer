@@ -121,6 +121,7 @@ impl Explorer {
         }
         let entries = self.sidebar_entries();
         let active = closest(&self.current, &entries);
+        let mut remove_remote = None;
         egui::SidePanel::left("places").default_width(205.0).min_width(170.0).max_width(280.0).show(ctx,|ui| {
             let height=(ui.available_height()-30.0).max(0.0);
             egui::ScrollArea::vertical().id_salt("sidebar_scroll").max_height(height).auto_shrink([false,false]).show(ui,|ui| {
@@ -158,13 +159,22 @@ impl Explorer {
                     sidebar_heading(ui,crate::i18n::tr("REDE"));
                     let network:Vec<_>=entries.iter().filter(|e|matches!(e.id,Location::Network(_)|Location::Remote(_))).collect();
                     if network.is_empty() {ui.label(RichText::new(crate::i18n::tr("Nenhuma conexão de rede configurada")).small().weak());}
-                    for entry in network {self.sidebar_place(ui,entry,active==Some(entry.id));}
+                    for entry in network {
+                        if let Some(index) = self.sidebar_place(ui,entry,active==Some(entry.id)) {
+                            remove_remote = Some(index);
+                        }
+                    }
                     if self.menu_item(ui,Icon::AddNetwork,crate::i18n::tr("Adicionar compartilhamento de rede"),"",!self.loading,false).on_hover_text(crate::i18n::tr("Adicionar compartilhamento de rede")).clicked(){self.request_network(None,ui.ctx());}
                 }
             });
             ui.add_space(5.0);
             ui.label(RichText::new("Linux System Explorer  0.1").small().weak());
         });
+        // Entries are a snapshot of the indices used throughout this frame. Apply
+        // removals only after every entry and its context menu has been rendered.
+        if let Some(index) = remove_remote {
+            self.sidebar_options.remote.remove(index);
+        }
     }
 
     fn local_share_heading(&mut self, ui: &mut egui::Ui) {
@@ -214,7 +224,13 @@ impl Explorer {
         }
     }
 
-    fn sidebar_place(&mut self, ui: &mut egui::Ui, entry: &SidebarEntry, selected: bool) {
+    fn sidebar_place(
+        &mut self,
+        ui: &mut egui::Ui,
+        entry: &SidebarEntry,
+        selected: bool,
+    ) -> Option<usize> {
+        let mut remove_remote = None;
         let response = ui
             .add_enabled_ui(!self.loading, |ui| {
                 let (rect, response) =
@@ -312,7 +328,7 @@ impl Explorer {
                     )
                     .clicked()
                 {
-                    self.sidebar_options.remote.remove(i);
+                    remove_remote = Some(i);
                     ui.close();
                 }
                 return;
@@ -375,6 +391,7 @@ impl Explorer {
                 }
             }
         });
+        remove_remote
     }
 
     pub(super) fn pin_folder(&mut self, path: PathBuf) {

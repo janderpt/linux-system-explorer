@@ -175,6 +175,23 @@ fn smb_server_listing_requires_selection_and_only_saves_the_chosen_share() {
     render(&mut app, &ctx, vec![]);
     let output = render(&mut app, &ctx, vec![]);
     assert!(text_center(&output, "Compartilhamentos disponíveis").is_some());
+    let left = |label: &str| {
+        output
+            .shapes
+            .iter()
+            .find_map(|shape| {
+                if let egui::Shape::Text(text) = &shape.shape
+                    && text.galley.text() == label
+                {
+                    Some(text.pos.x)
+                } else {
+                    None
+                }
+            })
+            .unwrap()
+    };
+    assert!((left("Docs") - left("Images")).abs() < 1.0);
+    assert!((left("Docs") - left("Compartilhamentos disponíveis")).abs() < 12.0);
     assert!(app.sidebar_options.remote.is_empty());
     let point = text_center(&output, "Docs").unwrap();
     click(&mut app, &ctx, point, PointerButton::Primary);
@@ -237,4 +254,63 @@ fn network_address_bar_routes_to_the_connection_dialog_and_rejects_uri_passwords
     assert!(dialog.result.is_none());
     assert!(dialog.browse_result.is_none());
     assert!(app.sidebar_options.remote.is_empty());
+}
+
+#[test]
+fn removing_a_remote_shortcut_from_its_menu_keeps_other_entries_and_current_folder() {
+    for removed in 0..2 {
+        let root = tempfile::tempdir().unwrap();
+        let folder = root.path().join("mounted");
+        std::fs::create_dir(&folder).unwrap();
+        let file = folder.join("keep.txt");
+        std::fs::write(&file, "preserved").unwrap();
+        let ctx = egui::Context::default();
+        let mut app = Explorer::with_context(&ctx, folder.clone());
+        complete_navigation(&mut app);
+        let prefs = root.path().join("preferences.json");
+        app.settings_path = Some(prefs.clone());
+        app.sidebar_options.visible.clear();
+        app.sidebar_options.show_pinned = false;
+        app.sidebar_options.show_local_shares = false;
+        app.sidebar_options.show_trash = false;
+        app.sidebar_options.show_network = true;
+        app.network_mounts.clear();
+        let connections: Vec<_> = ["First remote", "Second remote"]
+            .into_iter()
+            .enumerate()
+            .map(|(i, label)| crate::network::Connection {
+                url: format!("smb://server/share{i}"),
+                label: label.into(),
+                mount: Some(folder.clone()),
+            })
+            .collect();
+        app.sidebar_options.remote = connections.clone();
+        render(&mut app, &ctx, vec![]);
+        let output = render(&mut app, &ctx, vec![]);
+        click(
+            &mut app,
+            &ctx,
+            text_center(&output, &connections[removed].label).unwrap(),
+            PointerButton::Secondary,
+        );
+        let output = render(&mut app, &ctx, vec![]);
+        click(
+            &mut app,
+            &ctx,
+            text_center(&output, "Remover da Rede").unwrap(),
+            PointerButton::Primary,
+        );
+        render(&mut app, &ctx, vec![]);
+        assert_eq!(
+            app.sidebar_options.remote,
+            vec![connections[1 - removed].clone()]
+        );
+        assert_eq!(
+            Preferences::load(&prefs).unwrap().sidebar.remote,
+            app.sidebar_options.remote
+        );
+        assert_eq!(app.current, folder);
+        assert_eq!(std::fs::read_to_string(file).unwrap(), "preserved");
+        assert!(app.network_dialog.is_none());
+    }
 }
