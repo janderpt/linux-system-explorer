@@ -1427,6 +1427,10 @@
     "en": "{0} items selected",
     "pt": "{0} itens selecionados"
   },
+  "{}\nArraste para reorganizar a aba.": {
+    "en": "{0}\nDrag to reorder this tab.",
+    "pt": "{0}\nArraste para reorganizar a aba."
+  },
   "{}\nClique para ordenar. Arraste para mover a coluna.": {
     "en": "{0}\nClick to sort. Drag to move the column.",
     "pt": "{0}\nClique para ordenar. Arraste para mover a coluna."

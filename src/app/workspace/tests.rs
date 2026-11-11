@@ -1,5 +1,6 @@
 use super::*;
 use crate::app::tests::complete_navigation;
+mod tab_drag;
 fn workspace(ctx: &egui::Context, path: PathBuf) -> Workspace {
     let mut tab = Explorer::with_context(ctx, path);
     complete_navigation(&mut tab);

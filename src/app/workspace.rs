@@ -1,4 +1,5 @@
 use super::*;
+mod tab_bar;
 
 pub struct Workspace {
     tabs: Vec<Explorer>,
@@ -210,92 +211,6 @@ impl Workspace {
                 }
                 tab.clipboard_serial = serial;
             }
-        }
-    }
-    fn tab_bar(&mut self, ctx: &egui::Context) {
-        let mut select = None;
-        let mut close = None;
-        let mut add = false;
-        let locked = self.closing
-            || self.tabs[self.active].drag_blocks_tabs()
-            || self.tabs[self.active].has_dialog();
-        egui::TopBottomPanel::top("explorer_tabs").show(ctx, |ui| {
-            egui::ScrollArea::horizontal()
-                .id_salt("tab_strip")
-                .show(ui, |ui| {
-                    ui.horizontal(|ui| {
-                        for (index, tab) in self.tabs.iter().enumerate() {
-                            let path = tab.location();
-                            let title = if tab.is_trash() {
-                                crate::i18n::tr("Lixeira").to_owned()
-                            } else {
-                                path.file_name()
-                                    .unwrap_or(path.as_os_str())
-                                    .to_string_lossy()
-                                    .into_owned()
-                            };
-                            let mut title: String = title.chars().take(25).collect();
-                            if tab.busy() {
-                                title.push_str(" ·");
-                            }
-                            ui.push_id(tab.tab_id, |ui| {
-                                if ui
-                                    .add_enabled(
-                                        !locked,
-                                        egui::Button::new(title).selected(index == self.active),
-                                    )
-                                    .on_hover_text(path.display().to_string())
-                                    .clicked()
-                                {
-                                    select = Some(index);
-                                }
-                                if ui
-                                    .add_enabled(
-                                        !locked && !tab.busy(),
-                                        egui::Button::new("×").small(),
-                                    )
-                                    .on_hover_text(crate::i18n::tr("Fechar aba · Ctrl+W"))
-                                    .clicked()
-                                {
-                                    close = Some(index);
-                                }
-                            });
-                        }
-                        add = ui
-                            .add_enabled(!locked, egui::Button::new("+"))
-                            .on_hover_text(crate::i18n::tr("Nova aba · Ctrl+T"))
-                            .clicked();
-                    });
-                });
-        });
-        if !locked {
-            let terminal = self.tabs[self.active].terminal_focused(ctx);
-            if !terminal && ctx.input_mut(|i| i.consume_key(egui::Modifiers::CTRL, Key::T)) {
-                add = true;
-            }
-            if !terminal && ctx.input_mut(|i| i.consume_key(egui::Modifiers::CTRL, Key::W)) {
-                close = Some(self.active);
-            }
-            let backward = ctx.input_mut(|i| {
-                i.consume_key(egui::Modifiers::CTRL | egui::Modifiers::SHIFT, Key::Tab)
-            });
-            let forward = ctx.input_mut(|i| i.consume_key(egui::Modifiers::CTRL, Key::Tab));
-            if backward || forward {
-                select = Some(if backward {
-                    (self.active + self.tabs.len() - 1) % self.tabs.len()
-                } else {
-                    (self.active + 1) % self.tabs.len()
-                });
-            }
-        }
-        if let Some(index) = select {
-            self.activate(index, ctx);
-        }
-        if let Some(index) = close {
-            self.close_tab(index, ctx);
-        }
-        if add {
-            self.add_tab(dirs::home_dir().unwrap_or_else(|| "/".into()), ctx);
         }
     }
 }
