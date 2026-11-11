@@ -232,3 +232,89 @@ fn live_smb_server_lists_names_without_opening_share_contents() {
         "Expected shares from the explicitly selected test server"
     );
 }
+
+#[test]
+fn unreadable_kio_mount_retries_with_temporary_authenticated_mount_before_saving() {
+    let root = tempfile::tempdir().unwrap();
+    let mut calls = Vec::new();
+    let result = connect_with_fallback(
+        "smb://server/share",
+        Backend::Kio,
+        true,
+        &Cancellation::default(),
+        |backend| {
+            calls.push(backend);
+            if backend == Backend::Kio {
+                Ok(root.path().join("unreadable-mount"))
+            } else {
+                Ok(root.path().into())
+            }
+        },
+    )
+    .unwrap();
+    assert_eq!(result, root.path());
+    assert_eq!(calls, vec![Backend::Kio, Backend::Gvfs]);
+    assert!(std::fs::read_dir(result).unwrap().next().is_none());
+}
+#[test]
+fn a_readable_primary_mount_and_cancellation_do_not_start_another_authentication() {
+    let root = tempfile::tempdir().unwrap();
+    let mut calls = Vec::new();
+    connect_with_fallback(
+        "smb://server/share",
+        Backend::Kio,
+        true,
+        &Cancellation::default(),
+        |backend| {
+            calls.push(backend);
+            Ok(root.path().into())
+        },
+    )
+    .unwrap();
+    assert_eq!(calls, vec![Backend::Kio]);
+    calls.clear();
+    let cancel = Cancellation::default();
+    let result = connect_with_fallback(
+        "smb://server/share",
+        Backend::Kio,
+        true,
+        &cancel,
+        |backend| {
+            calls.push(backend);
+            cancel.cancel();
+            Err(io::Error::from(io::ErrorKind::PermissionDenied))
+        },
+    );
+    assert_eq!(result.unwrap_err().kind(), io::ErrorKind::Interrupted);
+    assert_eq!(calls, vec![Backend::Kio]);
+}
+#[test]
+fn fallback_requires_an_smb_target_and_an_available_service_and_reports_both_failures() {
+    for (uri, available, expected) in [
+        ("sftp://server/share", true, 1),
+        ("smb://server/share", false, 1),
+        ("smb://server/share", true, 2),
+    ] {
+        let mut calls = Vec::new();
+        let error = connect_with_fallback(
+            uri,
+            Backend::Kio,
+            available,
+            &Cancellation::default(),
+            |backend| {
+                calls.push(backend);
+                Err(io::Error::other(if backend == Backend::Kio {
+                    "KIO denied"
+                } else {
+                    "Temporary mount denied"
+                }))
+            },
+        )
+        .unwrap_err();
+        assert_eq!(calls.len(), expected);
+        assert!(error.to_string().contains("KIO denied"));
+        if expected == 2 {
+            assert!(error.to_string().contains("Temporary mount denied"));
+        }
+    }
+}

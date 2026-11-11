@@ -1994,5 +1994,9 @@
   "Para listar os compartilhamentos, informe apenas smb://servidor/.": {
     "pt": "Para listar os compartilhamentos, informe apenas smb://servidor/.",
     "en": "To list shares, enter only smb://server/."
+  },
+  "Não foi possível conectar pelos serviços de rede disponíveis:\n{}\n{}": {
+    "pt": "Não foi possível conectar pelos serviços de rede disponíveis:\n{0}\n{1}",
+    "en": "Could not connect through the available network services:\n{0}\n{1}"
   }
 }

@@ -174,18 +174,81 @@ pub fn connect_cancellable(input: &str, cancel: &Cancellation) -> io::Result<Pat
     if cancel.is_cancelled() {
         return Err(cancelled());
     }
-    match choose_backend(
+    let gvfs_available = services.iter().any(|s| s == "org.gtk.vfs.Daemon");
+    let backend = choose_backend(
         is_kde(),
         services.iter().any(|s| s == "org.kde.KIOFuse"),
-        services.iter().any(|s| s == "org.gtk.vfs.Daemon"),
-    ) {
-        Some(Backend::Kio) => connect_kio(&uri, cancel),
-        Some(Backend::Gvfs) => connect_gvfs(&uri, cancel),
-        None => Err(io::Error::other(crate::i18n::tr(
+        gvfs_available,
+    )
+    .ok_or_else(|| {
+        io::Error::other(crate::i18n::tr(
             "Instale GVfs no GNOME ou KIO Fuse no KDE para conectar a pastas remotas.",
-        ))),
+        ))
+    })?;
+    connect_with_fallback(
+        &uri,
+        backend,
+        gvfs_available,
+        cancel,
+        |backend| match backend {
+            Backend::Kio => connect_kio(&uri, cancel),
+            Backend::Gvfs => connect_gvfs(&uri, cancel),
+        },
+    )
+}
+
+fn readable_mount(path: PathBuf, cancel: &Cancellation) -> io::Result<PathBuf> {
+    if cancel.is_cancelled() {
+        return Err(cancelled());
+    }
+    // Mount/stat success does not prove a remote folder can be listed. Force the
+    // first directory read before saving a connection or leaving the old folder.
+    std::fs::read_dir(&path)?.next().transpose()?;
+    if cancel.is_cancelled() {
+        return Err(cancelled());
+    }
+    Ok(path)
+}
+fn connect_with_fallback(
+    uri: &str,
+    preferred: Backend,
+    gvfs_available: bool,
+    cancel: &Cancellation,
+    mut mount: impl FnMut(Backend) -> io::Result<PathBuf>,
+) -> io::Result<PathBuf> {
+    if cancel.is_cancelled() {
+        return Err(cancelled());
+    }
+    let first = mount(preferred).and_then(|path| readable_mount(path, cancel));
+    if cancel.is_cancelled() {
+        return Err(cancelled());
+    }
+    match first {
+        Ok(path) => Ok(path),
+        Err(primary)
+            if preferred == Backend::Kio && gvfs_available && uri.starts_with("smb://") =>
+        {
+            let second = mount(Backend::Gvfs).and_then(|path| readable_mount(path, cancel));
+            if cancel.is_cancelled() {
+                return Err(cancelled());
+            }
+            second.map_err(|secondary| {
+                if secondary.kind() == io::ErrorKind::Interrupted {
+                    return secondary;
+                }
+                io::Error::new(
+                    secondary.kind(),
+                    crate::i18n::message(
+                        "Não foi possível conectar pelos serviços de rede disponíveis:\n{}\n{}",
+                        &[primary.to_string(), secondary.to_string()],
+                    ),
+                )
+            })
+        }
+        Err(error) => Err(error),
     }
 }
+
 fn connect_gvfs(uri: &str, cancel: &Cancellation) -> io::Result<PathBuf> {
     connect_gvfs_with(&std::env::current_exe()?, uri, cancel)
 }
