@@ -1,0 +1,1510 @@
+{
+  " (cópia {number})": {
+    "en": " (copy {0})",
+    "pt": " (cópia {0})"
+  },
+  " (cópia)": {
+    "en": " (copy)",
+    "pt": " (cópia)"
+  },
+  " (restaurado {})": {
+    "en": " (restored {0})",
+    "pt": " (restaurado {0})"
+  },
+  " (restaurado)": {
+    "en": " (restored)",
+    "pt": " (restaurado)"
+  },
+  " Operação interrompida entre os itens.": {
+    "en": " Operation stopped between items.",
+    "pt": " Operação interrompida entre os itens."
+  },
+  " Restauração cancelada.": {
+    "en": " Restoration cancelled.",
+    "pt": " Restauração cancelada."
+  },
+  " Transferência cancelada.": {
+    "en": " Transfer cancelled.",
+    "pt": " Transferência cancelada."
+  },
+  " s": {
+    "en": " s",
+    "pt": " s"
+  },
+  "1 item selecionado": {
+    "en": "1 item selected",
+    "pt": "1 item selecionado"
+  },
+  "A associação padrão do sistema será alterada para este tipo de arquivo.": {
+    "en": "The system default association will be changed for this file type.",
+    "pt": "A associação padrão do sistema será alterada para este tipo de arquivo."
+  },
+  "A exclusão permanente (Shift+Del) sempre pede confirmação.": {
+    "en": "Permanent deletion (Shift+Del) always requires confirmation.",
+    "pt": "A exclusão permanente (Shift+Del) sempre pede confirmação."
+  },
+  "A lixeira está vazia": {
+    "en": "Trash is empty",
+    "pt": "A lixeira está vazia"
+  },
+  "A origem mudou antes de ser lida": {
+    "en": "The source changed before it could be read",
+    "pt": "A origem mudou antes de ser lida"
+  },
+  "A origem mudou durante a transferência: {}": {
+    "en": "The source changed during the transfer: {0}",
+    "pt": "A origem mudou durante a transferência: {0}"
+  },
+  "A pesquisa considera os nomes dos itens nesta pasta.": {
+    "en": "Search matches item names in this folder.",
+    "pt": "A pesquisa considera os nomes dos itens nesta pasta."
+  },
+  "A seleção excede os limites do arrastar e soltar.": {
+    "en": "The selection exceeds the drag-and-drop limits.",
+    "pt": "A seleção excede os limites do arrastar e soltar."
+  },
+  "ACESSO RÁPIDO": {
+    "en": "QUICK ACCESS",
+    "pt": "ACESSO RÁPIDO"
+  },
+  "Abrir": {
+    "en": "Open",
+    "pt": "Abrir"
+  },
+  "Abrir com outro aplicativo": {
+    "en": "Open with another application",
+    "pt": "Abrir com outro aplicativo"
+  },
+  "Abrir com…": {
+    "en": "Open with…",
+    "pt": "Abrir com…"
+  },
+  "Abrir este item": {
+    "en": "Open this item",
+    "pt": "Abrir este item"
+  },
+  "Abrir este item com…": {
+    "en": "Open this item with…",
+    "pt": "Abrir este item com…"
+  },
+  "Abrir item": {
+    "en": "Open item",
+    "pt": "Abrir item"
+  },
+  "Adicionar à Rede": {
+    "en": "Add to Network",
+    "pt": "Adicionar à Rede"
+  },
+  "Adicione o caminho local onde o compartilhamento está ou será montado, por exemplo /mnt/servidor.": {
+    "en": "Add the local path where the share is or will be mounted, for example /mnt/server.",
+    "pt": "Adicione o caminho local onde o compartilhamento está ou será montado, por exemplo /mnt/servidor."
+  },
+  "Alguns itens da lixeira não puderam ser listados e foram preservados.": {
+    "en": "Some Trash items could not be listed and were preserved.",
+    "pt": "Alguns itens da lixeira não puderam ser listados e foram preservados."
+  },
+  "Alteração de metadados": {
+    "en": "Metadata change",
+    "pt": "Alteração de metadados"
+  },
+  "Aparência e ícones": {
+    "en": "Appearance and icons",
+    "pt": "Aparência e ícones"
+  },
+  "Aplicar": {
+    "en": "Apply",
+    "pt": "Aplicar"
+  },
+  "Aplicar aos próximos conflitos": {
+    "en": "Apply to remaining conflicts",
+    "pt": "Aplicar aos próximos conflitos"
+  },
+  "Apresentações": {
+    "en": "Presentations",
+    "pt": "Apresentações"
+  },
+  "Arquivo": {
+    "en": "File",
+    "pt": "Arquivo"
+  },
+  "Arquivo {}": {
+    "en": "{0} file",
+    "pt": "Arquivo {0}"
+  },
+  "Arquivos PDF": {
+    "en": "PDF files",
+    "pt": "Arquivos PDF"
+  },
+  "Arquivos binários": {
+    "en": "Binary files",
+    "pt": "Arquivos binários"
+  },
+  "Arquivos compactados": {
+    "en": "Compressed archives",
+    "pt": "Arquivos compactados"
+  },
+  "Arquivos de backup": {
+    "en": "Backup files",
+    "pt": "Arquivos de backup"
+  },
+  "Arquivos de fonte": {
+    "en": "Font files",
+    "pt": "Arquivos de fonte"
+  },
+  "Arquivos de imagem": {
+    "en": "Image files",
+    "pt": "Arquivos de imagem"
+  },
+  "Arquivos de vídeo": {
+    "en": "Video files",
+    "pt": "Arquivos de vídeo"
+  },
+  "Arquivos de áudio": {
+    "en": "Audio files",
+    "pt": "Arquivos de áudio"
+  },
+  "Arquivos na lista": {
+    "en": "Files in the list",
+    "pt": "Arquivos na lista"
+  },
+  "Arraste para redimensionar a coluna": {
+    "en": "Drag to resize the column",
+    "pt": "Arraste para redimensionar a coluna"
+  },
+  "As preferências são salvas neste computador e restauradas na próxima execução.": {
+    "en": "Preferences are saved on this computer and restored the next time you open the application.",
+    "pt": "As preferências são salvas neste computador e restauradas na próxima execução."
+  },
+  "Atualizar": {
+    "en": "Refresh",
+    "pt": "Atualizar"
+  },
+  "Atualizar pastas": {
+    "en": "Refresh folders",
+    "pt": "Atualizar pastas"
+  },
+  "Atualizar · F5": {
+    "en": "Refresh · F5",
+    "pt": "Atualizar · F5"
+  },
+  "Aumentar tamanho dos itens": {
+    "en": "Increase item size",
+    "pt": "Aumentar tamanho dos itens"
+  },
+  "Avançar": {
+    "en": "Forward",
+    "pt": "Avançar"
+  },
+  "Avançar · Alt+→": {
+    "en": "Forward · Alt+→",
+    "pt": "Avançar · Alt+→"
+  },
+  "Aviso": {
+    "en": "Warning",
+    "pt": "Aviso"
+  },
+  "Bancos de dados": {
+    "en": "Databases",
+    "pt": "Bancos de dados"
+  },
+  "Barra lateral": {
+    "en": "Sidebar",
+    "pt": "Barra lateral"
+  },
+  "Blocos de 512 B": {
+    "en": "512 B blocks",
+    "pt": "Blocos de 512 B"
+  },
+  "Blocos reportados pelo sistema × 512 bytes. Pode diferir do tamanho lógico em arquivos esparsos.": {
+    "en": "Blocks reported by the system × 512 bytes. May differ from the logical size of sparse files.",
+    "pt": "Blocos reportados pelo sistema × 512 bytes. Pode diferir do tamanho lógico em arquivos esparsos."
+  },
+  "Buscar aplicativo…": {
+    "en": "Search applications…",
+    "pt": "Buscar aplicativo…"
+  },
+  "Buscar ícone Font Awesome: folder, house, gear…": {
+    "en": "Search Font Awesome icons: folder, house, gear…",
+    "pt": "Buscar ícone Font Awesome: folder, house, gear…"
+  },
+  "Calendários e contatos": {
+    "en": "Calendars and contacts",
+    "pt": "Calendários e contatos"
+  },
+  "Caminho": {
+    "en": "Path",
+    "pt": "Caminho"
+  },
+  "Caminho codificado inválido": {
+    "en": "Invalid encoded path",
+    "pt": "Caminho codificado inválido"
+  },
+  "Caminho completo": {
+    "en": "Full path",
+    "pt": "Caminho completo"
+  },
+  "Caminho da pasta": {
+    "en": "Folder path",
+    "pt": "Caminho da pasta"
+  },
+  "Caminho da pasta a fixar: /caminho ou ~/pasta": {
+    "en": "Folder to pin: /path or ~/folder",
+    "pt": "Caminho da pasta a fixar: /caminho ou ~/pasta"
+  },
+  "Caminho de preferências inválido": {
+    "en": "Invalid preferences path",
+    "pt": "Caminho de preferências inválido"
+  },
+  "Caminho inválido para exclusão": {
+    "en": "Invalid deletion path",
+    "pt": "Caminho inválido para exclusão"
+  },
+  "Caminho original": {
+    "en": "Original path",
+    "pt": "Caminho original"
+  },
+  "Cancelar": {
+    "en": "Cancel",
+    "pt": "Cancelar"
+  },
+  "Cancelar restauração": {
+    "en": "Cancel restoration",
+    "pt": "Cancelar restauração"
+  },
+  "Cancelar transferência": {
+    "en": "Cancel transfer",
+    "pt": "Cancelar transferência"
+  },
+  "Carregando aplicativos…": {
+    "en": "Loading applications…",
+    "pt": "Carregando aplicativos…"
+  },
+  "Carregando lixeira…": {
+    "en": "Loading Trash…",
+    "pt": "Carregando lixeira…"
+  },
+  "Carregando pastas…": {
+    "en": "Loading folders…",
+    "pt": "Carregando pastas…"
+  },
+  "Carregando pasta…": {
+    "en": "Loading folder…",
+    "pt": "Carregando pasta…"
+  },
+  "Certificados e chaves": {
+    "en": "Certificates and keys",
+    "pt": "Certificados e chaves"
+  },
+  "Clique direito para restaurar": {
+    "en": "Right-click to restore",
+    "pt": "Clique direito para restaurar"
+  },
+  "Clique nas pastas para navegar e confirme a pasta que deseja abrir.": {
+    "en": "Click folders to browse, then confirm the folder you want to open.",
+    "pt": "Clique nas pastas para navegar e confirme a pasta que deseja abrir."
+  },
+  "Colar": {
+    "en": "Paste",
+    "pt": "Colar"
+  },
+  "Colar arquivos": {
+    "en": "Paste files",
+    "pt": "Colar arquivos"
+  },
+  "Coloridos": {
+    "en": "Colored",
+    "pt": "Coloridos"
+  },
+  "Colunas": {
+    "en": "Columns",
+    "pt": "Colunas"
+  },
+  "Compartilhamentos de rede": {
+    "en": "Network shares",
+    "pt": "Compartilhamentos de rede"
+  },
+  "Compartilhamentos montados no Linux são detectados automaticamente. F5 atualiza essa lista.": {
+    "en": "Network shares mounted on Linux are detected automatically. Press F5 to refresh this list.",
+    "pt": "Compartilhamentos montados no Linux são detectados automaticamente. F5 atualiza essa lista."
+  },
+  "Configurações": {
+    "en": "Settings",
+    "pt": "Configurações"
+  },
+  "Copiar": {
+    "en": "Copy",
+    "pt": "Copiar"
+  },
+  "Copiar arquivos": {
+    "en": "Copy files",
+    "pt": "Copiar arquivos"
+  },
+  "Copiar caminho": {
+    "en": "Copy path",
+    "pt": "Copiar caminho"
+  },
+  "Copiar caminho original": {
+    "en": "Copy original path",
+    "pt": "Copiar caminho original"
+  },
+  "Copiar caminhos selecionados": {
+    "en": "Copy selected paths",
+    "pt": "Copiar caminhos selecionados"
+  },
+  "Cores dos ícones:": {
+    "en": "Icon colors:",
+    "pt": "Cores dos ícones:"
+  },
+  "Criar": {
+    "en": "Create",
+    "pt": "Criar"
+  },
+  "Código e configurações": {
+    "en": "Code and configuration files",
+    "pt": "Código e configurações"
+  },
+  "Cópia concluída, mas a origem foi preservada parcialmente: {e}": {
+    "en": "Copy completed, but part of the source was preserved: {0}",
+    "pt": "Cópia concluída, mas a origem foi preservada parcialmente: {0}"
+  },
+  "Cópia concluída, mas não foi possível remover toda a origem: {e}": {
+    "en": "Copy completed, but the entire source could not be removed: {0}",
+    "pt": "Cópia concluída, mas não foi possível remover toda a origem: {0}"
+  },
+  "Data de criação": {
+    "en": "Date created",
+    "pt": "Data de criação"
+  },
+  "Data de exclusão": {
+    "en": "Date deleted",
+    "pt": "Data de exclusão"
+  },
+  "Data de modificação": {
+    "en": "Date modified",
+    "pt": "Data de modificação"
+  },
+  "Datas não fornecidas pelo sistema de arquivos aparecem como —.": {
+    "en": "Dates unavailable from the file system are shown as —.",
+    "pt": "Datas não fornecidas pelo sistema de arquivos aparecem como —."
+  },
+  "Desafixar da barra lateral": {
+    "en": "Unpin from sidebar",
+    "pt": "Desafixar da barra lateral"
+  },
+  "Desafixar pasta": {
+    "en": "Unpin folder",
+    "pt": "Desafixar pasta"
+  },
+  "Desenhos e diagramas": {
+    "en": "Drawings and diagrams",
+    "pt": "Desenhos e diagramas"
+  },
+  "Destino do link": {
+    "en": "Link target",
+    "pt": "Destino do link"
+  },
+  "Destino do link: {}": {
+    "en": "Link target: {0}",
+    "pt": "Destino do link: {0}"
+  },
+  "Destino inválido": {
+    "en": "Invalid destination",
+    "pt": "Destino inválido"
+  },
+  "Destino registrado no link simbólico, que pode ser relativo.": {
+    "en": "Target stored in the symbolic link, which may be relative.",
+    "pt": "Destino registrado no link simbólico, que pode ser relativo."
+  },
+  "Destino: {}": {
+    "en": "Destination: {0}",
+    "pt": "Destino: {0}"
+  },
+  "Detalhes": {
+    "en": "Details",
+    "pt": "Detalhes"
+  },
+  "Diminuir tamanho dos itens": {
+    "en": "Decrease item size",
+    "pt": "Diminuir tamanho dos itens"
+  },
+  "Dispositivo (ID)": {
+    "en": "Device (ID)",
+    "pt": "Dispositivo (ID)"
+  },
+  "Dispositivo de blocos": {
+    "en": "Block device",
+    "pt": "Dispositivo de blocos"
+  },
+  "Dispositivo de caracteres": {
+    "en": "Character device",
+    "pt": "Dispositivo de caracteres"
+  },
+  "Documentos": {
+    "en": "Documents",
+    "pt": "Documentos"
+  },
+  "Documentos Word e Writer": {
+    "en": "Word and Writer documents",
+    "pt": "Documentos Word e Writer"
+  },
+  "Downloads": {
+    "en": "Downloads",
+    "pt": "Downloads"
+  },
+  "Duplo clique para abrir": {
+    "en": "Double-click to open",
+    "pt": "Duplo clique para abrir"
+  },
+  "ESTE COMPUTADOR": {
+    "en": "THIS COMPUTER",
+    "pt": "ESTE COMPUTADOR"
+  },
+  "Editar caminho": {
+    "en": "Edit path",
+    "pt": "Editar caminho"
+  },
+  "Editar caminho · Ctrl+L": {
+    "en": "Edit path · Ctrl+L",
+    "pt": "Editar caminho · Ctrl+L"
+  },
+  "Enviar para a lixeira?": {
+    "en": "Move to Trash?",
+    "pt": "Enviar para a lixeira?"
+  },
+  "Erro": {
+    "en": "Error",
+    "pt": "Erro"
+  },
+  "Escolha as colunas exibidas na lista de detalhes. Todas permitem ordenação pelo cabeçalho.": {
+    "en": "Choose the columns shown in Details view. Click any column header to sort.",
+    "pt": "Escolha as colunas exibidas na lista de detalhes. Todas permitem ordenação pelo cabeçalho."
+  },
+  "Escolha os atalhos e as seções da barra lateral.": {
+    "en": "Choose sidebar shortcuts and sections.",
+    "pt": "Escolha os atalhos e as seções da barra lateral."
+  },
+  "Escolha uma pasta existente para fixar": {
+    "en": "Choose an existing folder to pin",
+    "pt": "Escolha uma pasta existente para fixar"
+  },
+  "Espaço alocado": {
+    "en": "Allocated space",
+    "pt": "Espaço alocado"
+  },
+  "Esta ação não pode ser desfeita pela lixeira.": {
+    "en": "This action cannot be undone through the Trash.",
+    "pt": "Esta ação não pode ser desfeita pela lixeira."
+  },
+  "Esta escolha vale apenas para esta abertura.": {
+    "en": "This choice applies only to this opening.",
+    "pt": "Esta escolha vale apenas para esta abertura."
+  },
+  "Esta pasta está vazia": {
+    "en": "This folder is empty",
+    "pt": "Esta pasta está vazia"
+  },
+  "Esta pasta não contém subpastas visíveis.": {
+    "en": "This folder has no visible subfolders.",
+    "pt": "Esta pasta não contém subpastas visíveis."
+  },
+  "Esvaziando lixeira {}/{} · {}": {
+    "en": "Emptying Trash {0}/{1} · {2}",
+    "pt": "Esvaziando lixeira {0}/{1} · {2}"
+  },
+  "Esvaziar lixeira": {
+    "en": "Empty Trash",
+    "pt": "Esvaziar lixeira"
+  },
+  "Esvaziar lixeira?": {
+    "en": "Empty Trash?",
+    "pt": "Esvaziar lixeira?"
+  },
+  "Excluindo {}/{} · {}": {
+    "en": "Deleting {0}/{1} · {2}",
+    "pt": "Excluindo {0}/{1} · {2}"
+  },
+  "Excluir permanentemente": {
+    "en": "Delete permanently",
+    "pt": "Excluir permanentemente"
+  },
+  "Excluir permanentemente?": {
+    "en": "Delete permanently?",
+    "pt": "Excluir permanentemente?"
+  },
+  "Excluir permanentemente…": {
+    "en": "Delete permanently…",
+    "pt": "Excluir permanentemente…"
+  },
+  "Exibir Lixeira": {
+    "en": "Show Trash",
+    "pt": "Exibir Lixeira"
+  },
+  "Exibir arquivos ocultos": {
+    "en": "Show hidden files",
+    "pt": "Exibir arquivos ocultos"
+  },
+  "Exibir detalhes": {
+    "en": "Show details",
+    "pt": "Exibir detalhes"
+  },
+  "Exibir lista": {
+    "en": "Show list",
+    "pt": "Exibir lista"
+  },
+  "Exibir seção Rede": {
+    "en": "Show Network section",
+    "pt": "Exibir seção Rede"
+  },
+  "Exibir seção de pastas fixadas": {
+    "en": "Show pinned folders section",
+    "pt": "Exibir seção de pastas fixadas"
+  },
+  "Exibir ícones": {
+    "en": "Show icons",
+    "pt": "Exibir ícones"
+  },
+  "Explorador de Arquivos": {
+    "en": "File Explorer",
+    "pt": "Explorador de Arquivos"
+  },
+  "Extensão": {
+    "en": "Extension",
+    "pt": "Extensão"
+  },
+  "Falha no arrastar e soltar: {}": {
+    "en": "Drag-and-drop failed: {0}",
+    "pt": "Falha no arrastar e soltar: {0}"
+  },
+  "Falhas ao esvaziar a lixeira:\n{}": {
+    "en": "Errors while emptying Trash:\n{0}",
+    "pt": "Falhas ao esvaziar a lixeira:\n{0}"
+  },
+  "Falhas na restauração:\n{}": {
+    "en": "Restoration errors:\n{0}",
+    "pt": "Falhas na restauração:\n{0}"
+  },
+  "Fechamento manual": {
+    "en": "Dismiss manually",
+    "pt": "Fechamento manual"
+  },
+  "Fechar": {
+    "en": "Close",
+    "pt": "Fechar"
+  },
+  "Fechar aviso": {
+    "en": "Dismiss",
+    "pt": "Fechar aviso"
+  },
+  "Fechar todos": {
+    "en": "Dismiss all",
+    "pt": "Fechar todos"
+  },
+  "Fixar na barra lateral": {
+    "en": "Pin to sidebar",
+    "pt": "Fixar na barra lateral"
+  },
+  "Fixar pasta": {
+    "en": "Pin folder",
+    "pt": "Fixar pasta"
+  },
+  "Fixar pasta atual": {
+    "en": "Pin current folder",
+    "pt": "Fixar pasta atual"
+  },
+  "Geral": {
+    "en": "General",
+    "pt": "Geral"
+  },
+  "Grupo": {
+    "en": "Group",
+    "pt": "Grupo"
+  },
+  "Identificador numérico st_dev do sistema de arquivos.": {
+    "en": "Numeric st_dev identifier from the file system.",
+    "pt": "Identificador numérico st_dev do sistema de arquivos."
+  },
+  "Idioma:": {
+    "en": "Language:",
+    "pt": "Idioma:"
+  },
+  "Idiomas não disponíveis usam inglês.": {
+    "en": "Unsupported system languages use English.",
+    "pt": "Idiomas não disponíveis usam inglês."
+  },
+  "Ignorar": {
+    "en": "Skip",
+    "pt": "Ignorar"
+  },
+  "Imagens": {
+    "en": "Pictures",
+    "pt": "Imagens"
+  },
+  "Imagens de disco": {
+    "en": "Disk images",
+    "pt": "Imagens de disco"
+  },
+  "Indica ausência dos bits POSIX de escrita. ACLs, privilégios e montagem também afetam o acesso.": {
+    "en": "Indicates that POSIX write bits are absent. ACLs, privileges and mount settings also affect access.",
+    "pt": "Indica ausência dos bits POSIX de escrita. ACLs, privilégios e montagem também afetam o acesso."
+  },
+  "Informe um caminho absoluto, como /mnt/servidor, ou use ~/pasta": {
+    "en": "Enter an absolute path, such as /mnt/server, or use ~/folder",
+    "pt": "Informe um caminho absoluto, como /mnt/servidor, ou use ~/pasta"
+  },
+  "Informe um nome sem barras, diferente de . e ..": {
+    "en": "Enter a name without slashes, other than . or ..",
+    "pt": "Informe um nome sem barras, diferente de . e .."
+  },
+  "Interromper após este item": {
+    "en": "Stop after this item",
+    "pt": "Interromper após este item"
+  },
+  "Itens ocultos": {
+    "en": "Hidden items",
+    "pt": "Itens ocultos"
+  },
+  "Itens ocultos · Ctrl+H": {
+    "en": "Hidden items · Ctrl+H",
+    "pt": "Itens ocultos · Ctrl+H"
+  },
+  "Já existe um arquivo ou pasta com esse nome.": {
+    "en": "A file or folder with this name already exists.",
+    "pt": "Já existe um arquivo ou pasta com esse nome."
+  },
+  "Já existe um item com este nome": {
+    "en": "An item with this name already exists",
+    "pt": "Já existe um item com este nome"
+  },
+  "Limpar pesquisa": {
+    "en": "Clear search",
+    "pt": "Limpar pesquisa"
+  },
+  "Link para pasta": {
+    "en": "Folder link",
+    "pt": "Link para pasta"
+  },
+  "Link simbólico": {
+    "en": "Symbolic link",
+    "pt": "Link simbólico"
+  },
+  "Links físicos": {
+    "en": "Hard links",
+    "pt": "Links físicos"
+  },
+  "Lista": {
+    "en": "List",
+    "pt": "Lista"
+  },
+  "Lixeira": {
+    "en": "Trash",
+    "pt": "Lixeira"
+  },
+  "Local: {}": {
+    "en": "Location: {0}",
+    "pt": "Local: {0}"
+  },
+  "Mais ações da pasta": {
+    "en": "More folder actions",
+    "pt": "Mais ações da pasta"
+  },
+  "Manter ambos": {
+    "en": "Keep both",
+    "pt": "Manter ambos"
+  },
+  "Manter ambos cria uma cópia com outro nome.": {
+    "en": "Keep both creates a copy with a different name.",
+    "pt": "Manter ambos cria uma cópia com outro nome."
+  },
+  "Manter os toasts visíveis até o fechamento manual": {
+    "en": "Keep toasts visible until closed manually",
+    "pt": "Manter os toasts visíveis até o fechamento manual"
+  },
+  "Modificado: {}": {
+    "en": "Modified: {0}",
+    "pt": "Modificado: {0}"
+  },
+  "Modo POSIX com tipo e bits rwx, incluindo setuid, setgid e sticky bit.": {
+    "en": "POSIX mode with file type and rwx bits, including setuid, setgid and the sticky bit.",
+    "pt": "Modo POSIX com tipo e bits rwx, incluindo setuid, setgid e sticky bit."
+  },
+  "Modo de detalhes": {
+    "en": "Details view",
+    "pt": "Modo de detalhes"
+  },
+  "Modo de lista": {
+    "en": "List view",
+    "pt": "Modo de lista"
+  },
+  "Modo de visualização, colunas e larguras são salvos por pasta.": {
+    "en": "View mode, columns and widths are saved for each folder.",
+    "pt": "Modo de visualização, colunas e larguras são salvos por pasta."
+  },
+  "Modo de visualização, zoom, colunas e larguras são salvos por pasta.": {
+    "en": "View mode, zoom, columns and widths are saved for each folder.",
+    "pt": "Modo de visualização, zoom, colunas e larguras são salvos por pasta."
+  },
+  "Modo de ícones": {
+    "en": "Icons view",
+    "pt": "Modo de ícones"
+  },
+  "Modo octal": {
+    "en": "Octal mode",
+    "pt": "Modo octal"
+  },
+  "Montagens": {
+    "en": "Mounts",
+    "pt": "Montagens"
+  },
+  "Montagens · /mnt": {
+    "en": "Mounts · /mnt",
+    "pt": "Montagens · /mnt"
+  },
+  "Mostrar outros aplicativos": {
+    "en": "Show other applications",
+    "pt": "Mostrar outros aplicativos"
+  },
+  "Mover para a lixeira": {
+    "en": "Move to Trash",
+    "pt": "Mover para a lixeira"
+  },
+  "Mídias removíveis": {
+    "en": "Removable media",
+    "pt": "Mídias removíveis"
+  },
+  "Mídias · /media": {
+    "en": "Media · /media",
+    "pt": "Mídias · /media"
+  },
+  "Músicas": {
+    "en": "Music",
+    "pt": "Músicas"
+  },
+  "Nascimento do arquivo (btime), quando fornecido pelo sistema de arquivos.": {
+    "en": "File birth time (btime), when provided by the file system.",
+    "pt": "Nascimento do arquivo (btime), quando fornecido pelo sistema de arquivos."
+  },
+  "Navegar e selecionar pasta": {
+    "en": "Browse and select folder",
+    "pt": "Navegar e selecionar pasta"
+  },
+  "Nenhum aplicativo encontrado.": {
+    "en": "No applications found.",
+    "pt": "Nenhum aplicativo encontrado."
+  },
+  "Nenhum compartilhamento configurado": {
+    "en": "No shares configured",
+    "pt": "Nenhum compartilhamento configurado"
+  },
+  "Nenhum item disponível para exclusão.": {
+    "en": "No items are available for deletion.",
+    "pt": "Nenhum item disponível para exclusão."
+  },
+  "Nenhum item encontrado": {
+    "en": "No items found",
+    "pt": "Nenhum item encontrado"
+  },
+  "Nenhum ícone encontrado.": {
+    "en": "No icons found.",
+    "pt": "Nenhum ícone encontrado."
+  },
+  "Nome": {
+    "en": "Name",
+    "pt": "Nome"
+  },
+  "Nome da pasta": {
+    "en": "Folder name",
+    "pt": "Nome da pasta"
+  },
+  "Nome do compartilhamento (opcional)": {
+    "en": "Share name (optional)",
+    "pt": "Nome do compartilhamento (opcional)"
+  },
+  "Notificação de aviso": {
+    "en": "Warning notification",
+    "pt": "Notificação de aviso"
+  },
+  "Notificação de erro": {
+    "en": "Error notification",
+    "pt": "Notificação de erro"
+  },
+  "Notificação de sucesso": {
+    "en": "Success notification",
+    "pt": "Notificação de sucesso"
+  },
+  "Notificações": {
+    "en": "Notifications",
+    "pt": "Notificações"
+  },
+  "Nova pasta": {
+    "en": "New folder",
+    "pt": "Nova pasta"
+  },
+  "Novo nome": {
+    "en": "New name",
+    "pt": "Novo nome"
+  },
+  "Não": {
+    "en": "No",
+    "pt": "Não"
+  },
+  "Não foi possível abrir a pasta: {error}": {
+    "en": "Could not open the folder: {0}",
+    "pt": "Não foi possível abrir a pasta: {0}"
+  },
+  "Não foi possível abrir {} (xdg-open: {status}).": {
+    "en": "Could not open {0} (xdg-open: {1}).",
+    "pt": "Não foi possível abrir {0} (xdg-open: {1})."
+  },
+  "Não foi possível abrir {} ({}: {}).": {
+    "en": "Could not open {0} ({1}: {2}).",
+    "pt": "Não foi possível abrir {0} ({1}: {2})."
+  },
+  "Não foi possível abrir {} com {} (gio: {}).": {
+    "en": "Could not open {0} with {1} (gio: {2}).",
+    "pt": "Não foi possível abrir {0} com {1} (gio: {2})."
+  },
+  "Não foi possível abrir {}: {error}": {
+    "en": "Could not open {0}: {1}",
+    "pt": "Não foi possível abrir {0}: {1}"
+  },
+  "Não foi possível carregar as preferências: {error}": {
+    "en": "Could not load preferences: {0}",
+    "pt": "Não foi possível carregar as preferências: {0}"
+  },
+  "Não foi possível criar a pasta: {error}": {
+    "en": "Could not create the folder: {0}",
+    "pt": "Não foi possível criar a pasta: {0}"
+  },
+  "Não foi possível definir {} como padrão para {} (gio: {}).": {
+    "en": "Could not set {0} as the default for {1} (gio: {2}).",
+    "pt": "Não foi possível definir {0} como padrão para {1} (gio: {2})."
+  },
+  "Não foi possível executar gio. Instale as ferramentas GIO do sistema: {}": {
+    "en": "Could not run gio. Install the system GIO tools: {0}",
+    "pt": "Não foi possível executar gio. Instale as ferramentas GIO do sistema: {0}"
+  },
+  "Não foi possível executar xdg-open: {error}": {
+    "en": "Could not run xdg-open: {0}",
+    "pt": "Não foi possível executar xdg-open: {0}"
+  },
+  "Não foi possível executar {}: {}": {
+    "en": "Could not run {0}: {1}",
+    "pt": "Não foi possível executar {0}: {1}"
+  },
+  "Não foi possível fixar a pasta: {error}": {
+    "en": "Could not pin the folder: {0}",
+    "pt": "Não foi possível fixar a pasta: {0}"
+  },
+  "Não foi possível gerar um nome disponível": {
+    "en": "Could not generate an available name",
+    "pt": "Não foi possível gerar um nome disponível"
+  },
+  "Não foi possível identificar um tipo MIME válido para salvar a associação.": {
+    "en": "Could not identify a valid MIME type to save the association.",
+    "pt": "Não foi possível identificar um tipo MIME válido para salvar a associação."
+  },
+  "Não foi possível iniciar a exclusão: {error}": {
+    "en": "Could not start deletion: {0}",
+    "pt": "Não foi possível iniciar a exclusão: {0}"
+  },
+  "Não foi possível iniciar a restauração: {}": {
+    "en": "Could not start restoration: {0}",
+    "pt": "Não foi possível iniciar a restauração: {0}"
+  },
+  "Não foi possível iniciar a transferência: {error}": {
+    "en": "Could not start the transfer: {0}",
+    "pt": "Não foi possível iniciar a transferência: {0}"
+  },
+  "Não foi possível iniciar o arrastar e soltar nativo nesta sessão gráfica.": {
+    "en": "Could not start native drag and drop in this desktop session.",
+    "pt": "Não foi possível iniciar o arrastar e soltar nativo nesta sessão gráfica."
+  },
+  "Não foi possível ler a lixeira: {}": {
+    "en": "Could not read Trash: {0}",
+    "pt": "Não foi possível ler a lixeira: {0}"
+  },
+  "Não foi possível listar os aplicativos: {}": {
+    "en": "Could not list applications: {0}",
+    "pt": "Não foi possível listar os aplicativos: {0}"
+  },
+  "Não foi possível preparar os arquivos arrastados: {}": {
+    "en": "Could not prepare the dragged files: {0}",
+    "pt": "Não foi possível preparar os arquivos arrastados: {0}"
+  },
+  "Não foi possível renomear: {}": {
+    "en": "Could not rename: {0}",
+    "pt": "Não foi possível renomear: {0}"
+  },
+  "Não foi possível restaurar a pasta: {error}": {
+    "en": "Could not reset the folder: {0}",
+    "pt": "Não foi possível restaurar a pasta: {0}"
+  },
+  "Não foi possível salvar a associação padrão para {}: {}": {
+    "en": "Could not save the default association for {0}: {1}",
+    "pt": "Não foi possível salvar a associação padrão para {0}: {1}"
+  },
+  "Não foi possível salvar as preferências: {error}": {
+    "en": "Could not save preferences: {0}",
+    "pt": "Não foi possível salvar as preferências: {0}"
+  },
+  "Não foi possível salvar: {error}": {
+    "en": "Could not save: {0}",
+    "pt": "Não foi possível salvar: {0}"
+  },
+  "Não é possível transferir a raiz do sistema": {
+    "en": "The file system root cannot be transferred",
+    "pt": "Não é possível transferir a raiz do sistema"
+  },
+  "O aplicativo de origem não permite a operação solicitada para os arquivos arrastados.": {
+    "en": "The source application does not allow the requested operation for the dragged files.",
+    "pt": "O aplicativo de origem não permite a operação solicitada para os arquivos arrastados."
+  },
+  "O aplicativo de origem não permite copiar os arquivos arrastados.": {
+    "en": "The source application does not allow copying the dragged files.",
+    "pt": "O aplicativo de origem não permite copiar os arquivos arrastados."
+  },
+  "O arraste não contém uma lista válida de arquivos locais.": {
+    "en": "The drag does not contain a valid list of local files.",
+    "pt": "O arraste não contém uma lista válida de arquivos locais."
+  },
+  "O destino não é uma pasta": {
+    "en": "The destination is not a folder",
+    "pt": "O destino não é uma pasta"
+  },
+  "O destino original já existe. Manter ambos restaura com outro nome.": {
+    "en": "The original destination already exists. Keep both restores with a different name.",
+    "pt": "O destino original já existe. Manter ambos restaura com outro nome."
+  },
+  "O item da lixeira mudou. Atualize a lista antes de restaurar.": {
+    "en": "The Trash item changed. Refresh the list before restoring.",
+    "pt": "O item da lixeira mudou. Atualize a lista antes de restaurar."
+  },
+  "O item foi substituído desde a leitura da pasta. Atualize a lista e tente novamente.": {
+    "en": "The item was replaced since the folder was read. Refresh the list and try again.",
+    "pt": "O item foi substituído desde a leitura da pasta. Atualize a lista e tente novamente."
+  },
+  "O item mudou desde a seleção. Atualize a pasta e selecione-o novamente": {
+    "en": "The item changed after selection. Refresh the folder and select it again",
+    "pt": "O item mudou desde a seleção. Atualize a pasta e selecione-o novamente"
+  },
+  "O serviço de leitura foi encerrado.": {
+    "en": "The folder reading service has stopped.",
+    "pt": "O serviço de leitura foi encerrado."
+  },
+  "O serviço de leitura foi encerrado. Reinicie o explorador.": {
+    "en": "The folder reading service has stopped. Restart the explorer.",
+    "pt": "O serviço de leitura foi encerrado. Reinicie o explorador."
+  },
+  "O serviço de renomeação foi encerrado.": {
+    "en": "The rename service stopped.",
+    "pt": "O serviço de renomeação foi encerrado."
+  },
+  "Ocultar compartilhamento": {
+    "en": "Hide share",
+    "pt": "Ocultar compartilhamento"
+  },
+  "Oculto": {
+    "en": "Hidden",
+    "pt": "Oculto"
+  },
+  "Origem: {}": {
+    "en": "Source: {0}",
+    "pt": "Origem: {0}"
+  },
+  "Os itens listados serão excluídos permanentemente, incluindo o conteúdo das pastas.": {
+    "en": "The listed items will be permanently deleted, including the contents of folders.",
+    "pt": "Os itens listados serão excluídos permanentemente, incluindo o conteúdo das pastas."
+  },
+  "Os itens poderão ser restaurados pela lixeira do sistema.": {
+    "en": "Items can be restored from the system Trash.",
+    "pt": "Os itens poderão ser restaurados pela lixeira do sistema."
+  },
+  "PASTAS FIXADAS": {
+    "en": "PINNED FOLDERS",
+    "pt": "PASTAS FIXADAS"
+  },
+  "Pacotes e instaladores": {
+    "en": "Packages and installers",
+    "pt": "Pacotes e instaladores"
+  },
+  "Padrão": {
+    "en": "Default",
+    "pt": "Padrão"
+  },
+  "Pasta": {
+    "en": "Folder",
+    "pt": "Pasta"
+  },
+  "Pasta acima": {
+    "en": "Up one level",
+    "pt": "Pasta acima"
+  },
+  "Pasta acima · Alt+↑": {
+    "en": "Up one level · Alt+↑",
+    "pt": "Pasta acima · Alt+↑"
+  },
+  "Pasta não configurada no sistema": {
+    "en": "Folder not configured in the system",
+    "pt": "Pasta não configurada no sistema"
+  },
+  "Pasta pessoal": {
+    "en": "Home",
+    "pt": "Pasta pessoal"
+  },
+  "Pasta pessoal não encontrada": {
+    "en": "Home folder not found",
+    "pt": "Pasta pessoal não encontrada"
+  },
+  "Pastas anteriores do caminho": {
+    "en": "Parent folders in the path",
+    "pt": "Pastas anteriores do caminho"
+  },
+  "Pastas na lista": {
+    "en": "Folders in the list",
+    "pt": "Pastas na lista"
+  },
+  "Pedir confirmação antes de enviar itens à lixeira": {
+    "en": "Ask for confirmation before moving items to Trash",
+    "pt": "Pedir confirmação antes de enviar itens à lixeira"
+  },
+  "Permissões": {
+    "en": "Permissions",
+    "pt": "Permissões"
+  },
+  "Personalizar:": {
+    "en": "Customize:",
+    "pt": "Personalizar:"
+  },
+  "Pesquisar nesta pasta · Ctrl+F": {
+    "en": "Search this folder · Ctrl+F",
+    "pt": "Pesquisar nesta pasta · Ctrl+F"
+  },
+  "Planilhas e arquivos CSV": {
+    "en": "Spreadsheets and CSV files",
+    "pt": "Planilhas e arquivos CSV"
+  },
+  "Ponto de montagem: /mnt/servidor": {
+    "en": "Mount point: /mnt/server",
+    "pt": "Ponto de montagem: /mnt/servidor"
+  },
+  "Preto e branco": {
+    "en": "Black and white",
+    "pt": "Preto e branco"
+  },
+  "Programas executáveis": {
+    "en": "Executable programs",
+    "pt": "Programas executáveis"
+  },
+  "Propriedades": {
+    "en": "Properties",
+    "pt": "Propriedades"
+  },
+  "Propriedades deste item": {
+    "en": "Properties of this item",
+    "pt": "Propriedades deste item"
+  },
+  "Proprietário": {
+    "en": "Owner",
+    "pt": "Proprietário"
+  },
+  "REDE": {
+    "en": "NETWORK",
+    "pt": "REDE"
+  },
+  "Recomendado": {
+    "en": "Recommended",
+    "pt": "Recomendado"
+  },
+  "Recortar": {
+    "en": "Cut",
+    "pt": "Recortar"
+  },
+  "Recortar arquivos": {
+    "en": "Cut files",
+    "pt": "Recortar arquivos"
+  },
+  "Registro da lixeira inválido": {
+    "en": "Invalid Trash entry",
+    "pt": "Registro da lixeira inválido"
+  },
+  "Remover": {
+    "en": "Remove",
+    "pt": "Remover"
+  },
+  "Remover da Rede": {
+    "en": "Remove from Network",
+    "pt": "Remover da Rede"
+  },
+  "Renomeando…": {
+    "en": "Renaming…",
+    "pt": "Renomeando…"
+  },
+  "Renomear": {
+    "en": "Rename",
+    "pt": "Renomear"
+  },
+  "Restaura a visualização, as colunas e as larguras apenas da pasta aberta.": {
+    "en": "Reset view mode, columns and widths for the current folder only.",
+    "pt": "Restaura a visualização, as colunas e as larguras apenas da pasta aberta."
+  },
+  "Restaura a visualização, o zoom, as colunas e as larguras apenas da pasta aberta.": {
+    "en": "Reset view mode, zoom, columns and widths for the current folder only.",
+    "pt": "Restaura a visualização, o zoom, as colunas e as larguras apenas da pasta aberta."
+  },
+  "Restaurando {}/{} · {}": {
+    "en": "Restoring {0}/{1} · {2}",
+    "pt": "Restaurando {0}/{1} · {2}"
+  },
+  "Restaurar": {
+    "en": "Restore",
+    "pt": "Restaurar"
+  },
+  "Restaurar padrão": {
+    "en": "Restore defaults",
+    "pt": "Restaurar padrão"
+  },
+  "Restaurar padrão desta pasta": {
+    "en": "Reset this folder",
+    "pt": "Restaurar padrão desta pasta"
+  },
+  "Restaure o item da lixeira antes de renomeá-lo.": {
+    "en": "Restore the item from Trash before renaming it.",
+    "pt": "Restaure o item da lixeira antes de renomeá-lo."
+  },
+  "Sair da edição do caminho": {
+    "en": "Exit path editing",
+    "pt": "Sair da edição do caminho"
+  },
+  "Sair da edição do caminho · Esc": {
+    "en": "Exit path editing · Esc",
+    "pt": "Sair da edição do caminho · Esc"
+  },
+  "Salvar e fechar": {
+    "en": "Save and close",
+    "pt": "Salvar e fechar"
+  },
+  "Seguir idioma do sistema": {
+    "en": "Follow system language",
+    "pt": "Seguir idioma do sistema"
+  },
+  "Selecionar pasta": {
+    "en": "Select folder",
+    "pt": "Selecionar pasta"
+  },
+  "Sem bits de escrita": {
+    "en": "No write bits",
+    "pt": "Sem bits de escrita"
+  },
+  "Sim": {
+    "en": "Yes",
+    "pt": "Sim"
+  },
+  "Sistema de arquivos": {
+    "en": "File system",
+    "pt": "Sistema de arquivos"
+  },
+  "Sockets, FIFOs e dispositivos não podem ser copiados como arquivos comuns": {
+    "en": "Sockets, FIFOs and devices cannot be copied as regular files",
+    "pt": "Sockets, FIFOs e dispositivos não podem ser copiados como arquivos comuns"
+  },
+  "Sucesso": {
+    "en": "Success",
+    "pt": "Sucesso"
+  },
+  "Tamanho": {
+    "en": "Size",
+    "pt": "Tamanho"
+  },
+  "Tamanho dos itens": {
+    "en": "Item size",
+    "pt": "Tamanho dos itens"
+  },
+  "Tamanho dos itens desta pasta": {
+    "en": "Item size for this folder",
+    "pt": "Tamanho dos itens desta pasta"
+  },
+  "Tamanho dos itens: {}%": {
+    "en": "Item size: {0}%",
+    "pt": "Tamanho dos itens: {0}%"
+  },
+  "Tamanho na barra": {
+    "en": "Toolbar size",
+    "pt": "Tamanho na barra"
+  },
+  "Tamanho: {} ({size} bytes)": {
+    "en": "Size: {0} ({1} bytes)",
+    "pt": "Tamanho: {0} ({1} bytes)"
+  },
+  "Tema claro": {
+    "en": "Light theme",
+    "pt": "Tema claro"
+  },
+  "Tema escuro": {
+    "en": "Dark theme",
+    "pt": "Tema escuro"
+  },
+  "Tempo de exibição": {
+    "en": "Display duration",
+    "pt": "Tempo de exibição"
+  },
+  "Tempo de exibição dos toasts:": {
+    "en": "Toast display time:",
+    "pt": "Tempo de exibição dos toasts:"
+  },
+  "Tentar novamente": {
+    "en": "Try again",
+    "pt": "Tentar novamente"
+  },
+  "Testar aviso": {
+    "en": "Test warning",
+    "pt": "Testar aviso"
+  },
+  "Testar erro": {
+    "en": "Test error",
+    "pt": "Testar erro"
+  },
+  "Testar sucesso": {
+    "en": "Test success",
+    "pt": "Testar sucesso"
+  },
+  "Teste: não foi possível concluir a operação.": {
+    "en": "Test: the operation could not be completed.",
+    "pt": "Teste: não foi possível concluir a operação."
+  },
+  "Teste: operação concluída com avisos.": {
+    "en": "Test: operation completed with warnings.",
+    "pt": "Teste: operação concluída com avisos."
+  },
+  "Teste: operação concluída com sucesso.": {
+    "en": "Test: operation completed successfully.",
+    "pt": "Teste: operação concluída com sucesso."
+  },
+  "Texto e registros": {
+    "en": "Text and log files",
+    "pt": "Texto e registros"
+  },
+  "Tipo": {
+    "en": "Type",
+    "pt": "Tipo"
+  },
+  "Tipo: {}": {
+    "en": "Type: {0}",
+    "pt": "Tipo: {0}"
+  },
+  "Transferindo {}/{} · {} · {}": {
+    "en": "Transferring {0}/{1} · {2} · {3}",
+    "pt": "Transferindo {0}/{1} · {2} · {3}"
+  },
+  "Transferência cancelada": {
+    "en": "Transfer cancelled",
+    "pt": "Transferência cancelada"
+  },
+  "Uma pasta não pode ser colada dentro dela mesma": {
+    "en": "A folder cannot be pasted into itself",
+    "pt": "Uma pasta não pode ser colada dentro dela mesma"
+  },
+  "Usar esta pasta": {
+    "en": "Use this folder",
+    "pt": "Usar esta pasta"
+  },
+  "Usar sempre este aplicativo para este tipo de arquivo": {
+    "en": "Always use this application for this file type",
+    "pt": "Usar sempre este aplicativo para este tipo de arquivo"
+  },
+  "Versão de preferências não suportada": {
+    "en": "Unsupported preferences version",
+    "pt": "Versão de preferências não suportada"
+  },
+  "Visualização desta pasta:": {
+    "en": "View for this folder:",
+    "pt": "Visualização desta pasta:"
+  },
+  "Voltar": {
+    "en": "Back",
+    "pt": "Voltar"
+  },
+  "Voltar · Alt+←": {
+    "en": "Back · Alt+←",
+    "pt": "Voltar · Alt+←"
+  },
+  "Vídeos": {
+    "en": "Videos",
+    "pt": "Vídeos"
+  },
+  "atime: depende das opções de montagem, como relatime e noatime.": {
+    "en": "atime: depends on mount options such as relatime and noatime.",
+    "pt": "atime: depende das opções de montagem, como relatime e noatime."
+  },
+  "copiados": {
+    "en": "copied",
+    "pt": "copiados"
+  },
+  "ctime: última alteração dos metadados; não representa a criação do arquivo.": {
+    "en": "ctime: last metadata change; does not represent file creation time.",
+    "pt": "ctime: última alteração dos metadados; não representa a criação do arquivo."
+  },
+  "de {}": {
+    "en": "of {0}",
+    "pt": "de {0}"
+  },
+  "enviados à lixeira": {
+    "en": "moved to Trash",
+    "pt": "enviados à lixeira"
+  },
+  "excluídos permanentemente": {
+    "en": "permanently deleted",
+    "pt": "excluídos permanentemente"
+  },
+  "recortados": {
+    "en": "cut",
+    "pt": "recortados"
+  },
+  "{count} itens selecionados": {
+    "en": "{0} items selected",
+    "pt": "{0} itens selecionados"
+  },
+  "{}\nClique para ordenar. Arraste para mover a coluna.": {
+    "en": "{0}\nClick to sort. Drag to move the column.",
+    "pt": "{0}\nClique para ordenar. Arraste para mover a coluna."
+  },
+  "{} (montado)": {
+    "en": "{0} (mounted)",
+    "pt": "{0} (montado)"
+  },
+  "{} falha(s) na exclusão:\n{}": {
+    "en": "{0} deletion error(s):\n{1}",
+    "pt": "{0} falha(s) na exclusão:\n{1}"
+  },
+  "{} falha(s) na transferência:\n{}": {
+    "en": "{0} transfer error(s):\n{1}",
+    "pt": "{0} falha(s) na transferência:\n{1}"
+  },
+  "{} falha.": {
+    "en": "{0} failure.",
+    "pt": "{0} falha."
+  },
+  "{} falhas.": {
+    "en": "{0} failures.",
+    "pt": "{0} falhas."
+  },
+  "{} foi restaurado, mas o registro da lixeira não pôde ser removido: {}": {
+    "en": "{0} was restored, but its Trash record could not be removed: {1}",
+    "pt": "{0} foi restaurado, mas o registro da lixeira não pôde ser removido: {1}"
+  },
+  "{} item": {
+    "en": "{0} item",
+    "pt": "{0} item"
+  },
+  "{} item concluído": {
+    "en": "{0} item completed",
+    "pt": "{0} item concluído"
+  },
+  "{} item copiado. Abra a pasta de destino e use Colar.": {
+    "en": "{0} item copied. Open the destination folder and use Paste.",
+    "pt": "{0} item copiado. Abra a pasta de destino e use Colar."
+  },
+  "{} item enviado à lixeira.": {
+    "en": "{0} item moved to Trash.",
+    "pt": "{0} item enviado à lixeira."
+  },
+  "{} item excluído permanentemente.": {
+    "en": "{0} item permanently deleted.",
+    "pt": "{0} item excluído permanentemente."
+  },
+  "{} item ignorado.": {
+    "en": "{0} item skipped.",
+    "pt": "{0} item ignorado."
+  },
+  "{} item recortado. Abra a pasta de destino e use Colar.": {
+    "en": "{0} item cut. Open the destination folder and use Paste.",
+    "pt": "{0} item recortado. Abra a pasta de destino e use Colar."
+  },
+  "{} item restaurado.": {
+    "en": "{0} item restored.",
+    "pt": "{0} item restaurado."
+  },
+  "{} item selecionado.": {
+    "en": "{0} item selected.",
+    "pt": "{0} item selecionado."
+  },
+  "{} item(ns) concluídos; {} ignorados.{}": {
+    "en": "{0} item(s) completed; {1} skipped.{2}",
+    "pt": "{0} item(ns) concluídos; {1} ignorados.{2}"
+  },
+  "{} item(ns) selecionados. {}": {
+    "en": "{0} item(s) selected. {1}",
+    "pt": "{0} item(ns) selecionados. {1}"
+  },
+  "{} item(ns) {}. Abra a pasta de destino e use Colar.": {
+    "en": "{0} item(s) {1}. Open the destination folder and use Paste.",
+    "pt": "{0} item(ns) {1}. Abra a pasta de destino e use Colar."
+  },
+  "{} item(ns) {}.{}": {
+    "en": "{0} item(s) {1}.{2}",
+    "pt": "{0} item(ns) {1}.{2}"
+  },
+  "{} itens": {
+    "en": "{0} items",
+    "pt": "{0} itens"
+  },
+  "{} itens concluídos": {
+    "en": "{0} items completed",
+    "pt": "{0} itens concluídos"
+  },
+  "{} itens copiados. Abra a pasta de destino e use Colar.": {
+    "en": "{0} items copied. Open the destination folder and use Paste.",
+    "pt": "{0} itens copiados. Abra a pasta de destino e use Colar."
+  },
+  "{} itens enviados à lixeira.": {
+    "en": "{0} items moved to Trash.",
+    "pt": "{0} itens enviados à lixeira."
+  },
+  "{} itens excluídos permanentemente.": {
+    "en": "{0} items permanently deleted.",
+    "pt": "{0} itens excluídos permanentemente."
+  },
+  "{} itens ignorados.": {
+    "en": "{0} items skipped.",
+    "pt": "{0} itens ignorados."
+  },
+  "{} itens não puderam ser lidos": {
+    "en": "{0} items could not be read",
+    "pt": "{0} itens não puderam ser lidos"
+  },
+  "{} itens recortados. Abra a pasta de destino e use Colar.": {
+    "en": "{0} items cut. Open the destination folder and use Paste.",
+    "pt": "{0} itens recortados. Abra a pasta de destino e use Colar."
+  },
+  "{} itens restaurados.": {
+    "en": "{0} items restored.",
+    "pt": "{0} itens restaurados."
+  },
+  "{} itens selecionados.": {
+    "en": "{0} items selected.",
+    "pt": "{0} itens selecionados."
+  },
+  "{} ícones gratuitos · Font Awesome Free 7.1.0 · Solid": {
+    "en": "{0} free icons · Font Awesome Free 7.1.0 · Solid",
+    "pt": "{0} ícones gratuitos · Font Awesome Free 7.1.0 · Solid"
+  },
+  "Área de trabalho": {
+    "en": "Desktop",
+    "pt": "Área de trabalho"
+  },
+  "É necessário identificar o tipo MIME do arquivo para salvar a associação.": {
+    "en": "The file MIME type must be identified to save the association.",
+    "pt": "É necessário identificar o tipo MIME do arquivo para salvar a associação."
+  },
+  "Ícone padrão": {
+    "en": "Default icon",
+    "pt": "Ícone padrão"
+  },
+  "Ícones": {
+    "en": "Icons",
+    "pt": "Ícones"
+  },
+  "Último acesso": {
+    "en": "Last accessed",
+    "pt": "Último acesso"
+  }
+}
