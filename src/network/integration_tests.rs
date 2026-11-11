@@ -318,3 +318,71 @@ fn fallback_requires_an_smb_target_and_an_available_service_and_reports_both_fai
         }
     }
 }
+
+#[test]
+fn server_browsing_retries_after_kio_denial_and_preserves_user_in_selected_share_urls() {
+    let mut calls = Vec::new();
+    let shares = browse_with_fallback(
+        "smb://Administrador@server/",
+        Backend::Kio,
+        true,
+        &Cancellation::default(),
+        |backend| {
+            calls.push(backend);
+            match backend {
+                Backend::Kio => Err(io::Error::from(io::ErrorKind::PermissionDenied)),
+                Backend::Gvfs => Ok(vec!["D".into(), "Shared folder #1".into()]),
+            }
+        },
+    )
+    .unwrap();
+    assert_eq!(calls, vec![Backend::Kio, Backend::Gvfs]);
+    assert_eq!(shares[0].url, "smb://Administrador@server/D");
+    assert_eq!(
+        shares[1].url,
+        "smb://Administrador@server/Shared%20folder%20%231"
+    );
+}
+
+#[test]
+fn server_browsing_respects_cancellation_service_availability_and_successful_empty_lists() {
+    for (available, cancel_after_first, success, expected_calls) in [
+        (false, false, false, 1),
+        (true, true, false, 1),
+        (true, false, true, 1),
+        (true, false, false, 2),
+    ] {
+        let cancel = Cancellation::default();
+        let mut calls = Vec::new();
+        let result = browse_with_fallback(
+            "smb://Administrador@server/",
+            Backend::Kio,
+            available,
+            &cancel,
+            |backend| {
+                calls.push(backend);
+                if cancel_after_first {
+                    cancel.cancel();
+                }
+                if success {
+                    Ok(Vec::new())
+                } else {
+                    Err(io::Error::other(match backend {
+                        Backend::Kio => "KIO listing denied",
+                        Backend::Gvfs => "GVfs listing denied",
+                    }))
+                }
+            },
+        );
+        assert_eq!(calls.len(), expected_calls);
+        if success {
+            assert!(result.unwrap().is_empty());
+        } else if cancel_after_first {
+            assert_eq!(result.unwrap_err().kind(), io::ErrorKind::Interrupted);
+        } else {
+            let error = result.unwrap_err().to_string();
+            assert!(error.contains("KIO listing denied"));
+            assert_eq!(error.contains("GVfs listing denied"), available);
+        }
+    }
+}

@@ -2,6 +2,8 @@
 
 ## Unreleased — 0.1.0 experimental
 
+- Apply the GVfs fallback to SMB server-root listings as well as share connections, preserving the supplied username in share URLs and respecting cancellation.
+
 - Verify remote folder readability before saving connections; retry failed or unreadable KDE SMB mounts through GVfs when available, supporting temporary authentication without requiring stored passwords.
 
 - Operational errors use the standard error-toast stack; removed the legacy global error banner. SMB share selection now fills the dialog width.

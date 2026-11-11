@@ -216,10 +216,21 @@ fn connect_with_fallback(
     cancel: &Cancellation,
     mut mount: impl FnMut(Backend) -> io::Result<PathBuf>,
 ) -> io::Result<PathBuf> {
+    with_backend_fallback(uri, preferred, gvfs_available, cancel, |backend| {
+        mount(backend).and_then(|path| readable_mount(path, cancel))
+    })
+}
+fn with_backend_fallback<T>(
+    uri: &str,
+    preferred: Backend,
+    gvfs_available: bool,
+    cancel: &Cancellation,
+    mut operation: impl FnMut(Backend) -> io::Result<T>,
+) -> io::Result<T> {
     if cancel.is_cancelled() {
         return Err(cancelled());
     }
-    let first = mount(preferred).and_then(|path| readable_mount(path, cancel));
+    let first = operation(preferred);
     if cancel.is_cancelled() {
         return Err(cancelled());
     }
@@ -228,7 +239,7 @@ fn connect_with_fallback(
         Err(primary)
             if preferred == Backend::Kio && gvfs_available && uri.starts_with("smb://") =>
         {
-            let second = mount(Backend::Gvfs).and_then(|path| readable_mount(path, cancel));
+            let second = operation(Backend::Gvfs);
             if cancel.is_cancelled() {
                 return Err(cancelled());
             }
@@ -380,43 +391,62 @@ pub fn browse_server(uri: &str, cancel: &Cancellation) -> io::Result<Vec<ServerS
         return Err(cancelled());
     }
     let services = available_services();
-    let names = match choose_backend(
+    let gvfs_available = services.iter().any(|s| s == "org.gtk.vfs.Daemon");
+    let backend = choose_backend(
         is_kde(),
         services.iter().any(|s| s == "org.kde.KIOFuse"),
-        services.iter().any(|s| s == "org.gtk.vfs.Daemon"),
-    ) {
-        Some(Backend::Kio) => {
-            let path = connect_kio(&uri, cancel)?;
-            let mut names = Vec::new();
-            for entry in std::fs::read_dir(path)? {
-                if cancel.is_cancelled() {
-                    return Err(cancelled());
+        gvfs_available,
+    )
+    .ok_or_else(|| {
+        io::Error::other(crate::i18n::tr(
+            "Instale GVfs no GNOME ou KIO Fuse no KDE para conectar a pastas remotas.",
+        ))
+    })?;
+    browse_with_fallback(
+        &uri,
+        backend,
+        gvfs_available,
+        cancel,
+        |backend| match backend {
+            Backend::Kio => {
+                let path = connect_kio(&uri, cancel)?;
+                let mut names = Vec::new();
+                for entry in std::fs::read_dir(path)? {
+                    if cancel.is_cancelled() {
+                        return Err(cancelled());
+                    }
+                    let entry = entry?;
+                    if !entry.file_type()?.is_dir() {
+                        continue;
+                    }
+                    names.push(entry.file_name().into_string().map_err(|_| {
+                        invalid("O servidor retornou um nome de compartilhamento inválido.")
+                    })?);
+                    if names.len() > 10000 {
+                        return Err(invalid("O servidor retornou compartilhamentos demais."));
+                    }
                 }
-                let entry = entry?;
-                if !entry.file_type()?.is_dir() {
-                    continue;
-                }
-                names.push(entry.file_name().into_string().map_err(|_| {
-                    invalid("O servidor retornou um nome de compartilhamento inválido.")
-                })?);
+                Ok(names)
             }
-            names
-        }
-        Some(Backend::Gvfs) => {
-            let output =
-                run_gvfs_helper(&std::env::current_exe()?, "--browse-network", &uri, cancel)?;
-            serde_json::from_slice(&output).map_err(io::Error::other)?
-        }
-        None => {
-            return Err(io::Error::other(crate::i18n::tr(
-                "Instale GVfs no GNOME ou KIO Fuse no KDE para conectar a pastas remotas.",
-            )));
-        }
-    };
-    if cancel.is_cancelled() {
-        return Err(cancelled());
-    }
-    shares_from_names(&uri, names)
+            Backend::Gvfs => {
+                let output =
+                    run_gvfs_helper(&std::env::current_exe()?, "--browse-network", &uri, cancel)?;
+                serde_json::from_slice(&output).map_err(io::Error::other)
+            }
+        },
+    )
+}
+fn browse_with_fallback(
+    uri: &str,
+    preferred: Backend,
+    gvfs_available: bool,
+    cancel: &Cancellation,
+    mut list: impl FnMut(Backend) -> io::Result<Vec<String>>,
+) -> io::Result<Vec<ServerShare>> {
+    with_backend_fallback(uri, preferred, gvfs_available, cancel, |backend| {
+        let names = list(backend)?;
+        shares_from_names(uri, names)
+    })
 }
 
 fn connect_kio(uri: &str, cancel: &Cancellation) -> io::Result<PathBuf> {
