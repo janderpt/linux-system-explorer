@@ -1998,5 +1998,13 @@
   "Não foi possível conectar pelos serviços de rede disponíveis:\n{}\n{}": {
     "pt": "Não foi possível conectar pelos serviços de rede disponíveis:\n{0}\n{1}",
     "en": "Could not connect through the available network services:\n{0}\n{1}"
+  },
+  "Dividir em dois painéis": {
+    "pt": "Dividir em dois painéis",
+    "en": "Split into two panes"
+  },
+  "Exibir um painel": {
+    "pt": "Exibir um painel",
+    "en": "Show one pane"
   }
 }

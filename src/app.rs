@@ -118,6 +118,8 @@ pub struct Explorer {
     new_folder: Option<String>,
     properties: Option<Entry>,
     dark: bool,
+    split_view: bool,
+    requested_split: bool,
     file_clipboard: Option<file_ops::Clipboard>,
     file_clipboard_text: String,
     clipboard_serial: u64,
@@ -253,6 +255,8 @@ impl Explorer {
             new_folder: None,
             properties: None,
             dark: false,
+            split_view: false,
+            requested_split: false,
             file_clipboard: None,
             file_clipboard_text: String::new(),
             clipboard_serial: 0,
@@ -577,7 +581,7 @@ impl Explorer {
                 }
                 ui.add_space(10.0);
                 let controls_width =
-                    ((self.appearance.size + 14.0).max(32.0) + ui.spacing().item_spacing.x) * 2.0;
+                    ((self.appearance.size + 14.0).max(32.0) + ui.spacing().item_spacing.x) * 3.0;
                 ui.allocate_ui_with_layout(
                     Vec2::new((ui.available_width() - controls_width).max(1.0), height),
                     Layout::left_to_right(Align::Center),
@@ -610,6 +614,24 @@ impl Explorer {
             });
         }
         self.column_settings(ui);
+        if ui
+            .add_enabled_ui(!self.has_dialog() && !self.drag_blocks_tabs(), |ui| {
+                self.icon_toggle(
+                    ui,
+                    Icon::SplitView,
+                    if self.split_view {
+                        crate::i18n::tr("Exibir um painel")
+                    } else {
+                        crate::i18n::tr("Dividir em dois painéis")
+                    },
+                    self.split_view,
+                )
+            })
+            .inner
+            .clicked()
+        {
+            self.requested_split = true;
+        }
     }
 
     fn filter_field(&mut self, ui: &mut egui::Ui) -> egui::Response {
@@ -976,106 +998,110 @@ impl Explorer {
                 }),
             )
             .show(ctx, |ui| {
-                ui.spacing_mut().item_spacing.y = 0.0;
-                self.folder_path(ui);
-                ui.add(egui::Separator::default().spacing(0.0));
-                self.transfer_status(ui);
-                self.deletion_status(ui);
-                self.restore_status(ui);
-                self.empty_trash_status(ui);
-                if self.loading {
-                    ui.horizontal(|ui| {
-                        ui.spinner();
-                        ui.label(crate::i18n::tr("Carregando pasta…"));
-                    });
-                }
-                let background = ui.available_rect_before_wrap();
-                self.register_drop_target(ui, background, self.current.clone());
-                let background_response = ui.interact(
-                    background,
-                    ui.id().with("folder_background"),
-                    Sense::click(),
-                );
-                background_response.context_menu(|ui| {
-                    if self.is_trash() {
-                        if self
-                            .menu_item(
-                                ui,
-                                Icon::Restore,
-                                crate::i18n::tr("Restaurar"),
-                                "",
-                                self.can_restore(),
-                                false,
-                            )
-                            .clicked()
-                        {
-                            self.restore_selected(ui.ctx());
-                            ui.close();
-                        }
-                        if self
-                            .menu_item(
-                                ui,
-                                Icon::Refresh,
-                                crate::i18n::tr("Atualizar"),
-                                "F5",
-                                !self.loading,
-                                false,
-                            )
-                            .clicked()
-                        {
-                            self.refresh();
-                            ui.close();
-                        }
-                        return;
-                    }
-                    self.paste_menu(ui);
-                    if !self.current.as_os_str().is_empty() && !self.loading && !self.is_trash() {
-                        ui.separator();
-                        self.folder_actions_menu(ui, &self.current.clone());
-                        self.pin_menu(ui, &self.current.clone());
-                    }
-                });
-                ui.add_enabled_ui(!self.loading, |ui| {
-                    if visible.is_empty() && !self.loading {
-                        ui.add_space(80.0);
-                        ui.vertical_centered(|ui| {
-                            ui.label(
-                                RichText::new(if self.query.is_empty() {
-                                    if self.is_trash() {
-                                        crate::i18n::tr("A lixeira está vazia")
-                                    } else {
-                                        crate::i18n::tr("Esta pasta está vazia")
-                                    }
-                                } else {
-                                    crate::i18n::tr("Nenhum item encontrado")
-                                })
-                                .size(20.0),
-                            );
-                            if !self.query.is_empty() {
-                                ui.label(crate::i18n::tr(
-                                    "A pesquisa considera os nomes dos itens nesta pasta.",
-                                ));
-                                if ui.button(crate::i18n::tr("Limpar pesquisa")).clicked() {
-                                    self.query.clear();
-                                }
-                            }
-                        });
-                        return;
-                    }
-                    match self.view {
-                        View::Details => self.details(ui, visible),
-                        View::Icons => self.icons(ui, visible),
-                        View::List => self.list(ui, visible),
-                    }
-                });
+                self.contents_ui(ui, visible);
             });
+    }
+
+    fn contents_ui(&mut self, ui: &mut egui::Ui, visible: &[usize]) {
+        ui.spacing_mut().item_spacing.y = 0.0;
+        self.folder_path(ui);
+        ui.add(egui::Separator::default().spacing(0.0));
+        self.transfer_status(ui);
+        self.deletion_status(ui);
+        self.restore_status(ui);
+        self.empty_trash_status(ui);
+        if self.loading {
+            ui.horizontal(|ui| {
+                ui.spinner();
+                ui.label(crate::i18n::tr("Carregando pasta…"));
+            });
+        }
+        let background = ui.available_rect_before_wrap();
+        self.register_drop_target(ui, background, self.current.clone());
+        let background_response = ui.interact(
+            background,
+            ui.id().with("folder_background"),
+            Sense::click(),
+        );
+        background_response.context_menu(|ui| {
+            if self.is_trash() {
+                if self
+                    .menu_item(
+                        ui,
+                        Icon::Restore,
+                        crate::i18n::tr("Restaurar"),
+                        "",
+                        self.can_restore(),
+                        false,
+                    )
+                    .clicked()
+                {
+                    self.restore_selected(ui.ctx());
+                    ui.close();
+                }
+                if self
+                    .menu_item(
+                        ui,
+                        Icon::Refresh,
+                        crate::i18n::tr("Atualizar"),
+                        "F5",
+                        !self.loading,
+                        false,
+                    )
+                    .clicked()
+                {
+                    self.refresh();
+                    ui.close();
+                }
+                return;
+            }
+            self.paste_menu(ui);
+            if !self.current.as_os_str().is_empty() && !self.loading && !self.is_trash() {
+                ui.separator();
+                self.folder_actions_menu(ui, &self.current.clone());
+                self.pin_menu(ui, &self.current.clone());
+            }
+        });
+        ui.add_enabled_ui(!self.loading, |ui| {
+            if visible.is_empty() && !self.loading {
+                ui.add_space(80.0);
+                ui.vertical_centered(|ui| {
+                    ui.label(
+                        RichText::new(if self.query.is_empty() {
+                            if self.is_trash() {
+                                crate::i18n::tr("A lixeira está vazia")
+                            } else {
+                                crate::i18n::tr("Esta pasta está vazia")
+                            }
+                        } else {
+                            crate::i18n::tr("Nenhum item encontrado")
+                        })
+                        .size(20.0),
+                    );
+                    if !self.query.is_empty() {
+                        ui.label(crate::i18n::tr(
+                            "A pesquisa considera os nomes dos itens nesta pasta.",
+                        ));
+                        if ui.button(crate::i18n::tr("Limpar pesquisa")).clicked() {
+                            self.query.clear();
+                        }
+                    }
+                });
+                return;
+            }
+            match self.view {
+                View::Details => self.details(ui, visible),
+                View::Icons => self.icons(ui, visible),
+                View::List => self.list(ui, visible),
+            }
+        });
     }
 
     fn details(&mut self, ui: &mut egui::Ui, visible: &[usize]) {
         ui.spacing_mut().item_spacing.y = 0.0;
         let scale = self.item_scale;
         let row_height = 34.0 * scale;
-        let viewport_width = (ui.available_width() - 14.0).max(450.0);
+        let viewport_width = (ui.available_width() - 14.0).max(1.0);
         let columns = column_layout(
             viewport_width,
             ui.spacing().item_spacing.x,
@@ -1483,14 +1509,15 @@ impl Explorer {
 }
 
 impl Explorer {
-    fn show(&mut self, ctx: &egui::Context) {
+    fn prepare_view(&mut self, ctx: &egui::Context) {
         crate::i18n::set_locale(self.language.resolve());
         self.poll();
         self.begin_drag_drop(ctx);
         self.handle_transfer_close(ctx);
         self.process_transfer_refresh();
-        self.shortcuts(ctx);
-        self.top_toolbar(ctx);
+    }
+
+    fn visible_for_display(&mut self) -> Vec<usize> {
         let visible = filesystem::visible_entries(
             &self.entries,
             &self.query,
@@ -1506,6 +1533,10 @@ impl Explorer {
         if !self.loading || !self.entries.is_empty() {
             self.retain_selection(&visible_paths);
         }
+        visible
+    }
+
+    fn status_bar(&mut self, ctx: &egui::Context, visible: &[usize]) {
         egui::TopBottomPanel::bottom("status").show(ctx, |ui| {
             ui.horizontal(|ui| {
                 ui.label(crate::i18n::plural("{} item", "{} itens", visible.len()));
@@ -1550,10 +1581,9 @@ impl Explorer {
                 });
             });
         });
-        self.terminal_panel(ctx);
-        self.sidebar(ctx);
-        self.contents(ctx, &visible);
-        self.finish_drag_drop(ctx);
+    }
+
+    fn view_overlays(&mut self, ctx: &egui::Context) {
         self.dialogs(ctx);
         self.settings_dialog(ctx);
         self.transfer_dialog(ctx);
@@ -1565,6 +1595,19 @@ impl Explorer {
         self.network_dialog(ctx);
         self.local_shares_dialog(ctx);
         self.show_notice_toast(ctx);
+    }
+
+    fn show(&mut self, ctx: &egui::Context) {
+        self.prepare_view(ctx);
+        self.shortcuts(ctx);
+        self.top_toolbar(ctx);
+        let visible = self.visible_for_display();
+        self.status_bar(ctx, &visible);
+        self.terminal_panel(ctx);
+        self.sidebar(ctx);
+        self.contents(ctx, &visible);
+        self.finish_drag_drop(ctx);
+        self.view_overlays(ctx);
         self.persist_preferences(ctx);
     }
 }

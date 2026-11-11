@@ -1,5 +1,6 @@
 use super::*;
 mod closed_tabs;
+mod split;
 mod tab_bar;
 
 pub struct Workspace {
@@ -12,6 +13,7 @@ pub struct Workspace {
     closing: bool,
     session: crate::session::Store,
     closed_tabs: std::collections::VecDeque<closed_tabs::ClosedTab>,
+    split: Option<split::SplitView>,
 }
 impl Workspace {
     pub fn new(
@@ -48,6 +50,7 @@ impl Workspace {
             closing: false,
             session: startup.store,
             closed_tabs: Default::default(),
+            split: None,
         };
         if let Some(saved) = startup.saved {
             app.restore_tabs(&saved, &cc.egui_ctx);
@@ -75,6 +78,7 @@ impl Workspace {
             return;
         }
         self.capture(ctx);
+        self.assign_split_tab(index);
         let native = self.tabs[self.active].dnd.native.take();
         if let Some(native) = &native {
             native.cancel();
@@ -181,6 +185,7 @@ impl Workspace {
         if index < self.active {
             self.active -= 1;
         }
+        self.normalize_split();
     }
     fn external(&mut self, request: crate::file_manager::window::Request, ctx: &egui::Context) {
         let index = std::iter::once(self.active)
@@ -252,6 +257,8 @@ impl Workspace {
             .map(|tab| (tab.tab_id, tab.busy()))
             .collect();
         self.background();
+        self.normalize_split();
+        self.focus_split(ctx);
         let requests = self
             .window
             .as_ref()
@@ -270,7 +277,18 @@ impl Workspace {
             }
         }
         self.tab_bar(ctx);
-        self.tabs[self.active].show(ctx);
+        self.normalize_split();
+        for tab in &mut self.tabs {
+            tab.split_view = self.split.is_some();
+        }
+        if self.split.is_some() {
+            self.show_split(ctx);
+        } else {
+            self.tabs[self.active].show(ctx);
+        }
+        if std::mem::take(&mut self.tabs[self.active].requested_split) {
+            self.toggle_split(ctx);
+        }
         let completed = busy_before
             .into_iter()
             .any(|(id, busy)| busy && self.tabs.iter().any(|tab| tab.tab_id == id && !tab.busy()));

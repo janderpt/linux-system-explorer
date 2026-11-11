@@ -318,6 +318,12 @@ Datas usam `dd/mm/aaaa HH:mm` em português e `aaaa-mm-dd HH:mm` em inglês. O f
 
 Na barra da pasta, as lupas com **−** e **+** diminuem ou aumentam ícones, texto e altura dos itens em passos de 25%, entre 75% e 200%, nas três visualizações. Em janelas estreitas, ficam acessíveis no menu de ações excedentes. O valor também pode ser escolhido em **Geral → Tamanho dos itens desta pasta**. O zoom é salvo por pasta junto com o modo de visualização, sendo restaurado ao navegar, usar Voltar/Avançar ou reabrir o aplicativo; as larguras de colunas e a seleção são preservadas. Preferências anteriores mantêm o antigo zoom global como padrão das pastas ainda não personalizadas e dos perfis que ainda não tinham zoom próprio.
 
+### Dois painéis lado a lado
+
+O botão **Dividir em dois painéis**, com o ícone de duas colunas ao lado das configurações na toolbar, abre a pasta atual em dois painéis na mesma janela. Cada painel mantém caminho, filtro, seleção, histórico, rolagem e visualização independentes. Clique em um painel para ativá-lo; uma linha discreta no topo identifica o lado controlado pela toolbar, pela barra lateral, pelo terminal e pelos atalhos. Arraste o separador central para ajustar as larguras. Copiar/colar e arrastar arquivos funcionam entre os painéis, com os modificadores já usados nas transferências.
+
+Os painéis usam as abas da janela: ao ativar a divisão, uma nova aba mostra a mesma pasta à direita; selecionar uma aba diferente troca o conteúdo do painel ativo. **Exibir um painel** volta à visualização única da pasta ativa, mantendo a outra disponível como aba. Fechar uma das abas exibidas encerra a divisão. A disposição em dois painéis e a proporção do separador valem para a janela atual; a restauração de sessão continua recuperando as pastas como abas.
+
 ### Barra lateral e rede
 
 Em **Configurações → Barra lateral**, escolha quais atalhos padrão deseja exibir e se as seções **Pastas fixadas** e **Rede** ficam visíveis. Os atalhos padrão dependem das pastas disponíveis no sistema. O destaque considera o caminho completo por componentes e seleciona apenas o ancestral visível mais específico: ao navegar em `Downloads/projeto/media`, por exemplo, **Downloads** continua destacado; se `Downloads/projeto` estiver fixado, ele passa a ser o ancestral mais próximo.

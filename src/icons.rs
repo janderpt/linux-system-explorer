@@ -61,6 +61,7 @@ pub enum Icon {
     BrowseFolders,
     ZoomIn,
     ZoomOut,
+    SplitView,
     TrashBin,
     Restore,
     EmptyTrash,
@@ -90,7 +91,7 @@ pub enum Icon {
 }
 
 impl Icon {
-    pub const ALL: [Self; 79] = [
+    pub const ALL: [Self; 80] = [
         Self::Home,
         Self::Desktop,
         Self::Download,
@@ -144,6 +145,7 @@ impl Icon {
         Self::BrowseFolders,
         Self::ZoomIn,
         Self::ZoomOut,
+        Self::SplitView,
         Self::TrashBin,
         Self::Restore,
         Self::EmptyTrash,
@@ -227,6 +229,7 @@ impl Icon {
             Self::BrowseFolders => crate::i18n::tr("Navegar e selecionar pasta"),
             Self::ZoomIn => crate::i18n::tr("Aumentar tamanho dos itens"),
             Self::ZoomOut => crate::i18n::tr("Diminuir tamanho dos itens"),
+            Self::SplitView => crate::i18n::tr("Dividir em dois painéis"),
             Self::TrashBin => crate::i18n::tr("Lixeira"),
             Self::Restore => crate::i18n::tr("Restaurar"),
             Self::EmptyTrash => crate::i18n::tr("Esvaziar lixeira"),
@@ -311,6 +314,7 @@ impl Icon {
             Self::BrowseFolders => "folder-tree",
             Self::ZoomIn => "magnifying-glass-plus",
             Self::ZoomOut => "magnifying-glass-minus",
+            Self::SplitView => "table-columns",
             Self::TrashBin => "trash-can",
             Self::Restore => "trash-arrow-up",
             Self::EmptyTrash => "trash-can",

@@ -34,6 +34,18 @@ pub(super) struct DragDrop {
 }
 
 impl Explorer {
+    pub(super) fn mirror_drag_feedback(&mut self, source: &Self) {
+        self.dnd.targets.clear();
+        self.dnd.paths = source.dnd.paths.clone();
+        self.dnd.hover = source.dnd.hover;
+    }
+    pub(super) fn merge_drop_targets(&mut self, other: &mut Self) {
+        if other.file_drop_available() {
+            self.dnd.targets.append(&mut other.dnd.targets);
+        }
+        other.dnd.paths.clear();
+        other.dnd.hover = None;
+    }
     pub(super) fn drag_blocks_tabs(&self) -> bool {
         self.dnd.native_active
             || self.dnd.pending.is_some()

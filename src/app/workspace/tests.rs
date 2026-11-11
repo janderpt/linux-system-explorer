@@ -4,7 +4,7 @@ mod closed_tabs;
 mod recent_tabs;
 mod tab_drag;
 mod tab_menu;
-fn workspace(ctx: &egui::Context, path: PathBuf) -> Workspace {
+pub(super) fn workspace(ctx: &egui::Context, path: PathBuf) -> Workspace {
     let mut tab = Explorer::with_context(ctx, path);
     complete_navigation(&mut tab);
     let shared = tab.stored_preferences(&tab.preferences());
@@ -18,6 +18,7 @@ fn workspace(ctx: &egui::Context, path: PathBuf) -> Workspace {
         closing: false,
         session: crate::session::Store::at(None),
         closed_tabs: Default::default(),
+        split: None,
     }
 }
 
