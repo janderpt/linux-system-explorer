@@ -171,7 +171,7 @@ impl Explorer {
         let label = crate::i18n::tr("Gerenciar compartilhamentos locais");
         let response = ui
             .horizontal(|ui| {
-                ui.label(
+                let heading = ui.label(
                     RichText::new(crate::i18n::tr("Compartilhamentos locais"))
                         .small()
                         .weak()
@@ -193,7 +193,10 @@ impl Explorer {
                 let color = ui.visuals().weak_text_color();
                 icons::paint(
                     ui.painter(),
-                    egui::Rect::from_center_size(response.rect.center(), Vec2::splat(14.0)),
+                    egui::Rect::from_center_size(
+                        egui::pos2(response.rect.center().x, heading.rect.center().y),
+                        Vec2::splat(14.0),
+                    ),
                     Icon::Settings,
                     if self.loading {
                         color.gamma_multiply(0.4)
