@@ -19,11 +19,13 @@ permissions:
 jobs:
   native:
     runs-on: ubuntu-24.04
+    timeout-minutes: 25
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: dtolnay/rust-toolchain@stable
       - name: Install build and packaging dependencies
-        run: sudo apt-get update && sudo apt-get install -y libxkbcommon-dev libwayland-dev dpkg-dev desktop-file-utils appstream
+        timeout-minutes: 10
+        run: sudo env GITHUB_ACTIONS=true python3 scripts/ci-dependencies.py libxkbcommon-dev libwayland-dev dpkg-dev desktop-file-utils appstream
       - name: Validate metadata
         run: python3 scripts/package.py check
       - name: Build optimized executable
@@ -33,7 +35,7 @@ jobs:
       - name: Verify checksums
         working-directory: dist
         run: sha256sum --check SHA256SUMS
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: experimental-linux-x86_64
           path: dist/
