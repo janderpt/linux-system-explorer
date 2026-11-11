@@ -53,8 +53,18 @@ The installer uses `~/.local/bin` and the user's XDG data directories, without s
 without changing defaults. It backs up previous files and records the previous folder
 handler. To return to that handler: `python3 scripts/install-user.py restore-default`.
 It leaves any newer folder-handler choice untouched. Other MIME associations and user
-preferences are preserved. Application-specific D-Bus "Show in Folder" services are a
-separate integration and may still invoke another installed file manager.
+preferences are preserved. This flag also registers the per-user FileManager1 D-Bus
+service for "Show in Folder", opening parent folders with the requested items selected,
+including hidden files. Files in different folders open in separate windows. Folder
+and properties requests are also supported. Only local file URIs are accepted; network
+shares must be mounted locally. The bridge activates even when the explorer is closed.
+An already running file-manager service keeps its bus name until it exits or the next
+login. Rollback restores the previous service registration as well as the folder handler.
+Native package installation alone does not change these defaults.
+
+Window, launcher and taskbar icons share one project SVG and its build-generated PNG.
+The application ID, desktop filename and icon name match on Wayland and X11. The user
+installer refreshes KDE's application and icon caches; reopen older windows after updating.
 
 On a Debian/Ubuntu build host, install Python 3.11+, `dpkg-dev`, `desktop-file-utils`
 and `appstream`, then:

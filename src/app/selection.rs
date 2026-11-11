@@ -1,6 +1,67 @@
 use super::*;
 
 impl Explorer {
+    /// Applied only after the asynchronous initial directory read has completed.
+    pub fn reveal_external(&mut self, paths: Vec<PathBuf>, properties: bool) {
+        if !paths.is_empty() {
+            self.pending_external = Some((paths, properties));
+        }
+    }
+
+    pub(super) fn hidden_visible(&self) -> bool {
+        self.show_hidden || self.reveal_hidden
+    }
+
+    pub(super) fn toggle_hidden(&mut self) {
+        self.show_hidden = !self.hidden_visible();
+        self.reveal_hidden = false;
+    }
+
+    pub(super) fn complete_external_reveal(&mut self) {
+        let Some((paths, properties)) = self.pending_external.take() else {
+            return;
+        };
+        self.query.clear();
+        let requested: BTreeSet<_> = paths.iter().cloned().collect();
+        self.selected = self
+            .entries
+            .iter()
+            .filter(|entry| requested.contains(&entry.path))
+            .map(|entry| entry.path.clone())
+            .collect();
+        let cursor = paths
+            .iter()
+            .find(|path| self.selected.contains(*path))
+            .cloned();
+        self.selection_anchor = cursor.clone();
+        self.selection_cursor = cursor;
+        self.reveal_selection = self.selection_cursor.is_some();
+        self.reveal_hidden = self
+            .entries
+            .iter()
+            .any(|entry| entry.hidden && self.selected.contains(&entry.path));
+        if properties {
+            self.properties = paths
+                .first()
+                .and_then(|path| filesystem::read_entry(path).ok());
+        }
+        let missing = paths
+            .iter()
+            .filter(|path| !self.selected.contains(*path) && *path != &self.current)
+            .count();
+        if missing > 0 {
+            self.post_operation_notice(
+                crate::i18n::plural(
+                    "{} item solicitado não está disponível nesta pasta.",
+                    "{} itens solicitados não estão disponíveis nesta pasta.",
+                    missing,
+                ),
+                &[],
+                true,
+            );
+        }
+    }
+
     pub(super) fn select_entry(
         &mut self,
         path: &Path,
@@ -101,7 +162,7 @@ impl Explorer {
         let visible = filesystem::visible_entries(
             &self.entries,
             &self.query,
-            self.show_hidden,
+            self.hidden_visible(),
             self.sort,
             self.descending,
         );
@@ -181,7 +242,7 @@ impl Explorer {
         filesystem::visible_entries(
             &self.entries,
             &self.query,
-            self.show_hidden,
+            self.hidden_visible(),
             self.sort,
             self.descending,
         )

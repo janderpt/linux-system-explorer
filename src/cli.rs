@@ -3,6 +3,9 @@ use std::{ffi::OsString, path::PathBuf};
 #[derive(Debug, PartialEq, Eq)]
 pub enum Command {
     Browse(Option<PathBuf>),
+    Reveal(Vec<PathBuf>, bool),
+    FileManagerService,
+    ExportIcon(PathBuf),
     Help,
     Version,
 }
@@ -13,6 +16,10 @@ Usage: linux-system-explorer [OPTIONS] [DIRECTORY]
 
   -h, --help       Show this help without opening a window
   -V, --version    Print the version without opening a window
+  --select FILE... Open the parent folder with the given items selected
+  --properties FILE Open its parent folder and show its properties
+  --file-manager-service Run the headless FileManager1 D-Bus bridge
+  --export-icon PNG Write the canonical application icon without opening a window
   --               Treat the next argument as a directory, even if it starts with '-'
 
 With no directory, open the user's home folder. Use trash: to open the Trash.
@@ -23,7 +30,21 @@ pub fn parse(args: impl IntoIterator<Item = OsString>) -> Result<Command, &'stat
     let Some(first) = args.next() else {
         return Ok(Command::Browse(None));
     };
-    let command = if first == "--" {
+    let command = if first == "--select" || first == "--properties" {
+        let paths: Vec<PathBuf> = args.map(PathBuf::from).collect();
+        if paths.is_empty() || (first == "--properties" && paths.len() != 1) {
+            return Err("Expected files after --select or exactly one file after --properties");
+        }
+        return Ok(Command::Reveal(paths, first == "--properties"));
+    } else if first == "--file-manager-service" {
+        Command::FileManagerService
+    } else if first == "--export-icon" {
+        Command::ExportIcon(
+            args.next()
+                .ok_or("Expected a PNG path after --export-icon")?
+                .into(),
+        )
+    } else if first == "--" {
         Command::Browse(Some(
             args.next().ok_or("Expected a directory after --")?.into(),
         ))
@@ -48,6 +69,24 @@ mod tests {
 
     #[test]
     fn routes_headless_commands_and_preserves_special_paths() {
+        assert_eq!(
+            parse(["--file-manager-service".into()]),
+            Ok(Command::FileManagerService)
+        );
+        assert!(parse(["--file-manager-service".into(), "extra".into()]).is_err());
+        assert!(parse(["--select".into()]).is_err());
+        assert!(parse(["--properties".into(), "a".into(), "b".into()]).is_err());
+        assert_eq!(
+            parse(["--select".into(), "-name".into(), "a space".into()]),
+            Ok(Command::Reveal(
+                vec!["-name".into(), "a space".into()],
+                false
+            ))
+        );
+        assert_eq!(
+            parse(["--properties".into(), "/tmp/a".into()]),
+            Ok(Command::Reveal(vec!["/tmp/a".into()], true))
+        );
         assert_eq!(parse(["--version".into()]), Ok(Command::Version));
         assert_eq!(parse(["--help".into()]), Ok(Command::Help));
         assert_eq!(parse([]), Ok(Command::Browse(None)));

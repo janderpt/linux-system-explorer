@@ -9,7 +9,7 @@ pub const APP_ID: &str = env!("LSE_APP_ID");
 const MANAGED: &str = "X-LinuxSystemExplorer-Managed=true";
 
 /// Wayland identifies applications by app_id and resolves icons from desktop entries.
-pub fn register(accent: eframe::egui::Color32) -> io::Result<()> {
+pub fn register() -> io::Result<()> {
     let data =
         dirs::data_dir().ok_or_else(|| io::Error::other("XDG data directory unavailable"))?;
     let mut data_dirs: Vec<PathBuf> = std::env::var_os("XDG_DATA_DIRS")
@@ -28,7 +28,7 @@ pub fn register(accent: eframe::egui::Color32) -> io::Result<()> {
         }
         return Ok(());
     }
-    let changed = register_at(&data, &std::env::current_exe()?, accent)?;
+    let changed = register_at(&data, &std::env::current_exe()?)?;
     if changed
         && std::env::var("XDG_CURRENT_DESKTOP").is_ok_and(|desktop| {
             desktop
@@ -92,24 +92,20 @@ fn executable(value: &str) -> String {
     entry_value(&quoted)
 }
 
-fn register_at(data: &Path, binary: &Path, accent: eframe::egui::Color32) -> io::Result<bool> {
-    let icon = crate::system_style::application_icon(accent);
+fn register_at(data: &Path, binary: &Path) -> io::Result<bool> {
+    let icon = crate::system_style::application_icon();
     let png = icon.to_png_bytes().map_err(io::Error::other)?;
-    let icon_path = data.join("icons/hicolor/256x256/apps").join(format!(
-        "{APP_ID}-{:02x}{:02x}{:02x}.png",
-        accent.r(),
-        accent.g(),
-        accent.b()
-    ));
+    let icon_path = data
+        .join("icons/hicolor/256x256/apps")
+        .join(format!("{APP_ID}.png"));
     let utf8 = |path: &Path| {
         path.to_str()
             .map(str::to_owned)
             .ok_or_else(|| io::Error::other("Desktop entry paths must be UTF-8"))
     };
     let entry = format!(
-        "[Desktop Entry]\nType=Application\nVersion=1.0\nName=File Explorer\nName[pt]=Explorador de Arquivos\nName[pt_BR]=Explorador de Arquivos\nExec={} %f\nIcon={}\nTerminal=false\nStartupNotify=true\nStartupWMClass={APP_ID}\nCategories=System;FileTools;FileManager;\nMimeType=inode/directory;\n{MANAGED}\n",
-        executable(&utf8(binary)?),
-        entry_value(&utf8(&icon_path)?)
+        "[Desktop Entry]\nType=Application\nVersion=1.0\nName=File Explorer\nName[pt]=Explorador de Arquivos\nName[pt_BR]=Explorador de Arquivos\nExec={} %f\nIcon={APP_ID}\nTerminal=false\nStartupNotify=true\nStartupWMClass={APP_ID}\nCategories=System;FileTools;FileManager;\nMimeType=inode/directory;\n{MANAGED}\n",
+        executable(&utf8(binary)?)
     );
     let icon_changed = write_changed(&icon_path, &png)?;
     let entry_changed = write_changed(
@@ -122,13 +118,12 @@ fn register_at(data: &Path, binary: &Path, accent: eframe::egui::Color32) -> io:
 #[cfg(test)]
 mod tests {
     use super::*;
-    use eframe::egui::Color32;
 
     #[test]
     fn distinguishes_installed_launchers_from_development_overrides() {
         let root = tempfile::tempdir().unwrap();
         let data = root.path().to_owned();
-        register_at(&data, Path::new("/tmp/explorer"), Color32::BLUE).unwrap();
+        register_at(&data, Path::new("/tmp/explorer")).unwrap();
         assert!(!has_installed_launcher(std::slice::from_ref(&data)));
         fs::write(
             data.join("applications").join(format!("{APP_ID}.desktop")),
@@ -139,11 +134,11 @@ mod tests {
     }
 
     #[test]
-    fn registers_matching_wayland_identity_and_accent_icon_atomically() {
+    fn registers_matching_identity_and_the_canonical_window_icon_atomically() {
         let root = tempfile::tempdir().unwrap();
         let binary = root.path().join("a space/explorer%bin");
-        assert!(register_at(root.path(), &binary, Color32::from_rgb(61, 174, 233)).unwrap());
-        assert!(!register_at(root.path(), &binary, Color32::from_rgb(61, 174, 233)).unwrap());
+        assert!(register_at(root.path(), &binary).unwrap());
+        assert!(!register_at(root.path(), &binary).unwrap());
         let path = root
             .path()
             .join("applications")
@@ -151,17 +146,16 @@ mod tests {
         let entry = fs::read_to_string(&path).unwrap();
         assert!(entry.contains(&format!("StartupWMClass={APP_ID}")));
         assert!(entry.contains("explorer%%bin\" %f"));
-        let icon_path = entry
-            .lines()
-            .find_map(|line| line.strip_prefix("Icon="))
-            .unwrap();
+        assert!(entry.contains(&format!("Icon={APP_ID}\n")));
+        let icon_path = root
+            .path()
+            .join("icons/hicolor/256x256/apps")
+            .join(format!("{APP_ID}.png"));
         let icon = eframe::icon_data::from_png_bytes(&fs::read(icon_path).unwrap()).unwrap();
         assert_eq!(icon.width, 256);
-        assert!(icon.rgba.as_chunks::<4>().0.contains(&[61, 174, 233, 255]));
+        assert_eq!(icon.rgba, crate::system_style::application_icon().rgba);
         if let Ok(status) = Command::new("desktop-file-validate").arg(&path).status() {
             assert!(status.success());
         }
-        assert!(register_at(root.path(), &binary, Color32::from_rgb(200, 20, 40)).unwrap());
-        assert!(fs::read_to_string(path).unwrap().contains("-c81428.png"));
     }
 }

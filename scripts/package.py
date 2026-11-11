@@ -153,6 +153,12 @@ def stage(destination, prefix, binary):
     shutil.copyfile(binary, bindir / NAME)
     (bindir / NAME).chmod(0o755)
     render_metadata(install)
+    icon = install / f"share/icons/hicolor/256x256/apps/{APP_ID}.png"
+    icon.parent.mkdir(parents=True, exist_ok=True)
+    run([binary.resolve(), "--export-icon", icon.resolve()])
+    service = install / "share" / NAME / "org.freedesktop.FileManager1.service.in"
+    service.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(ROOT / "packaging/file-manager.service.in", service)
     doc = install / "share/doc" / NAME
     doc.mkdir(parents=True, exist_ok=True)
     for source in ["LICENSE", "README.md", "CHANGELOG.md", "docs/RELEASING.md", "docs/DISTRIBUTION.md"]:

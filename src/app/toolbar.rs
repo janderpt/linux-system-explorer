@@ -151,7 +151,7 @@ impl Explorer {
                 _ => true,
             };
         let selected = match action {
-            FolderAction::Hidden => self.show_hidden,
+            FolderAction::Hidden => self.hidden_visible(),
             FolderAction::Details => self.view == View::Details,
             FolderAction::List => self.view == View::List,
             FolderAction::Icons => self.view == View::Icons,
@@ -193,7 +193,7 @@ impl Explorer {
                 FolderAction::Copy => self.capture_files(file_ops::Mode::Copy, ui.ctx()),
                 FolderAction::Cut => self.capture_files(file_ops::Mode::Cut, ui.ctx()),
                 FolderAction::Paste => self.paste_files(ui.ctx()),
-                FolderAction::Hidden => self.show_hidden = !self.show_hidden,
+                FolderAction::Hidden => self.toggle_hidden(),
                 FolderAction::Details => self.view = View::Details,
                 FolderAction::List => self.view = View::List,
                 FolderAction::Icons => self.view = View::Icons,

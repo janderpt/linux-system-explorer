@@ -87,6 +87,8 @@ pub struct Explorer {
     selection_anchor: Option<PathBuf>,
     selection_cursor: Option<PathBuf>,
     reveal_selection: bool,
+    pending_external: Option<(Vec<PathBuf>, bool)>,
+    reveal_hidden: bool,
     navigation_page: usize,
     loading: bool,
     error: Option<String>,
@@ -203,6 +205,8 @@ impl Explorer {
             selection_anchor: None,
             selection_cursor: None,
             reveal_selection: false,
+            pending_external: None,
+            reveal_hidden: false,
             navigation_page: 1,
             loading: false,
             error: None,
@@ -294,6 +298,7 @@ impl Explorer {
                             if changed {
                                 self.query.clear();
                                 self.clear_selection();
+                                self.reveal_hidden = false;
                             } else {
                                 let paths: BTreeSet<_> = self
                                     .entries
@@ -302,8 +307,10 @@ impl Explorer {
                                     .collect();
                                 self.retain_selection(&paths);
                             }
+                            self.complete_external_reveal();
                         }
                         Err(error) => {
+                            self.pending_external = None;
                             self.error = Some(crate::i18n::message(
                                 "Não foi possível abrir a pasta: {error}",
                                 &[(error).to_string()],
@@ -421,7 +428,7 @@ impl Explorer {
             self.refresh();
         }
         if hidden && !self.is_trash() {
-            self.show_hidden = !self.show_hidden;
+            self.toggle_hidden();
         }
         if create && !self.loading && !self.is_trash() && !self.current.as_os_str().is_empty() {
             self.error = None;
@@ -1432,7 +1439,7 @@ impl eframe::App for Explorer {
         let visible = filesystem::visible_entries(
             &self.entries,
             &self.query,
-            self.show_hidden,
+            self.hidden_visible(),
             self.sort,
             self.descending,
         );

@@ -76,8 +76,15 @@ Para retornar ao explorador anterior sem alterar outras associações:
 python3 scripts/install-user.py restore-default
 ```
 
-A troca do padrão de pastas não substitui serviços D-Bus específicos de outros
-gerenciadores, usados por alguns aplicativos para ações como “Mostrar na pasta”.
+Com `--set-default`, o instalador também configura o serviço D-Bus
+`org.freedesktop.FileManager1` para **Mostrar na pasta**: abre a pasta e seleciona os
+itens solicitados, agrupando arquivos da mesma pasta na mesma janela. Também atende
+**Abrir pasta** e **Propriedades**. Aceita URIs de arquivos locais; compartilhamentos
+devem estar montados localmente. O serviço pode iniciar o explorador fechado. Um
+serviço de outro gerenciador já ativo mantém a sessão atual até ser encerrado ou até
+o próximo login. A restauração recupera também o registro D-Bus anterior, preservando
+alterações posteriores feitas pelo usuário. A instalação de pacotes nativos não muda
+essa preferência automaticamente.
 
 É necessário um ambiente gráfico Linux com OpenGL e bibliotecas de X11 ou Wayland. A abertura de arquivos usa `gio open`, das ferramentas GIO, e os aplicativos associados no sistema. Se GIO não estiver instalado, usa `xdg-open`, normalmente fornecido pelo pacote `xdg-utils`. Em um ambiente mínimo Ubuntu/Debian, as dependências de compilação e execução podem ser instaladas com:
 
@@ -95,7 +102,7 @@ sudo apt install build-essential pkg-config libx11-dev libxi-dev libxcursor-dev 
 - Breadcrumb adaptável: prioriza a pasta atual, abrevia nomes longos e reúne os ancestrais que não couberem no menu `…`; o caminho completo aparece ao passar o mouse.
 - Barra da pasta com navegação, nova pasta, copiar, recortar, colar, itens ocultos e modos de exibição. Em janelas estreitas, as ações excedentes ficam em **Mais ações da pasta**.
 - Configurações e tema no extremo direito da toolbar, sem repetir o nome e o ícone da aplicação no corpo da janela.
-- Ícone nativo de pasta na cor de destaque do sistema operacional.
+- Ícone de explorador consistente na janela, no lançador e na barra de tarefas.
 - Acesso rápido às pastas do usuário conforme a configuração XDG, com ícones específicos para cada local.
 - Destaque do ancestral visível mais próximo da pasta aberta, incluindo atalhos, pastas fixadas e compartilhamentos de rede.
 - Aba **Barra lateral** para escolher atalhos e seções, com pastas fixadas e atalhos de rede persistentes.
@@ -161,7 +168,8 @@ src/
   app/open_with.rs Seletor de aplicativo com busca e abertura em segundo plano
   app/breadcrumbs.rs  Abreviação e navegação do caminho
   app/folder_picker.rs  Seleção de pastas em segundo plano
-  system_style.rs  Cor de destaque do desktop e ícone nativo
+  system_style.rs  Ícone nativo gerado a partir do SVG do aplicativo
+  file_manager.rs  Serviço D-Bus Mostrar na pasta e seleção externa
   desktop.rs      Registro da identidade desktop para Wayland e lançadores
   i18n.rs         Detecção de idioma, traduções, plurais e formatos
   app/table.rs    Cabeçalhos redimensionáveis, reordenação e lista compacta
@@ -219,9 +227,9 @@ O recorte só movimenta os itens ao colar. No mesmo sistema de arquivos, usa ren
 
 No final do campo, o botão com ícone de árvore de pastas abre **Selecionar pasta**. O popup inicia no caminho digitado, aceita a navegação por subpastas e oferece subir um nível, pasta pessoal, sistema de arquivos, atualização e ancestrais clicáveis. As leituras ocorrem em segundo plano e respeitam a opção de arquivos ocultos. **Usar esta pasta** muda a pasta ativa; **Cancelar** ou **Esc** fecha o popup e preserva o texto em edição. Explorar o popup não altera a seleção nem o histórico da janela principal até confirmar.
 
-O ícone da janela usa a mesma pasta Font Awesome incorporada ao explorador. A cor de destaque é consultada na abertura pelo [portal de configurações do desktop](https://flatpak.github.io/xdg-desktop-portal/docs/doc-org.freedesktop.portal.Settings.html), usando `gdbus`. Na ausência dessa informação, usa a configuração de cores do KDE quando disponível e, por fim, o azul padrão do aplicativo. A consulta possui tempo limite e acontece antes da criação da janela para que o ícone já seja conhecido pelo gerenciador de janelas na abertura. Os dois novos botões do caminho também têm ícones personalizáveis em **Aparência e ícones**.
+O ícone da janela, do lançador e da barra de tarefas deriva de um único SVG do projeto. A compilação gera o PNG transparente de 256 px usado pela janela e instalado no tema hicolor junto com o SVG. Assim, os protocolos de janela e a descoberta pelo desktop usam o mesmo desenho e as mesmas cores. Os botões do caminho têm ícones personalizáveis em **Aparência e ícones**.
 
-No Wayland, o gerenciador de janelas obtém o ícone pela identidade desktop do aplicativo, agora `io.github.janderpt.linux-system-explorer`. Instalações empacotadas usam o lançador e o ícone SVG instalados pelo pacote, sem regravá-los ao abrir. Em builds de desenvolvimento sem um lançador instalado, o explorador registra um atalho em `$XDG_DATA_HOME/applications` e um PNG na cor de destaque em `$XDG_DATA_HOME/icons/hicolor/256x256/apps`. Esse atalho recebe uma marca própria; ele é removido quando há um lançador instalado, sem remover atalhos personalizados do usuário. O registro não altera o gerenciador de arquivos padrão. No KDE, a descoberta do registro de desenvolvimento é atualizada antes de abrir a janela. No X11, o ícone da janela continua usando a cor de destaque. Os detalhes e a migração de atalhos antigos estão em [Distribuição](docs/DISTRIBUTION.md).
+No Wayland, o gerenciador de janelas obtém o ícone pela identidade desktop `io.github.janderpt.linux-system-explorer`, também usada pelo lançador e pelo nome do ícone. Instalações empacotadas usam os arquivos instalados pelo pacote, sem regravá-los ao abrir. Em builds de desenvolvimento sem lançador instalado, o explorador registra um atalho identificado como gerado e o mesmo PNG em `$XDG_DATA_HOME/icons/hicolor/256x256/apps`. O atalho gerado é removido quando há um lançador instalado, preservando atalhos personalizados. O instalador por usuário atualiza os caches de ícones e aplicativos do KDE. Janelas já abertas devem ser reabertas após a atualização. Os detalhes estão em [Distribuição](docs/DISTRIBUTION.md).
 
 ## Lixeira e exclusão permanente
 

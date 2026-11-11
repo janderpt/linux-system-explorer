@@ -24,14 +24,17 @@ tempfile = "3"
 uzers = "0.12"
 rustix = { version = "1", features = ["fs"] }
 trash = "5.3"
-ab_glyph = "0.2"
 freedesktop-desktop-entry = { version = "0.8.4", default-features = false }
 guth-wayland-dnd = "0.3.1"
 raw-window-handle = "0.6"
 x11rb = "0.13"
 url = "2"
+zbus = "6.2.1"
 
 [profile.release]
 lto = "thin"
 strip = true
+
+[build-dependencies]
+resvg = { version = "0.49.0", default-features = false }
 

@@ -496,6 +496,59 @@ pub(super) fn complete_navigation(app: &mut Explorer) {
 }
 
 #[test]
+fn external_reveal_waits_for_listing_selects_hidden_items_and_preserves_preferences() {
+    use std::os::unix::ffi::OsStringExt;
+    let directory = tempfile::tempdir().unwrap();
+    let hidden = directory.path().join(".hidden report#.pdf");
+    let raw = directory
+        .path()
+        .join(std::ffi::OsString::from_vec(b"raw-\xff.docx".to_vec()));
+    std::fs::write(&hidden, b"pdf").unwrap();
+    std::fs::write(&raw, b"docx").unwrap();
+    let ctx = egui::Context::default();
+    let mut app = Explorer::with_context(&ctx, directory.path().to_owned());
+    app.query = "unrelated filter".into();
+    app.reveal_external(vec![hidden.clone(), raw.clone()], false);
+    assert!(app.selected.is_empty());
+    complete_navigation(&mut app);
+    assert_eq!(app.selected, BTreeSet::from([hidden.clone(), raw]));
+    assert_eq!(app.selection_cursor, Some(hidden));
+    assert!(app.query.is_empty());
+    assert!(app.hidden_visible() && app.reveal_selection);
+    assert!(
+        !app.show_hidden,
+        "reveal must not persist the temporary visibility"
+    );
+    assert!(app.properties.is_none());
+    app.navigate(
+        directory.path().parent().unwrap().to_owned(),
+        Navigation::Visit,
+    );
+    complete_navigation(&mut app);
+    assert!(!app.hidden_visible());
+    assert!(app.selected.is_empty());
+}
+
+#[test]
+fn external_properties_and_missing_items_are_reported_after_directory_read() {
+    let directory = tempfile::tempdir().unwrap();
+    let folder = directory.path().join("folder");
+    std::fs::create_dir(&folder).unwrap();
+    let ctx = egui::Context::default();
+    let mut app = Explorer::with_context(&ctx, directory.path().to_owned());
+    app.reveal_external(vec![folder.clone()], true);
+    complete_navigation(&mut app);
+    assert_eq!(app.current, directory.path());
+    assert_eq!(app.selected, BTreeSet::from([folder.clone()]));
+    assert_eq!(app.properties.as_ref().unwrap().path, folder);
+    app.reveal_external(vec![directory.path().join("missing")], false);
+    app.refresh();
+    complete_navigation(&mut app);
+    assert!(app.selected.is_empty());
+    assert_eq!(app.notice_toasts.len(), 1);
+}
+
+#[test]
 fn folders_restore_independent_layouts_through_history_refresh_errors_and_restart() {
     let directory = tempfile::tempdir().unwrap();
     let folder_a = directory.path().join("a");

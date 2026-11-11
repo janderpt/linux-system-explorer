@@ -35,7 +35,7 @@ impl Explorer {
         let entries: Vec<_> = filesystem::visible_entries(
             &self.entries,
             &self.query,
-            self.show_hidden,
+            self.hidden_visible(),
             self.sort,
             self.descending,
         )
@@ -225,7 +225,7 @@ impl Explorer {
             let paths = filesystem::visible_entries(
                 &self.entries,
                 &self.query,
-                self.show_hidden,
+                self.hidden_visible(),
                 self.sort,
                 self.descending,
             )

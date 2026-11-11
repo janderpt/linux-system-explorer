@@ -1427,6 +1427,10 @@
     "en": "{0} item selected.",
     "pt": "{0} item selecionado."
   },
+  "{} item solicitado não está disponível nesta pasta.": {
+    "en": "{0} requested item is not available in this folder.",
+    "pt": "{0} item solicitado não está disponível nesta pasta."
+  },
   "{} item(ns) concluídos; {} ignorados.{}": {
     "en": "{0} item(s) completed; {1} skipped.{2}",
     "pt": "{0} item(ns) concluídos; {1} ignorados.{2}"
@@ -1482,6 +1486,10 @@
   "{} itens selecionados.": {
     "en": "{0} items selected.",
     "pt": "{0} itens selecionados."
+  },
+  "{} itens solicitados não estão disponíveis nesta pasta.": {
+    "en": "{0} requested items are not available in this folder.",
+    "pt": "{0} itens solicitados não estão disponíveis nesta pasta."
   },
   "{} ícones gratuitos · Font Awesome Free 7.1.0 · Solid": {
     "en": "{0} free icons · Font Awesome Free 7.1.0 · Solid",

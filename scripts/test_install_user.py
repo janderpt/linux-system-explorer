@@ -35,6 +35,8 @@ class UserInstallationTests(unittest.TestCase):
         self.enterContext(patch.object(INSTALLER, "default_handler", side_effect=lambda: self.handler))
         self.change = self.enterContext(patch.object(INSTALLER, "set_handler", side_effect=self.set_handler))
         self.enterContext(patch.object(INSTALLER, "refresh"))
+        self.enterContext(patch.object(INSTALLER, "reload_bus"))
+        self.enterContext(patch.object(INSTALLER, "stop_own_bridge"))
         self.enterContext(patch.object(INSTALLER, "run", return_value=subprocess.CompletedProcess([], 0, stdout="test-revision\n")))
         self.enterContext(patch.object(INSTALLER.PACKAGE, "stage", side_effect=self.stage))
 
@@ -68,6 +70,36 @@ class UserInstallationTests(unittest.TestCase):
         self.install()
         self.install()
         self.assertEqual(json.loads(self.state.read_text())["previous_folder_handler"], "org.kde.dolphin.desktop")
+
+    def test_service_is_opt_in_and_original_override_survives_reinstall_and_restore(self):
+        service = self.data / "dbus-1/services" / INSTALLER.SERVICE
+        self.install(False)
+        self.assertFalse(service.exists())
+        service.parent.mkdir(parents=True)
+        original = "[D-BUS Service]\nName=org.freedesktop.FileManager1\nExec=/custom/manager\n"
+        service.write_text(original)
+        self.install()
+        self.assertIn("--file-manager-service", service.read_text())
+        self.assertNotIn("SystemdService=plasma-dolphin", service.read_text())
+        self.install()
+        with patch("sys.argv", ["install-user.py", "restore-default"]):
+            INSTALLER.main()
+        self.assertEqual(service.read_text(), original)
+        self.assertEqual(self.handler, "org.kde.dolphin.desktop")
+
+    def test_restore_removes_only_our_override_and_preserves_later_edits(self):
+        self.install()
+        service = self.data / "dbus-1/services" / INSTALLER.SERVICE
+        service.write_text("newer user service")
+        with self.assertRaises(RuntimeError):
+            INSTALLER.restore_integration(json.loads(self.state.read_text()))
+        self.assertEqual(service.read_text(), "newer user service")
+
+    def test_failed_change_removes_new_service_override(self):
+        self.change.side_effect = lambda handler: (_ for _ in ()).throw(RuntimeError("failure")) if handler == INSTALLER.DESKTOP_ID else self.set_handler(handler)
+        with self.assertRaises(RuntimeError):
+            self.install()
+        self.assertFalse((self.data / "dbus-1/services" / INSTALLER.SERVICE).exists())
 
     def test_failed_default_change_restores_the_previous_choice(self):
         def fail_new(handler):

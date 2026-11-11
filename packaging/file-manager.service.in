@@ -1,0 +1,4 @@
+[D-BUS Service]
+Name=org.freedesktop.FileManager1
+Exec=@EXECUTABLE@ --file-manager-service
+X-LinuxSystemExplorer-Managed=true

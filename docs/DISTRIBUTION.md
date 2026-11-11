@@ -52,7 +52,7 @@ python3 scripts/package.py stage --destdir /tmp/lse-stage --prefix /usr
 ```
 
 The destination must be empty. Standard layout: binary in `bin`, launcher in
-`share/applications`, AppStream in `share/metainfo`, SVG in the hicolor icon theme,
+`share/applications`, AppStream in `share/metainfo`, SVG and PNG in the hicolor icon theme,
 documentation in `share/doc`, and notices in `share/licenses`.
 
 The archive can be extracted and its `bin/linux-system-explorer` run directly, provided
@@ -62,14 +62,20 @@ The installer does not change the user's default file manager or MIME associatio
 
 For an explicitly requested per-user installation, `scripts/install-user.py install`
 installs under `~/.local/bin` and XDG data directories. Its optional `--set-default`
-flag changes only the default handler of `inode/directory`, with backups and recorded
+flag changes the default handler of `inode/directory` and registers a per-user
+`org.freedesktop.FileManager1` activation file, with backups and recorded
 rollback information under the XDG state directory. `restore-default` restores that
-previous handler only while this app remains the current default. This is independent
+previous handler and service registration only while these remain managed by this app.
+An already running service is not forcibly replaced; close it or log in again to switch.
+The bridge supports ShowFolders, ShowItems and ShowItemProperties for local file URIs,
+grouping selections by parent folder. Its private Quit interface stops only the bridge,
+leaving GUI windows intact. This is independent
 of package-manager installation, which does not change defaults automatically.
 
-Packaged installations use their installed launcher and static project icon. X11 still
-receives a window icon using the system accent. Uninstalled development builds retain
-the generated accent-colored Wayland launcher. The new app ID does not change the
+Packaged installations and native windows use the same project SVG, rasterized to PNG
+at build time. The user installer refreshes desktop and icon caches, including KDE's
+icon-change notification. Uninstalled development builds register the same icon and
+application identity. The app ID does not change the
 existing preferences directory. A launcher from older development builds using
 `io.github.linux-system-explorer.desktop` can remain in the user's menu; remove that old
 development shortcut manually if it is no longer needed.

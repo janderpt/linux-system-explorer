@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 import re
 import shutil
+import shlex
 import subprocess
 import tempfile
 import time
@@ -89,6 +90,74 @@ def refresh(data):
         run(["update-desktop-database", data / "applications"])
     if shutil.which("kbuildsycoca6"):
         run(["kbuildsycoca6", "--noincremental"], stdout=subprocess.DEVNULL)
+    if shutil.which("gtk-update-icon-cache") and (data / "icons/hicolor").is_dir():
+        run(["gtk-update-icon-cache", "--ignore-theme-index", "--force", data / "icons/hicolor"])
+    if shutil.which("dbus-send"):
+        # KIconLoader clears its cached images when this KDE notification arrives.
+        subprocess.run(["dbus-send", "--session", "/KIconLoader",
+                        "org.kde.KIconLoader.iconChanged", "int32:0"], check=False)
+
+
+SERVICE = "org.freedesktop.FileManager1.service"
+MANAGED = "X-LinuxSystemExplorer-Managed=true"
+CONTROL = "io.github.janderpt.LinuxSystemExplorer.FileManagerControl"
+
+
+def reload_bus():
+    run(["gdbus", "call", "--session", "--dest", "org.freedesktop.DBus",
+         "--object-path", "/org/freedesktop/DBus", "--method", "org.freedesktop.DBus.ReloadConfig"],
+        stdout=subprocess.DEVNULL)
+
+
+def stop_own_bridge():
+    # NameHasOwner does not auto-activate Dolphin or another manager.
+    owned = run(["gdbus", "call", "--session", "--dest", "org.freedesktop.DBus",
+                 "--object-path", "/org/freedesktop/DBus", "--method",
+                 "org.freedesktop.DBus.NameHasOwner", "org.freedesktop.FileManager1"],
+                capture_output=True, text=True).stdout
+    if "true" in owned:
+        # An unrelated owner has no private control interface, so it remains untouched.
+        subprocess.run(["gdbus", "call", "--session", "--dest", "org.freedesktop.FileManager1",
+                        "--object-path", "/org/freedesktop/FileManager1", "--method", CONTROL + ".Quit"],
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
+
+
+def activate_integration(data, binary, backup, old_state):
+    path = data / "dbus-1/services" / SERVICE
+    old = old_state.get("file_manager_activation")
+    if old and path.is_file() and path.read_text() == old["installed_text"]:
+        previous = old["previous_file"]
+    else:
+        previous = None
+        if path.exists():
+            original = backup / SERVICE
+            shutil.copy2(path, original)
+            previous = str(original)
+    template = (ROOT / "packaging/file-manager.service.in").read_text()
+    # D-Bus uses shell-style argument parsing, without invoking a shell.
+    text = template.replace("@EXECUTABLE@", shlex.quote(str(binary)))
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile(mode="w", dir=path.parent, delete=False) as file:
+        file.write(text)
+        temporary = Path(file.name)
+    temporary.chmod(0o644)
+    os.replace(temporary, path)
+    return {"path": str(path), "previous_file": previous, "installed_text": text}
+
+
+def restore_integration(state):
+    activation = state.get("file_manager_activation")
+    if not activation:
+        return
+    path = Path(activation["path"])
+    if not path.is_file() or path.read_text() != activation["installed_text"]:
+        raise RuntimeError("The FileManager1 service has changed; leaving that newer choice untouched")
+    stop_own_bridge()
+    if activation["previous_file"]:
+        atomic_copy(Path(activation["previous_file"]), path)
+    else:
+        path.unlink()
+    reload_bus()
 
 
 def install(binary, make_default, data, config, state_path):
@@ -132,13 +201,22 @@ def install(binary, make_default, data, config, state_path):
         "source_repository": PACKAGE.PACKAGE["repository"],
         "previous_folder_handler": previous, "backup": str(backup), "files": files,
     }
+    if "file_manager_activation" in old_state:
+        state["file_manager_activation"] = old_state["file_manager_activation"]
     write_state(state_path, state)
     refresh(data)
     run([installed_binary, "--version"])
     if make_default:
         try:
+            state["file_manager_activation"] = activate_integration(data, installed_binary, backup, old_state)
+            write_state(state_path, state)
+            reload_bus()
             set_handler(DESKTOP_ID)
+            stop_own_bridge()
         except (RuntimeError, subprocess.CalledProcessError):
+            restore_integration(state)
+            state.pop("file_manager_activation", None)
+            write_state(state_path, state)
             set_handler(previous)
             raise
     print("Installed:", installed_binary)
@@ -165,6 +243,9 @@ def main():
             raise RuntimeError("No previous folder handler is recorded")
         if default_handler() != DESKTOP_ID:
             raise RuntimeError("The current folder handler has changed; leaving that newer choice untouched")
+        restore_integration(state)
+        state.pop("file_manager_activation", None)
+        write_state(state_path, state)
         set_handler(previous)
         refresh(data)
         print("Restored folder handler:", previous)

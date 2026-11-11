@@ -59,7 +59,7 @@ impl Explorer {
         let target = filesystem::visible_entries(
             &self.entries,
             &self.query,
-            self.show_hidden,
+            self.hidden_visible(),
             self.sort,
             self.descending,
         )
