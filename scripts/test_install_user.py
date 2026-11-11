@@ -3,6 +3,7 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import shutil
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -88,6 +89,19 @@ class UserInstallationTests(unittest.TestCase):
                 INSTALLER.main()
         self.assertEqual(self.handler, "other-file-manager.desktop")
         self.change.assert_not_called()
+
+    @unittest.skipUnless(shutil.which("xdg-mime"), "xdg-utils not installed")
+    def test_installed_launcher_is_recognized_by_real_xdg_mime_query(self):
+        binary = self.home / ".local/bin" / INSTALLER.PACKAGE.NAME
+        INSTALLER.atomic_copy(self.binary, binary)
+        template = (INSTALLER.ROOT / "packaging/linux-system-explorer.desktop.in").read_text().replace("@APP_ID@", INSTALLER.APP_ID)
+        launcher = self.data / "applications" / INSTALLER.DESKTOP_ID
+        launcher.parent.mkdir(parents=True)
+        launcher.write_text(INSTALLER.launcher_text(template, binary))
+        self.mime.write_text("[Default Applications]\ninode/directory=" + INSTALLER.DESKTOP_ID + "\n")
+        env = os.environ | {"XDG_CURRENT_DESKTOP": "Generic", "XDG_CONFIG_DIRS": str(self.home / "no-config"), "XDG_DATA_DIRS": str(self.home / "no-data")}
+        result = subprocess.run(["xdg-mime", "query", "default", "inode/directory"], env=env, check=True, capture_output=True, text=True)
+        self.assertEqual(result.stdout.strip(), INSTALLER.DESKTOP_ID)
 
 
 if __name__ == "__main__":

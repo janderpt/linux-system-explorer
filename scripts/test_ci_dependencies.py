@@ -12,8 +12,7 @@ class AptMirrorsTests(unittest.TestCase):
         source = "Types: deb\nURIs: mirror+file:/etc/apt/apt-mirrors.txt\nSuites: noble noble-updates\nComponents: main universe\nSigned-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg\n\nURIs: mirror+file:/etc/apt/apt-mirrors-security.txt\nSuites: noble-security\n"
         result = CI.direct_mirrors(source)
         self.assertNotIn("mirror+file:", result)
-        self.assertIn("URIs: https://archive.ubuntu.com/ubuntu/", result)
-        self.assertIn("URIs: https://security.ubuntu.com/ubuntu/", result)
+        self.assertEqual(result.count("URIs: https://mirrors.edge.kernel.org/ubuntu/"), 2)
         self.assertIn("Suites: noble noble-updates", result)
         self.assertIn("Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg", result)
         self.assertEqual(result, CI.direct_mirrors(result))
@@ -22,5 +21,5 @@ class AptMirrorsTests(unittest.TestCase):
         source = "deb http://azure.archive.ubuntu.com/ubuntu noble main\ndeb https://packages.microsoft.com/repos/code stable main\n"
         result = CI.direct_mirrors(source)
         self.assertNotIn("azure.archive", result)
-        self.assertIn("https://archive.ubuntu.com/ubuntu noble main", result)
+        self.assertIn("https://mirrors.edge.kernel.org/ubuntu noble main", result)
         self.assertIn("https://packages.microsoft.com/repos/code stable main", result)

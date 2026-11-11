@@ -1,19 +1,23 @@
 #!/usr/bin/env python3
-"""Install CI dependencies using direct official Ubuntu HTTPS mirrors."""
+"""Install CI dependencies through the Linux Kernel Archives' Ubuntu mirror."""
 import os
 from pathlib import Path
 import subprocess
 import sys
 
+MIRROR = "https://mirrors.edge.kernel.org/ubuntu"
+
 
 def direct_mirrors(text):
     replacements = {
-        "mirror+file:/etc/apt/apt-mirrors.txt": "https://archive.ubuntu.com/ubuntu/",
-        "mirror+file:/etc/apt/apt-mirrors-security.txt": "https://security.ubuntu.com/ubuntu/",
-        "http://azure.archive.ubuntu.com/ubuntu": "https://archive.ubuntu.com/ubuntu",
-        "https://azure.archive.ubuntu.com/ubuntu": "https://archive.ubuntu.com/ubuntu",
-        "http://archive.ubuntu.com/ubuntu": "https://archive.ubuntu.com/ubuntu",
-        "http://security.ubuntu.com/ubuntu": "https://security.ubuntu.com/ubuntu",
+        "mirror+file:/etc/apt/apt-mirrors.txt": MIRROR + "/",
+        "mirror+file:/etc/apt/apt-mirrors-security.txt": MIRROR + "/",
+        "http://azure.archive.ubuntu.com/ubuntu": MIRROR,
+        "https://azure.archive.ubuntu.com/ubuntu": MIRROR,
+        "http://archive.ubuntu.com/ubuntu": MIRROR,
+        "https://archive.ubuntu.com/ubuntu": MIRROR,
+        "http://security.ubuntu.com/ubuntu": MIRROR,
+        "https://security.ubuntu.com/ubuntu": MIRROR,
     }
     for old, new in replacements.items():
         text = text.replace(old, new)
@@ -32,9 +36,9 @@ def main():
         updated = direct_mirrors(text)
         if updated != text:
             path.write_text(updated)
-            print("Using direct official Ubuntu HTTPS mirrors:", path, flush=True)
-    options = ["apt-get", "-o", "Acquire::Retries=3", "-o", "Acquire::http::Timeout=30",
-               "-o", "Acquire::https::Timeout=30", "-o", "DPkg::Lock::Timeout=60"]
+            print("Using the Linux Kernel Archives Ubuntu HTTPS mirror:", path, flush=True)
+    options = ["apt-get", "-o", "Acquire::Retries=2", "-o", "Acquire::http::Timeout=20",
+               "-o", "Acquire::https::Timeout=20", "-o", "DPkg::Lock::Timeout=60", "-o", "Acquire::ForceIPv4=true"]
     environment = os.environ | {"DEBIAN_FRONTEND": "noninteractive"}
     subprocess.run([*options, "-o", "APT::Update::Error-Mode=any", "update"], check=True, timeout=240, env=environment)
     subprocess.run([*options, "install", "-y", "--no-install-recommends", *sys.argv[1:]], check=True, timeout=240, env=environment)

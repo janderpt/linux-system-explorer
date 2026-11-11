@@ -6,6 +6,7 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import tempfile
@@ -45,11 +46,23 @@ def write_state(path, state):
 
 
 def default_handler():
+    if shutil.which("gio"):
+        result = run(["gio", "mime", "inode/directory"], capture_output=True, text=True,
+                     env=os.environ | {"LC_ALL": "C"}).stdout.splitlines()
+        if result and result[0].startswith("Default application for "):
+            return result[0].rsplit(": ", 1)[-1].strip()
     return run(["xdg-mime", "query", "default", "inode/directory"], capture_output=True, text=True).stdout.strip()
 
 
 def set_handler(desktop):
-    run(["xdg-mime", "default", desktop, "inode/directory"])
+    # Older xdg-utils invokes Qt 5's `qtpaths` on KDE 6, where only qtpaths6 exists.
+    # GIO writes the standard MIME association without that legacy dependency.
+    if shutil.which("gio"):
+        run(["gio", "mime", "inode/directory", desktop])
+    else:
+        run(["xdg-mime", "default", desktop, "inode/directory"])
+    data = Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local/share"))
+    refresh(data)
     if default_handler() != desktop:
         raise RuntimeError("The desktop did not confirm the requested folder handler")
 
@@ -59,9 +72,13 @@ def desktop_value(value):
 
 
 def launcher_text(template, binary):
-    quoted = '"' + "".join("\\" + c if c in '\\"`$' else "%%" if c == "%" else c for c in str(binary)) + '"'
+    # xdg-utils 1.2.x does not parse quoted Exec paths when querying defaults.
+    # Simple absolute paths need no quotes; special paths still follow the desktop spec.
+    executable = str(binary)
+    if not re.fullmatch(r"[A-Za-z0-9_./-]+", executable):
+        executable = '"' + "".join("\\" + c if c in '\\"`$' else "%%" if c == "%" else c for c in executable) + '"'
     return "\n".join(
-        "Exec=" + desktop_value(quoted) + " %f" if line.startswith("Exec=") else
+        "Exec=" + desktop_value(executable) + " %f" if line.startswith("Exec=") else
         "TryExec=" + desktop_value(str(binary)) if line.startswith("TryExec=") else line
         for line in template.splitlines()
     ) + "\n"
