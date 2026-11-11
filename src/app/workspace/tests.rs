@@ -99,12 +99,15 @@ fn global_preferences_follow_tab_switches_without_resetting_each_tabs_layout() {
     app.add_tab(root.path().to_owned(), &ctx);
     complete_navigation(&mut app.tabs[1]);
     app.tabs[1].dark = true;
+    app.tabs[1].restore_tabs = false;
     app.tabs[1].view = View::List;
     app.activate(0, &ctx);
     assert!(app.tabs[0].dark);
+    assert!(!app.tabs[0].restore_tabs);
     assert!(app.tabs[0].view == View::Details);
     app.activate(1, &ctx);
     assert!(app.tabs[1].dark);
+    assert!(!app.shared.restore_tabs);
     assert!(app.tabs[1].view == View::List);
 }
 

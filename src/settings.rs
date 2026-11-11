@@ -220,6 +220,7 @@ pub struct Preferences {
     pub dark: bool,
     pub show_hidden: bool,
     pub confirm_trash: bool,
+    pub restore_tabs: bool,
     pub toast: ToastOptions,
     pub language: crate::i18n::Language,
     pub item_scale: f32,
@@ -240,6 +241,7 @@ impl Default for Preferences {
             dark: false,
             show_hidden: false,
             confirm_trash: true,
+            restore_tabs: true,
             toast: ToastOptions::default(),
             language: crate::i18n::Language::System,
             item_scale: 1.0,
@@ -620,6 +622,27 @@ impl Editor {
 
     fn general(&mut self, ui: &mut egui::Ui) -> Action {
         let mut action = Action::None;
+        ui.horizontal(|ui| {
+            ui.label(crate::i18n::tr("Ao iniciar:"));
+            egui::ComboBox::from_id_salt("startup_tabs")
+                .selected_text(crate::i18n::tr(if self.draft.restore_tabs {
+                    "Restaurar abas da última sessão"
+                } else {
+                    "Iniciar sempre na pasta pessoal"
+                }))
+                .show_ui(ui, |ui| {
+                    ui.selectable_value(
+                        &mut self.draft.restore_tabs,
+                        true,
+                        crate::i18n::tr("Restaurar abas da última sessão"),
+                    );
+                    ui.selectable_value(
+                        &mut self.draft.restore_tabs,
+                        false,
+                        crate::i18n::tr("Iniciar sempre na pasta pessoal"),
+                    );
+                });
+        });
         ui.horizontal(|ui| {
             ui.label(crate::i18n::tr("Idioma:"));
             egui::ComboBox::from_id_salt("interface_language")

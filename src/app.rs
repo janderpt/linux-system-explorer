@@ -79,6 +79,7 @@ pub struct Explorer {
     focus_search: bool,
     show_hidden: bool,
     confirm_trash: bool,
+    restore_tabs: bool,
     toast_options: settings::ToastOptions,
     language: crate::i18n::Language,
     item_scale: f32,
@@ -208,6 +209,7 @@ impl Explorer {
             focus_search: false,
             show_hidden: false,
             confirm_trash: true,
+            restore_tabs: true,
             toast_options: settings::ToastOptions::default(),
             language: crate::i18n::Language::System,
             item_scale: 1.0,
@@ -724,6 +726,7 @@ impl Explorer {
             dark: self.dark,
             show_hidden: self.show_hidden,
             confirm_trash: self.confirm_trash,
+            restore_tabs: self.restore_tabs,
             toast: self.toast_options,
             language: self.language,
             item_scale: self.item_scale,
@@ -758,6 +761,7 @@ impl Explorer {
         self.dark = preferences.dark;
         self.show_hidden = preferences.show_hidden;
         self.confirm_trash = preferences.confirm_trash;
+        self.restore_tabs = preferences.restore_tabs;
         if self.toast_options != preferences.toast {
             for toast in &mut self.notice_toasts {
                 toast.update_options(&self.toast_options, &preferences.toast);

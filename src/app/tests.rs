@@ -2158,6 +2158,68 @@ fn page_home_end_follow_viewport_sort_and_shift_selection_in_all_views() {
 }
 
 #[test]
+fn startup_setting_can_be_cancelled_saved_and_restored_without_changing_folder_layout() {
+    let root = tempfile::tempdir().unwrap();
+    let ctx = egui::Context::default();
+    let mut app = Explorer::with_context(&ctx, root.path().to_owned());
+    complete_navigation(&mut app);
+    let path = root.path().join("config/preferences.json");
+    app.settings_path = Some(path.clone());
+    app.view = View::List;
+    app.item_scale = 1.5;
+    let draw = |app: &mut Explorer, ui: &mut egui::Ui| {
+        app.settings_dialog(ui.ctx());
+        ui.min_rect()
+    };
+    assert!(app.restore_tabs);
+    for save in [false, true] {
+        app.settings_editor = Some(settings::Editor::new(app.preferences()));
+        frame(&mut app, &ctx, 1180.0, vec![], draw);
+        for label in [
+            "Restaurar abas da última sessão",
+            "Iniciar sempre na pasta pessoal",
+        ] {
+            click_label(
+                &mut app,
+                &ctx,
+                label,
+                Modifiers::NONE,
+                PointerButton::Primary,
+                draw,
+            );
+        }
+        assert!(!app.settings_editor.as_ref().unwrap().draft.restore_tabs);
+        assert!(
+            app.restore_tabs,
+            "startup only changes after applying the draft"
+        );
+        click_label(
+            &mut app,
+            &ctx,
+            if save { "Salvar e fechar" } else { "Cancelar" },
+            Modifiers::NONE,
+            PointerButton::Primary,
+            draw,
+        );
+        assert_eq!(app.restore_tabs, !save);
+    }
+    let preferences = Preferences::load(&path).unwrap();
+    assert!(!preferences.restore_tabs);
+    let restarted_ctx = egui::Context::default();
+    let mut restarted = Explorer::with_context(&restarted_ctx, root.path().to_owned());
+    restarted.apply_preferences(preferences, &restarted_ctx);
+    complete_navigation(&mut restarted);
+    assert!(!restarted.preferences().restore_tabs);
+    assert!(restarted.view == View::List);
+    assert_eq!(restarted.item_scale, 1.5);
+    std::fs::write(&path, b"{}").unwrap();
+    assert!(
+        Preferences::load(&path).unwrap().restore_tabs,
+        "legacy preferences retain session restoration"
+    );
+}
+
+#[test]
 fn trash_confirmation_setting_can_be_cancelled_applied_and_restored_after_restart() {
     let root = tempfile::tempdir().unwrap();
     let source = root.path().join("source");

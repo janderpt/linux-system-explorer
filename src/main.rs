@@ -81,7 +81,10 @@ fn main() -> eframe::Result {
         .unwrap_or_else(|| PathBuf::from("/"));
     // Desktop Exec handlers (including GIO/xdg-open) launch the executable with
     // a directory, rather than going through the FileManager1 bridge.
-    let startup = session::Startup::load(resume);
+    let preferences = settings::Preferences::path()
+        .and_then(|path| settings::Preferences::load(&path).ok())
+        .unwrap_or_default();
+    let startup = session::Startup::load(resume && preferences.restore_tabs);
     let reuse_path = startup
         .saved
         .as_ref()
@@ -90,11 +93,7 @@ fn main() -> eframe::Result {
     if browse && file_manager::window::reuse_folder(&reuse_path, &activation::startup_token()) {
         return Ok(());
     }
-    let language = settings::Preferences::path()
-        .and_then(|path| settings::Preferences::load(&path).ok())
-        .unwrap_or_default()
-        .language;
-    i18n::set_locale(language.resolve());
+    i18n::set_locale(preferences.language.resolve());
     if let Err(error) = desktop::register() {
         eprintln!("Could not register desktop identity: {error}");
     }

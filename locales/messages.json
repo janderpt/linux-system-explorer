@@ -119,6 +119,10 @@
     "en": "Metadata change",
     "pt": "Alteração de metadados"
   },
+  "Ao iniciar:": {
+    "en": "On startup:",
+    "pt": "Ao iniciar:"
+  },
   "Aparência e ícones": {
     "en": "Appearance and icons",
     "pt": "Aparência e ícones"
@@ -671,6 +675,10 @@
     "en": "Enter a name without slashes, other than . or ..",
     "pt": "Informe um nome sem barras, diferente de . e .."
   },
+  "Iniciar sempre na pasta pessoal": {
+    "en": "Always start in the home folder",
+    "pt": "Iniciar sempre na pasta pessoal"
+  },
   "Interromper após este item": {
     "en": "Stop after this item",
     "pt": "Interromper após este item"
@@ -1202,6 +1210,10 @@
   "Restaurar": {
     "en": "Restore",
     "pt": "Restaurar"
+  },
+  "Restaurar abas da última sessão": {
+    "en": "Restore tabs from the last session",
+    "pt": "Restaurar abas da última sessão"
   },
   "Restaurar padrão": {
     "en": "Restore defaults",
