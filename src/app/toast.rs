@@ -60,6 +60,11 @@ impl Explorer {
             self.notice_toasts.push(notice);
         }
     }
+    pub(super) fn report_error(&mut self, text: String) {
+        self.error = Some(text.clone());
+        self.post_typed_notice(NoticeKind::Error, text);
+    }
+
     pub(super) fn post_notice(&mut self, text: String) {
         self.post_typed_notice(NoticeKind::Success, text);
     }

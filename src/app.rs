@@ -140,18 +140,16 @@ impl Explorer {
         let mut app = Self::with_context(&cc.egui_ctx, initial);
         match crate::native_dnd::Native::attach(cc) {
             Ok(native) => app.dnd.native = Some(native),
-            Err(error) => app.error = Some(error),
+            Err(error) => app.report_error(error),
         }
         app.settings_path = Preferences::path();
         if let Some(path) = &app.settings_path {
             match Preferences::load(path) {
                 Ok(preferences) => app.apply_preferences(preferences, &cc.egui_ctx),
-                Err(error) => {
-                    app.error = Some(crate::i18n::message(
-                        "Não foi possível carregar as preferências: {error}",
-                        &[(error).to_string()],
-                    ))
-                }
+                Err(error) => app.report_error(crate::i18n::message(
+                    "Não foi possível carregar as preferências: {error}",
+                    &[(error).to_string()],
+                )),
             }
         }
         app.activation = crate::activation::Activation::attach(cc);
@@ -297,7 +295,7 @@ impl Explorer {
             self.loading_path = Some(loading_path);
             self.error = None;
         } else {
-            self.error = Some(
+            self.report_error(
                 crate::i18n::tr("O serviço de leitura foi encerrado. Reinicie o explorador.")
                     .into(),
             );
@@ -364,14 +362,14 @@ impl Explorer {
                         }
                         Err(error) => {
                             self.pending_external = None;
-                            self.error = Some(crate::i18n::message(
+                            self.report_error(crate::i18n::message(
                                 "Não foi possível abrir a pasta: {error}",
                                 &[(error).to_string()],
                             ))
                         }
                     }
                 }
-                Event::OpenFailed(message) => self.error = Some(message),
+                Event::OpenFailed(message) => self.report_error(message),
                 Event::TransferProgress(progress) => {
                     if let Some(transfer) = &mut self.active_transfer {
                         transfer.progress = progress;
@@ -927,7 +925,7 @@ impl Explorer {
         if let Some(path) = &self.settings_path
             && let Err(error) = preferences.save(path)
         {
-            self.error = Some(crate::i18n::message(
+            self.report_error(crate::i18n::message(
                 "Não foi possível salvar as preferências: {error}",
                 &[(error).to_string()],
             ));
@@ -980,27 +978,6 @@ impl Explorer {
                 self.deletion_status(ui);
                 self.restore_status(ui);
                 self.empty_trash_status(ui);
-                if let Some(error) = self.error.clone() {
-                    egui::Frame::new()
-                        .fill(if self.dark {
-                            Color32::from_rgb(70, 30, 30)
-                        } else {
-                            Color32::from_rgb(255, 236, 233)
-                        })
-                        .inner_margin(10.0)
-                        .show(ui, |ui| {
-                            ui.horizontal_wrapped(|ui| {
-                                ui.label(RichText::new(error).color(if self.dark {
-                                    Color32::LIGHT_RED
-                                } else {
-                                    Color32::DARK_RED
-                                }));
-                                if ui.small_button(crate::i18n::tr("Fechar")).clicked() {
-                                    self.error = None;
-                                }
-                            });
-                        });
-                }
                 if self.loading {
                     ui.horizontal(|ui| {
                         ui.spinner();
@@ -1418,12 +1395,10 @@ impl Explorer {
                         self.new_folder = None;
                         self.refresh();
                     }
-                    Err(error) => {
-                        self.error = Some(crate::i18n::message(
-                            "Não foi possível criar a pasta: {error}",
-                            &[(error).to_string()],
-                        ))
-                    }
+                    Err(error) => self.report_error(crate::i18n::message(
+                        "Não foi possível criar a pasta: {error}",
+                        &[(error).to_string()],
+                    )),
                 }
             }
         }

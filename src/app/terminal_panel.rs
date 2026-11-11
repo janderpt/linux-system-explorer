@@ -448,7 +448,7 @@ impl Explorer {
     pub(super) fn open_terminal(&mut self, path: PathBuf, ctx: &egui::Context) {
         let panel = self.terminal.get_or_insert_with(Panel::new);
         if let Err(error) = panel.open(&path, ctx) {
-            self.error = Some(crate::i18n::message(
+            self.report_error(crate::i18n::message(
                 "Não foi possível abrir o terminal: {error}",
                 &[error.to_string()],
             ));

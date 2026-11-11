@@ -2,6 +2,8 @@
 
 ## Unreleased — 0.1.0 experimental
 
+- Operational errors use the standard error-toast stack; removed the legacy global error banner. SMB share selection now fills the dialog width.
+
 - SMB server browsing from UNC/SMB root addresses, share selection before connecting, and network URL handling in the address bar, with native KDE/GNOME authentication.
 
 - Separate Local shares sidebar section with local folder navigation, independent visibility, immediate manager updates across tabs and periodic background refresh for other windows/external changes.

@@ -187,12 +187,10 @@ impl Explorer {
                 self.active_transfer = Some(ActiveTransfer { progress, cancel });
                 self.error = None;
             }
-            Err(error) => {
-                self.error = Some(crate::i18n::message(
-                    "Não foi possível iniciar a transferência: {error}",
-                    &[(error).to_string()],
-                ))
-            }
+            Err(error) => self.report_error(crate::i18n::message(
+                "Não foi possível iniciar a transferência: {error}",
+                &[(error).to_string()],
+            )),
         }
     }
 

@@ -379,7 +379,7 @@ impl Explorer {
 
     pub(super) fn pin_folder(&mut self, path: PathBuf) {
         if let Err(error) = self.sidebar_options.pin(&path) {
-            self.error = Some(crate::i18n::message(
+            self.report_error(crate::i18n::message(
                 "Não foi possível fixar a pasta: {error}",
                 &[(error).to_string()],
             ));

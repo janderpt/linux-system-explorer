@@ -99,12 +99,10 @@ impl Explorer {
             self.dnd.trash_prepare = None;
             match result {
                 Ok(entries) => self.delete_dropped_entries(entries, ctx),
-                Err(error) => {
-                    self.error = Some(crate::i18n::message(
-                        "Não foi possível preparar os arquivos arrastados: {}",
-                        &[error.to_string()],
-                    ))
-                }
+                Err(error) => self.report_error(crate::i18n::message(
+                    "Não foi possível preparar os arquivos arrastados: {}",
+                    &[error.to_string()],
+                )),
             }
         }
         if self
@@ -118,6 +116,7 @@ impl Explorer {
         {
             self.finish_native_drop(false);
         }
+        let mut native_errors = Vec::new();
         if let Some(native) = &mut self.dnd.native {
             native.scale(ctx.pixels_per_point());
             for event in native.poll(ctx.input(|input| input.modifiers)) {
@@ -158,7 +157,7 @@ impl Explorer {
                         self.dnd.feedback = None;
                     }
                     NativeEvent::Error(error) => {
-                        self.error = Some(crate::i18n::message(
+                        native_errors.push(crate::i18n::message(
                             "Falha no arrastar e soltar: {}",
                             &[error],
                         ));
@@ -168,6 +167,9 @@ impl Explorer {
                     }
                 }
             }
+        }
+        for error in native_errors {
+            self.report_error(error);
         }
         // Legacy X11 sources may ignore XdndProxy. Winit still supplies their files.
         let files = ctx.input(|input| {

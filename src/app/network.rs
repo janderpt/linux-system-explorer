@@ -291,12 +291,23 @@ impl Explorer {
                 }
                 egui::ScrollArea::vertical()
                     .id_salt("server_share_choices")
+                    .auto_shrink([false, true])
                     .max_height((ctx.content_rect().height() - 440.0).clamp(80.0, 180.0))
                     .show(ui, |ui| {
                         ui.add_enabled_ui(!busy, |ui| {
                             for (i, share) in shares.iter().enumerate() {
                                 if ui
-                                    .selectable_label(dialog.selected_share == Some(i), &share.name)
+                                    .horizontal(|ui| {
+                                        ui.add(
+                                            egui::Button::selectable(
+                                                dialog.selected_share == Some(i),
+                                                &share.name,
+                                            )
+                                            .min_size(Vec2::new(ui.available_width(), 32.0))
+                                            .truncate(),
+                                        )
+                                    })
+                                    .inner
                                     .on_hover_text(&share.url)
                                     .clicked()
                                 {

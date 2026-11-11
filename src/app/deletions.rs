@@ -217,12 +217,10 @@ impl Explorer {
                 self.active_deletion = Some(ActiveDeletion { progress, cancel });
                 self.error = None;
             }
-            Err(error) => {
-                self.error = Some(crate::i18n::message(
-                    "Não foi possível iniciar a exclusão: {error}",
-                    &[(error).to_string()],
-                ))
-            }
+            Err(error) => self.report_error(crate::i18n::message(
+                "Não foi possível iniciar a exclusão: {error}",
+                &[(error).to_string()],
+            )),
         }
     }
 

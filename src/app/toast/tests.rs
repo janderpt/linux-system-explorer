@@ -441,3 +441,54 @@ fn preview_uses_draft_timing_without_changing_or_following_global_preferences() 
     draw(&mut app, &ctx, 3600.0, true);
     assert_eq!(app.notice_toasts.len(), 1);
 }
+
+#[test]
+fn folder_and_open_errors_stack_as_error_toasts_without_moving_column_headers() {
+    let root = tempfile::tempdir().unwrap();
+    std::fs::write(root.path().join("file.txt"), "test").unwrap();
+    let ctx = egui::Context::default();
+    let mut app = Explorer::with_context(&ctx, root.path().into());
+    crate::app::tests::complete_navigation(&mut app);
+    let frame = |app: &mut Explorer, time: f64| {
+        ctx.run(
+            RawInput {
+                screen_rect: Some(Rect::from_min_size(Pos2::ZERO, Vec2::new(1180.0, 760.0))),
+                time: Some(time),
+                ..Default::default()
+            },
+            |ctx| app.show(ctx),
+        )
+    };
+    frame(&mut app, 0.0);
+    let initial = frame(&mut app, 0.1);
+    let header = text_center(&initial, "Nome").unwrap();
+    app.event_sender
+        .send(Event::Listed(
+            Err(std::io::Error::from(std::io::ErrorKind::PermissionDenied)),
+            Navigation::Visit,
+        ))
+        .unwrap();
+    app.event_sender
+        .send(Event::OpenFailed("Application opening failed".into()))
+        .unwrap();
+    frame(&mut app, 0.2);
+    let output = frame(&mut app, 0.3);
+    assert_eq!(app.current, root.path());
+    assert_eq!(app.notice_toasts.len(), 2);
+    assert!(
+        app.notice_toasts
+            .iter()
+            .all(|notice| notice.kind == NoticeKind::Error)
+    );
+    let stack = ctx
+        .memory(|m| m.area_rect(egui::Id::new("operation_notice_stack")))
+        .unwrap();
+    for notice in &app.notice_toasts {
+        let point = text_center(&output, &notice.text).unwrap();
+        assert!(stack.contains(point));
+    }
+    assert!((text_center(&output, "Nome").unwrap().y - header.y).abs() < 0.5);
+    frame(&mut app, 100.0);
+    assert_eq!(app.notice_toasts.len(), 2);
+    assert!(!app.toast_options.error.auto_dismiss);
+}
