@@ -467,6 +467,10 @@
     "en": "Downloads",
     "pt": "Downloads"
   },
+  "Duplicar aba": {
+    "en": "Duplicate tab",
+    "pt": "Duplicar aba"
+  },
   "Duplo clique para abrir": {
     "en": "Double-click to open",
     "pt": "Duplo clique para abrir"
@@ -611,9 +615,17 @@
     "en": "Close tab · Ctrl+W",
     "pt": "Fechar aba · Ctrl+W"
   },
+  "Fechar abas à direita": {
+    "en": "Close tabs to the right",
+    "pt": "Fechar abas à direita"
+  },
   "Fechar aviso": {
     "en": "Dismiss",
     "pt": "Fechar aviso"
+  },
+  "Fechar outras abas": {
+    "en": "Close other tabs",
+    "pt": "Fechar outras abas"
   },
   "Fechar todos": {
     "en": "Dismiss all",

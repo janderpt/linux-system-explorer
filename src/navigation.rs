@@ -1,7 +1,7 @@
 use std::path::{Path, PathBuf};
 
 /// History changes only after the requested directory has been read successfully.
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub struct History {
     paths: Vec<PathBuf>,
     cursor: usize,

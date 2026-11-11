@@ -41,6 +41,9 @@ pub enum Icon {
     Open,
     NewWindow,
     NewTab,
+    DuplicateTab,
+    CloseOtherTabs,
+    CloseRightTabs,
     Terminal,
     OpenWith,
     Rename,
@@ -84,7 +87,7 @@ pub enum Icon {
 }
 
 impl Icon {
-    pub const ALL: [Self; 73] = [
+    pub const ALL: [Self; 76] = [
         Self::Home,
         Self::Desktop,
         Self::Download,
@@ -118,6 +121,9 @@ impl Icon {
         Self::Open,
         Self::NewWindow,
         Self::NewTab,
+        Self::DuplicateTab,
+        Self::CloseOtherTabs,
+        Self::CloseRightTabs,
         Self::Terminal,
         Self::OpenWith,
         Self::Rename,
@@ -195,6 +201,9 @@ impl Icon {
             Self::Open => crate::i18n::tr("Abrir item"),
             Self::NewWindow => crate::i18n::tr("Abrir em nova janela"),
             Self::NewTab => crate::i18n::tr("Abrir em nova aba"),
+            Self::DuplicateTab => crate::i18n::tr("Duplicar aba"),
+            Self::CloseOtherTabs => crate::i18n::tr("Fechar outras abas"),
+            Self::CloseRightTabs => crate::i18n::tr("Fechar abas à direita"),
             Self::Terminal => crate::i18n::tr("Abrir terminal aqui"),
             Self::OpenWith => crate::i18n::tr("Abrir com outro aplicativo"),
             Self::Rename => crate::i18n::tr("Renomear"),
@@ -273,6 +282,9 @@ impl Icon {
             Self::Open => "folder-open",
             Self::NewWindow => "window-restore",
             Self::NewTab => "square-plus",
+            Self::DuplicateTab => "clone",
+            Self::CloseOtherTabs => "rectangle-xmark",
+            Self::CloseRightTabs => "right-from-bracket",
             Self::Terminal => "terminal",
             Self::OpenWith => "window-restore",
             Self::Rename => "file-pen",

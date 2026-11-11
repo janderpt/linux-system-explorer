@@ -4,10 +4,75 @@ use super::*;
 #[derive(Clone, Copy)]
 struct TabDrag(u64);
 
+#[derive(Clone, Copy)]
+pub(super) enum TabAction {
+    Duplicate,
+    CloseOthers,
+    CloseRight,
+}
+
 const HEIGHT: f32 = 36.0;
 const GAP: f32 = 4.0;
 
 impl Workspace {
+    pub(super) fn tab_action(&mut self, id: u64, action: TabAction, ctx: &egui::Context) {
+        let Some(index) = self.tabs.iter().position(|tab| tab.tab_id == id) else {
+            return;
+        };
+        match action {
+            TabAction::Duplicate => {
+                self.capture(ctx);
+                self.append_tab(self.tabs[index].location().to_owned(), ctx);
+                let last = self.tabs.len() - 1;
+                let (originals, duplicate) = self.tabs.split_at_mut(last);
+                let source = &originals[index];
+                let copy = &mut duplicate[0];
+                // Preserve the browsing context while the new tab refreshes its own listing.
+                // Transfers and terminal processes continue to belong only to the original.
+                if source.location() == source.current && !source.current.as_os_str().is_empty() {
+                    copy.current = source.current.clone();
+                    copy.entries = source.entries.clone();
+                    copy.skipped = source.skipped;
+                    copy.history = source.history.clone();
+                    copy.query = source.query.clone();
+                    copy.selected = source.selected.clone();
+                    copy.selection_anchor = source.selection_anchor.clone();
+                    copy.selection_cursor = source.selection_cursor.clone();
+                    copy.reveal_selection = !copy.selected.is_empty();
+                    copy.reveal_hidden = source.reveal_hidden;
+                    copy.apply_layout(source.current_layout());
+                }
+                let duplicate_id = copy.tab_id;
+                self.reorder_tab(duplicate_id, index + 1);
+                self.activate(index + 1, ctx);
+            }
+            TabAction::CloseOthers | TabAction::CloseRight => {
+                let closing: BTreeSet<_> = self
+                    .tabs
+                    .iter()
+                    .enumerate()
+                    .filter(|(i, tab)| {
+                        *i != index
+                            && !tab.busy()
+                            && (matches!(action, TabAction::CloseOthers) || *i > index)
+                    })
+                    .map(|(_, tab)| tab.tab_id)
+                    .collect();
+                if closing.contains(&self.tabs[self.active].tab_id) {
+                    self.activate(index, ctx);
+                }
+                let active_id = self.tabs[self.active].tab_id;
+                self.tabs.retain(|tab| !closing.contains(&tab.tab_id));
+                self.active = self
+                    .tabs
+                    .iter()
+                    .position(|tab| tab.tab_id == active_id)
+                    .unwrap();
+            }
+        }
+        ctx.request_repaint();
+    }
+
     pub(super) fn reorder_tab(&mut self, id: u64, insertion: usize) {
         let Some(from) = self.tabs.iter().position(|tab| tab.tab_id == id) else {
             return;
@@ -28,6 +93,8 @@ impl Workspace {
         let mut close = None;
         let mut add = false;
         let mut reorder = None;
+        let mut menu_action = None;
+        let mut menu_open = false;
         let locked = self.closing
             || self.tabs[self.active].drag_blocks_tabs()
             || self.tabs[self.active].has_dialog();
@@ -76,6 +143,42 @@ impl Workspace {
                                 }
                                 if x.clicked() {
                                     close = Some(index);
+                                }
+                                if !locked && !dragging {
+                                    response.context_menu(|ui| {
+                                        for (action, icon, enabled) in [
+                                            (TabAction::Duplicate, Icon::DuplicateTab, true),
+                                            (
+                                                TabAction::CloseOthers,
+                                                Icon::CloseOtherTabs,
+                                                self.tabs
+                                                    .iter()
+                                                    .enumerate()
+                                                    .any(|(i, t)| i != index && !t.busy()),
+                                            ),
+                                            (
+                                                TabAction::CloseRight,
+                                                Icon::CloseRightTabs,
+                                                self.tabs[index + 1..].iter().any(|t| !t.busy()),
+                                            ),
+                                        ] {
+                                            if icons::menu_item(
+                                                ui,
+                                                icon,
+                                                icon.label(),
+                                                "",
+                                                enabled,
+                                                false,
+                                                &self.tabs[self.active].appearance,
+                                            )
+                                            .clicked()
+                                            {
+                                                menu_action = Some((tab.tab_id, action));
+                                                ui.close();
+                                            }
+                                        }
+                                    });
+                                    menu_open |= response.context_menu_opened();
                                 }
                                 if !locked && response.drag_started_by(egui::PointerButton::Primary)
                                 {
@@ -177,7 +280,11 @@ impl Workspace {
             );
             painter.galley(rect.min + Vec2::new(12.0, 8.0), text, visuals.text_color());
         }
-        if !locked && !egui::DragAndDrop::has_payload_of_type::<TabDrag>(ctx) && !dragging {
+        if !locked
+            && !menu_open
+            && !egui::DragAndDrop::has_payload_of_type::<TabDrag>(ctx)
+            && !dragging
+        {
             let terminal = self.tabs[self.active].terminal_focused(ctx);
             if !terminal && ctx.input_mut(|i| i.consume_key(egui::Modifiers::CTRL, Key::T)) {
                 add = true;
@@ -196,6 +303,10 @@ impl Workspace {
                     (self.active + 1) % self.tabs.len()
                 });
             }
+        }
+        if let Some((id, action)) = menu_action {
+            self.tab_action(id, action, ctx);
+            return;
         }
         if let Some(index) = select {
             self.activate(index, ctx);

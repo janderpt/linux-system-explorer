@@ -2,7 +2,7 @@ use super::*;
 use crate::app::tests::text_center;
 use egui::{Event, FullOutput, Modifiers, PointerButton, Pos2, RawInput, Rect, Shape};
 
-fn render(app: &mut Workspace, ctx: &egui::Context, events: Vec<Event>) -> FullOutput {
+pub(super) fn render(app: &mut Workspace, ctx: &egui::Context, events: Vec<Event>) -> FullOutput {
     ctx.run(
         RawInput {
             screen_rect: Some(Rect::from_min_size(Pos2::ZERO, Vec2::new(780.0, 760.0))),
@@ -21,7 +21,7 @@ fn pointer(pos: Pos2, pressed: bool) -> Event {
         modifiers: Modifiers::NONE,
     }
 }
-fn tab_rect(output: &FullOutput, title: &str) -> Rect {
+pub(super) fn tab_rect(output: &FullOutput, title: &str) -> Rect {
     let text = text_center(output, title).unwrap_or_else(|| panic!("missing tab {title}"));
     output
         .shapes
