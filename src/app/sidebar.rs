@@ -116,15 +116,31 @@ impl Explorer {
     }
 
     pub(super) fn sidebar(&mut self, ctx: &egui::Context) {
+        egui::SidePanel::left("places")
+            .default_width(205.0)
+            .min_width(170.0)
+            .max_width(280.0)
+            .show(ctx, |ui| self.sidebar_body(ui));
+    }
+
+    pub(super) fn sidebar_inside(&mut self, ui: &mut egui::Ui) {
+        let maximum = (ui.available_width() * 0.48).clamp(120.0, 240.0);
+        egui::SidePanel::left(egui::Id::new(("pane_places", self.tab_id)))
+            .default_width(170.0)
+            .min_width(120.0)
+            .max_width(maximum)
+            .show_inside(ui, |ui| self.sidebar_body(ui));
+    }
+
+    fn sidebar_body(&mut self, ui: &mut egui::Ui) {
         if self.sidebar_options.show_local_shares {
-            self.refresh_local_share_sidebar(ctx);
+            self.refresh_local_share_sidebar(ui.ctx());
         }
         let entries = self.sidebar_entries();
         let active = closest(&self.current, &entries);
         let mut remove_remote = None;
-        egui::SidePanel::left("places").default_width(205.0).min_width(170.0).max_width(280.0).show(ctx,|ui| {
-            let height=(ui.available_height()-30.0).max(0.0);
-            egui::ScrollArea::vertical().id_salt("sidebar_scroll").max_height(height).auto_shrink([false,false]).show(ui,|ui| {
+        let height = (ui.available_height() - 30.0).max(0.0);
+        egui::ScrollArea::vertical().id_salt("sidebar_scroll").max_height(height).auto_shrink([false,false]).show(ui,|ui| {
                 self.drag_hover_scroll(ui);
                 ui.add_space(10.0);
                 for computer in [false,true] {
@@ -167,9 +183,8 @@ impl Explorer {
                     if self.menu_item(ui,Icon::AddNetwork,crate::i18n::tr("Adicionar compartilhamento de rede"),"",!self.loading,false).on_hover_text(crate::i18n::tr("Adicionar compartilhamento de rede")).clicked(){self.request_network(None,ui.ctx());}
                 }
             });
-            ui.add_space(5.0);
-            ui.label(RichText::new("Linux System Explorer  0.1").small().weak());
-        });
+        ui.add_space(5.0);
+        ui.label(RichText::new("Linux System Explorer  0.1").small().weak());
         // Entries are a snapshot of the indices used throughout this frame. Apply
         // removals only after every entry and its context menu has been rendered.
         if let Some(index) = remove_remote {

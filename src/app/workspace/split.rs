@@ -118,7 +118,6 @@ impl Workspace {
             },
         );
         self.tabs[active].terminal_panel(ctx);
-        self.tabs[active].sidebar(ctx);
         {
             let (source, other) = two_tabs(&mut self.tabs, active, other);
             other.mirror_drag_feedback(source);
@@ -126,11 +125,11 @@ impl Workspace {
         let mut ratio = self.split.as_ref().unwrap().ratio;
         let mut pane_rects = None;
         egui::CentralPanel::default()
-            .frame(egui::Frame::NONE)
+            .frame(egui::Frame::central_panel(&ctx.style()).inner_margin(0))
             .show(ctx, |ui| {
                 let rect = ui.available_rect_before_wrap();
                 let width = (rect.width() - 8.0).max(1.0);
-                let minimum = (160.0 / width).min(0.45);
+                let minimum = (320.0 / width).min(0.45);
                 ratio = ratio.clamp(minimum, 1.0 - minimum);
                 let divider = egui::Rect::from_min_max(
                     egui::pos2(rect.left() + width * ratio, rect.top()),
@@ -171,12 +170,20 @@ impl Workspace {
                 ] {
                     ui.scope_builder(
                         egui::UiBuilder::new()
-                            .max_rect(pane.shrink2(Vec2::new(6.0, 0.0)))
+                            .max_rect(pane)
                             .id_salt(("folder_pane", self.tabs[index].tab_id))
                             .layout(Layout::top_down(Align::Min)),
                         |ui| {
                             ui.set_clip_rect(pane.intersect(ui.clip_rect()));
-                            self.tabs[index].contents_ui(ui, visible);
+                            self.tabs[index].sidebar_inside(ui);
+                            egui::CentralPanel::default()
+                                .frame(egui::Frame::NONE.inner_margin(egui::Margin {
+                                    left: 6,
+                                    right: 6,
+                                    top: 0,
+                                    bottom: 0,
+                                }))
+                                .show_inside(ui, |ui| self.tabs[index].contents_ui(ui, visible));
                         },
                     );
                     if index == active {

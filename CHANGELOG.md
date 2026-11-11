@@ -2,7 +2,9 @@
 
 ## Unreleased — 0.1.0 experimental
 
-- Toolbar toggle for two resizable folder panes in one window, initially showing the same directory. Independent navigation, filtering and selection; shared active-pane toolbar/sidebar, clipboard and cross-pane drag/drop. Turning the split off preserves both folders as tabs.
+- Give each split pane its own navigation sidebar and paint an opaque theme background, fixing black folder areas in light mode.
+
+- Toolbar toggle for two resizable folder panes in one window, initially showing the same directory. Independent navigation, filtering and selection; per-pane sidebars, shared active-pane toolbar, clipboard and cross-pane drag/drop. Turning the split off preserves both folders as tabs.
 
 - Show network addresses in breadcrumbs, address editing and tab tooltips, and share/folder names in tabs and recently closed tabs. Keep breadcrumb and Up navigation within the remote hierarchy while retaining local paths for filesystem operations.
 

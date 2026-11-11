@@ -123,6 +123,19 @@ fn both_panes_render_all_views_without_crossing_the_divider_in_both_themes() {
             render(&mut app, &ctx, vec![], Modifiers::NONE);
             let output = render(&mut app, &ctx, vec![], Modifiers::NONE);
             let rects = app.split.as_ref().unwrap().rects.unwrap();
+            let background = ctx.style().visuals.panel_fill;
+            assert_eq!(background.a(), 255);
+            for rect in rects {
+                assert!(
+                    output.shapes.iter().any(|shape| {
+                        matches!(&shape.shape, egui::Shape::Rect(paint)
+                        if paint.fill == background
+                            && paint.rect.contains_rect(rect)
+                            && shape.clip_rect.contains(rect.center()))
+                    }),
+                    "each pane needs an opaque background from the selected theme"
+                );
+            }
             let names = points(&output, "one.txt");
             assert_eq!(names.len(), 2);
             assert!(rects[0].contains(names[0]));
@@ -187,6 +200,39 @@ fn splitter_resizes_and_tab_reordering_and_closing_preserve_valid_pane_ids() {
     assert!(app.split.is_none());
     assert_eq!(app.tabs.len(), 1);
     render(&mut app, &ctx, vec![], Modifiers::NONE);
+}
+
+#[test]
+fn each_pane_has_its_own_sidebar_that_navigates_only_that_pane() {
+    let root = tempfile::tempdir().unwrap();
+    let target = root.path().join("Other");
+    std::fs::create_dir(&target).unwrap();
+    let ctx = egui::Context::default();
+    let mut app = workspace(&ctx, root.path().into());
+    let sidebar = &mut app.tabs[0].sidebar_options;
+    sidebar.visible.clear();
+    sidebar.show_trash = false;
+    sidebar.show_local_shares = false;
+    sidebar.show_network = false;
+    sidebar.pinned = vec![locations::Shortcut {
+        path: target.clone(),
+        label: "Destination shortcut".into(),
+    }];
+    app.toggle_split(&ctx);
+    settle(&mut app);
+    render(&mut app, &ctx, vec![], Modifiers::NONE);
+    let output = render(&mut app, &ctx, vec![], Modifiers::NONE);
+    let [left, right] = app.split_indices().unwrap();
+    let rects = app.split.as_ref().unwrap().rects.unwrap();
+    let shortcuts = points(&output, "Destination shortcut");
+    assert_eq!(shortcuts.len(), 2);
+    assert!(rects[0].contains(shortcuts[0]));
+    assert!(rects[1].contains(shortcuts[1]));
+    click(&mut app, &ctx, shortcuts[1]);
+    settle(&mut app);
+    assert_eq!(app.active, right);
+    assert_eq!(app.tabs[right].current, target);
+    assert_eq!(app.tabs[left].current, root.path());
 }
 
 #[test]

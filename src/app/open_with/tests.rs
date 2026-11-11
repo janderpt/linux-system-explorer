@@ -151,7 +151,8 @@ fn context_chooser_filters_cancels_and_opens_only_the_chosen_file() {
     click(&mut app, &ctx, open, PointerButton::Primary);
     assert!(app.open_with.is_none());
     let deadline = Instant::now() + Duration::from_secs(3);
-    while !capture.exists() {
+    // The launched process can create the file before writing its argument.
+    while fs::read_to_string(&capture).unwrap_or_default().is_empty() {
         app.poll();
         assert!(app.error.is_none(), "{:?}", app.error);
         assert!(Instant::now() < deadline);
