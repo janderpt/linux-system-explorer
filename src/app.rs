@@ -1503,7 +1503,10 @@ impl Explorer {
             .iter()
             .map(|&index| self.entries[index].path.clone())
             .collect();
-        self.retain_selection(&visible_paths);
+        // A reopened tab restores its selection before its first listing arrives.
+        if !self.loading || !self.entries.is_empty() {
+            self.retain_selection(&visible_paths);
+        }
         egui::TopBottomPanel::bottom("status").show(ctx, |ui| {
             ui.horizontal(|ui| {
                 ui.label(crate::i18n::plural("{} item", "{} itens", visible.len()));

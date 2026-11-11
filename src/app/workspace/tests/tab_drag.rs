@@ -153,9 +153,46 @@ fn tabs_have_shared_contours_centered_contents_and_distinct_active_style_in_both
                 }
             })
             .collect();
-        assert_eq!(shapes.len(), 2);
-        assert_eq!(shapes[0].rect.height(), 35.0);
+        assert_eq!(shapes.len(), 3);
+        assert_eq!(shapes[0].rect.height(), 30.0);
         assert_eq!(shapes[0].rect.height(), shapes[1].rect.height());
+        assert_eq!(
+            shapes[0].rect.right(),
+            shapes[1].rect.left(),
+            "tabs touch without a gap"
+        );
+        assert_eq!(
+            shapes[1].rect.right(),
+            shapes[2].rect.left(),
+            "new-tab control also touches the strip"
+        );
+        assert_eq!(shapes[2].rect.size(), Vec2::new(36.0, 30.0));
+        assert_eq!(
+            shapes[2].fill.a(),
+            255,
+            "new-tab control has an opaque background"
+        );
+        let background = output
+            .shapes
+            .iter()
+            .find_map(|s| {
+                if let Shape::Rect(r) = &s.shape
+                    && r.rect
+                        .contains(shapes[2].rect.right_top() + Vec2::new(50.0, 1.0))
+                    && r.rect.height() < 50.0
+                {
+                    Some(r.fill)
+                } else {
+                    None
+                }
+            })
+            .unwrap();
+        assert_eq!(
+            background.a(),
+            255,
+            "tab strip must not expose the renderer's dark clear color"
+        );
+        assert_eq!(background, ctx.style().visuals.panel_fill);
         assert_ne!(shapes[0].fill, shapes[1].fill);
         assert_ne!(shapes[0].stroke.color, shapes[1].stroke.color);
         let title = text_center(&output, "Short").unwrap();

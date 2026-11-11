@@ -1175,6 +1175,10 @@
     "en": "NETWORK",
     "pt": "REDE"
   },
+  "Reabrir aba fechada": {
+    "en": "Reopen closed tab",
+    "pt": "Reabrir aba fechada"
+  },
   "Recomendado": {
     "en": "Recommended",
     "pt": "Recomendado"

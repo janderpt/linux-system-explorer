@@ -1,5 +1,6 @@
 use super::*;
 use crate::app::tests::complete_navigation;
+mod closed_tabs;
 mod tab_drag;
 mod tab_menu;
 fn workspace(ctx: &egui::Context, path: PathBuf) -> Workspace {
@@ -15,6 +16,7 @@ fn workspace(ctx: &egui::Context, path: PathBuf) -> Workspace {
         window: None,
         closing: false,
         session: crate::session::Store::at(None),
+        closed_tabs: Default::default(),
     }
 }
 #[test]

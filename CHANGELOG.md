@@ -4,6 +4,8 @@
 
 - Linux file manager written in Rust, with native X11 and Wayland windows.
 - Folder tabs with distinct outlines, integrated close buttons, drag-to-reorder with edge scrolling, and persistent ordering/active-tab identity.
+- Reopen closed tabs with Ctrl+Shift+T and context actions, retaining browsing context and neighbor order within the current window.
+- Compact touching tabs with an opaque theme-matching strip and a visible tab-shaped new-tab control.
 - Tab context menus for duplication, closing other tabs and closing tabs to the right, with configurable icons and protection for ongoing file operations.
 - Independent tab navigation, shared clipboard/notifications and system-opening reuse of inactive tabs.
 - Automatic persistence of open tab directories, their order and the active tab, with a General setting to restore the last session or always start in the home folder.

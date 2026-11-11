@@ -44,6 +44,7 @@ pub enum Icon {
     DuplicateTab,
     CloseOtherTabs,
     CloseRightTabs,
+    ReopenTab,
     Terminal,
     OpenWith,
     Rename,
@@ -87,7 +88,7 @@ pub enum Icon {
 }
 
 impl Icon {
-    pub const ALL: [Self; 76] = [
+    pub const ALL: [Self; 77] = [
         Self::Home,
         Self::Desktop,
         Self::Download,
@@ -124,6 +125,7 @@ impl Icon {
         Self::DuplicateTab,
         Self::CloseOtherTabs,
         Self::CloseRightTabs,
+        Self::ReopenTab,
         Self::Terminal,
         Self::OpenWith,
         Self::Rename,
@@ -204,6 +206,7 @@ impl Icon {
             Self::DuplicateTab => crate::i18n::tr("Duplicar aba"),
             Self::CloseOtherTabs => crate::i18n::tr("Fechar outras abas"),
             Self::CloseRightTabs => crate::i18n::tr("Fechar abas à direita"),
+            Self::ReopenTab => crate::i18n::tr("Reabrir aba fechada"),
             Self::Terminal => crate::i18n::tr("Abrir terminal aqui"),
             Self::OpenWith => crate::i18n::tr("Abrir com outro aplicativo"),
             Self::Rename => crate::i18n::tr("Renomear"),
@@ -281,10 +284,11 @@ impl Icon {
             Self::Refresh => "arrows-rotate",
             Self::Open => "folder-open",
             Self::NewWindow => "window-restore",
-            Self::NewTab => "square-plus",
+            Self::NewTab => "plus",
             Self::DuplicateTab => "clone",
             Self::CloseOtherTabs => "rectangle-xmark",
             Self::CloseRightTabs => "right-from-bracket",
+            Self::ReopenTab => "rotate-left",
             Self::Terminal => "terminal",
             Self::OpenWith => "window-restore",
             Self::Rename => "file-pen",

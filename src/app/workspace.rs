@@ -1,4 +1,5 @@
 use super::*;
+mod closed_tabs;
 mod tab_bar;
 
 pub struct Workspace {
@@ -10,6 +11,7 @@ pub struct Workspace {
     window: Option<crate::file_manager::window::Window>,
     closing: bool,
     session: crate::session::Store,
+    closed_tabs: std::collections::VecDeque<closed_tabs::ClosedTab>,
 }
 impl Workspace {
     pub fn new(
@@ -45,6 +47,7 @@ impl Workspace {
             window,
             closing: false,
             session: startup.store,
+            closed_tabs: Default::default(),
         };
         if let Some(saved) = startup.saved {
             app.restore_tabs(&saved, &cc.egui_ctx);
@@ -144,6 +147,7 @@ impl Workspace {
             ctx.send_viewport_cmd(egui::ViewportCommand::Close);
             return;
         }
+        self.remember_closed(index);
         if index == self.active {
             self.activate(if index == 0 { 1 } else { index - 1 }, ctx);
         }

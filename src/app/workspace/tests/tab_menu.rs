@@ -3,7 +3,7 @@ use super::*;
 use crate::app::tests::text_center;
 use egui::{Event, FullOutput, Modifiers, PointerButton, Pos2};
 
-fn click(app: &mut Workspace, ctx: &egui::Context, pos: Pos2, button: PointerButton) {
+pub(super) fn click(app: &mut Workspace, ctx: &egui::Context, pos: Pos2, button: PointerButton) {
     for pressed in [true, false] {
         render(
             app,
@@ -20,19 +20,19 @@ fn click(app: &mut Workspace, ctx: &egui::Context, pos: Pos2, button: PointerBut
         );
     }
 }
-fn menu(app: &mut Workspace, ctx: &egui::Context, title: &str) -> FullOutput {
+pub(super) fn menu(app: &mut Workspace, ctx: &egui::Context, title: &str) -> FullOutput {
     render(app, ctx, vec![]);
     let output = render(app, ctx, vec![]);
     let point = tab_rect(&output, title).left_center() + Vec2::new(60.0, 0.0);
     click(app, ctx, point, PointerButton::Secondary);
     render(app, ctx, vec![])
 }
-fn choose(app: &mut Workspace, ctx: &egui::Context, output: &FullOutput, label: &str) {
+pub(super) fn choose(app: &mut Workspace, ctx: &egui::Context, output: &FullOutput, label: &str) {
     let point =
         text_center(output, label).unwrap_or_else(|| panic!("missing tab menu item {label}"));
     click(app, ctx, point, PointerButton::Primary);
 }
-fn three_tabs(root: &Path, ctx: &egui::Context) -> Workspace {
+pub(super) fn three_tabs(root: &Path, ctx: &egui::Context) -> Workspace {
     for name in ["Alpha", "Beta", "Gamma"] {
         std::fs::create_dir(root.join(name)).unwrap();
     }
@@ -205,6 +205,11 @@ fn bulk_close_keeps_busy_tabs_and_does_not_cancel_their_file_operations() {
     assert_eq!(app.tabs.len(), 2);
     assert_eq!(app.tabs[1].tab_id, busy_id);
     assert!(app.tabs[1].busy());
+    assert_eq!(
+        app.closed_tabs.len(),
+        1,
+        "only the successfully closed Gamma tab is recorded"
+    );
     let prompt = app.tabs[1].transfer_conflict.take().unwrap();
     prompt
         .reply

@@ -9,10 +9,11 @@ pub(super) enum TabAction {
     Duplicate,
     CloseOthers,
     CloseRight,
+    Reopen,
 }
 
-const HEIGHT: f32 = 36.0;
-const GAP: f32 = 4.0;
+const HEIGHT: f32 = 30.0;
+const GAP: f32 = 0.0;
 
 impl Workspace {
     pub(super) fn tab_action(&mut self, id: u64, action: TabAction, ctx: &egui::Context) {
@@ -58,6 +59,11 @@ impl Workspace {
                     })
                     .map(|(_, tab)| tab.tab_id)
                     .collect();
+                for i in 0..self.tabs.len() {
+                    if closing.contains(&self.tabs[i].tab_id) {
+                        self.remember_closed(i);
+                    }
+                }
                 if closing.contains(&self.tabs[self.active].tab_id) {
                     self.activate(index, ctx);
                 }
@@ -69,6 +75,7 @@ impl Workspace {
                     .position(|tab| tab.tab_id == active_id)
                     .unwrap();
             }
+            TabAction::Reopen => self.reopen_closed_tab(ctx),
         }
         ctx.request_repaint();
     }
@@ -92,6 +99,7 @@ impl Workspace {
         let mut select = None;
         let mut close = None;
         let mut add = false;
+        let mut reopen = false;
         let mut reorder = None;
         let mut menu_action = None;
         let mut menu_open = false;
@@ -109,11 +117,11 @@ impl Workspace {
         egui::TopBottomPanel::top("explorer_tabs")
             .frame(
                 egui::Frame::new()
-                    .fill(ctx.style().visuals.faint_bg_color)
+                    .fill(ctx.style().visuals.panel_fill)
                     .inner_margin(egui::Margin {
                         left: 8,
                         right: 8,
-                        top: 5,
+                        top: 3,
                         bottom: 0,
                     }),
             )
@@ -177,6 +185,21 @@ impl Workspace {
                                                 ui.close();
                                             }
                                         }
+                                        ui.separator();
+                                        if icons::menu_item(
+                                            ui,
+                                            Icon::ReopenTab,
+                                            crate::i18n::tr("Reabrir aba fechada"),
+                                            "Ctrl+Shift+T",
+                                            !self.closed_tabs.is_empty(),
+                                            false,
+                                            &self.tabs[self.active].appearance,
+                                        )
+                                        .clicked()
+                                        {
+                                            menu_action = Some((tab.tab_id, TabAction::Reopen));
+                                            ui.close();
+                                        }
                                     });
                                     menu_open |= response.context_menu_opened();
                                 }
@@ -185,15 +208,31 @@ impl Workspace {
                                     egui::DragAndDrop::set_payload(ctx, TabDrag(tab.tab_id));
                                 }
                             }
-                            add = ui
-                                .add_enabled(
-                                    !locked && !dragging,
-                                    egui::Button::new("+")
-                                        .frame(false)
-                                        .min_size(Vec2::splat(HEIGHT)),
-                                )
-                                .on_hover_text(crate::i18n::tr("Nova aba · Ctrl+T"))
-                                .clicked();
+                            let plus = new_tab_button(
+                                ui,
+                                !locked && !dragging,
+                                &self.tabs[self.active].appearance,
+                            );
+                            add = plus.clicked();
+                            if !locked && !dragging {
+                                plus.context_menu(|ui| {
+                                    if icons::menu_item(
+                                        ui,
+                                        Icon::ReopenTab,
+                                        crate::i18n::tr("Reabrir aba fechada"),
+                                        "Ctrl+Shift+T",
+                                        !self.closed_tabs.is_empty(),
+                                        false,
+                                        &self.tabs[self.active].appearance,
+                                    )
+                                    .clicked()
+                                    {
+                                        reopen = true;
+                                        ui.close();
+                                    }
+                                });
+                                menu_open |= plus.context_menu_opened();
+                            }
                         });
                         if !locked
                             && let Some(payload) = egui::DragAndDrop::payload::<TabDrag>(ctx)
@@ -286,7 +325,11 @@ impl Workspace {
             && !dragging
         {
             let terminal = self.tabs[self.active].terminal_focused(ctx);
-            if !terminal && ctx.input_mut(|i| i.consume_key(egui::Modifiers::CTRL, Key::T)) {
+            if ctx.input_mut(|i| {
+                i.consume_key(egui::Modifiers::CTRL | egui::Modifiers::SHIFT, Key::T)
+            }) {
+                reopen = true;
+            } else if !terminal && ctx.input_mut(|i| i.consume_key(egui::Modifiers::CTRL, Key::T)) {
                 add = true;
             }
             if !terminal && ctx.input_mut(|i| i.consume_key(egui::Modifiers::CTRL, Key::W)) {
@@ -306,6 +349,10 @@ impl Workspace {
         }
         if let Some((id, action)) = menu_action {
             self.tab_action(id, action, ctx);
+            return;
+        }
+        if reopen {
+            self.reopen_closed_tab(ctx);
             return;
         }
         if let Some(index) = select {
@@ -370,7 +417,7 @@ fn tab_widget(
         visuals.widgets.noninteractive.bg_stroke.color
     };
     ui.painter().rect(
-        rect.shrink(0.5),
+        rect,
         egui::CornerRadius {
             nw: 7,
             ne: 7,
@@ -451,6 +498,57 @@ fn tab_widget(
         )),
         x.on_hover_text(crate::i18n::tr("Fechar aba · Ctrl+W")),
     )
+}
+
+fn new_tab_button(
+    ui: &mut egui::Ui,
+    enabled: bool,
+    appearance: &icons::Appearance,
+) -> egui::Response {
+    let (rect, response) = ui.allocate_exact_size(
+        Vec2::new(36.0, HEIGHT),
+        if enabled {
+            Sense::click()
+        } else {
+            Sense::hover()
+        },
+    );
+    let visuals = ui.visuals();
+    ui.painter().rect(
+        rect,
+        egui::CornerRadius {
+            nw: 7,
+            ne: 7,
+            sw: 0,
+            se: 0,
+        },
+        if response.hovered() && enabled {
+            visuals.widgets.hovered.bg_fill
+        } else {
+            visuals.widgets.inactive.bg_fill
+        },
+        (1.0, visuals.widgets.noninteractive.bg_stroke.color),
+        egui::StrokeKind::Inside,
+    );
+    icons::paint(
+        ui.painter(),
+        egui::Rect::from_center_size(rect.center(), Vec2::splat(16.0)),
+        Icon::NewTab,
+        if enabled {
+            visuals.text_color()
+        } else {
+            visuals.weak_text_color()
+        },
+        appearance,
+    );
+    response.widget_info(|| {
+        egui::WidgetInfo::labeled(
+            egui::WidgetType::Button,
+            enabled,
+            crate::i18n::tr("Nova aba · Ctrl+T"),
+        )
+    });
+    response.on_hover_text(crate::i18n::tr("Nova aba · Ctrl+T"))
 }
 
 fn tab_title(tab: &Explorer) -> String {
