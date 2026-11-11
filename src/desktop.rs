@@ -1,16 +1,33 @@
 use eframe::icon_data::IconDataExt;
 use std::{
     fs, io,
-    path::Path,
+    path::{Path, PathBuf},
     process::{Command, Stdio},
 };
 
-pub const APP_ID: &str = "io.github.linux-system-explorer";
+pub const APP_ID: &str = env!("LSE_APP_ID");
+const MANAGED: &str = "X-LinuxSystemExplorer-Managed=true";
 
 /// Wayland identifies applications by app_id and resolves icons from desktop entries.
 pub fn register(accent: eframe::egui::Color32) -> io::Result<()> {
     let data =
         dirs::data_dir().ok_or_else(|| io::Error::other("XDG data directory unavailable"))?;
+    let mut data_dirs: Vec<PathBuf> = std::env::var_os("XDG_DATA_DIRS")
+        .map(|paths| std::env::split_paths(&paths).collect())
+        .unwrap_or_else(|| vec!["/usr/local/share".into(), "/usr/share".into()]);
+    data_dirs.push(data.clone());
+    if std::env::var("FLATPAK_ID").is_ok_and(|id| id == APP_ID)
+        || has_installed_launcher(&data_dirs)
+    {
+        // The installer owns its launcher and icon. Remove only our own development override.
+        let generated = data.join("applications").join(format!("{APP_ID}.desktop"));
+        if fs::read_to_string(&generated)
+            .is_ok_and(|entry| entry.lines().any(|line| line == MANAGED))
+        {
+            fs::remove_file(generated)?;
+        }
+        return Ok(());
+    }
     let changed = register_at(&data, &std::env::current_exe()?, accent)?;
     if changed
         && std::env::var("XDG_CURRENT_DESKTOP").is_ok_and(|desktop| {
@@ -28,6 +45,13 @@ pub fn register(accent: eframe::egui::Color32) -> io::Result<()> {
             .status();
     }
     Ok(())
+}
+
+fn has_installed_launcher(data_dirs: &[PathBuf]) -> bool {
+    data_dirs.iter().any(|data| {
+        fs::read_to_string(data.join("applications").join(format!("{APP_ID}.desktop")))
+            .is_ok_and(|entry| !entry.lines().any(|line| line == MANAGED))
+    })
 }
 
 fn write_changed(path: &Path, bytes: &[u8]) -> io::Result<bool> {
@@ -83,7 +107,7 @@ fn register_at(data: &Path, binary: &Path, accent: eframe::egui::Color32) -> io:
             .ok_or_else(|| io::Error::other("Desktop entry paths must be UTF-8"))
     };
     let entry = format!(
-        "[Desktop Entry]\nType=Application\nVersion=1.0\nName=File Explorer\nName[pt]=Explorador de Arquivos\nName[pt_BR]=Explorador de Arquivos\nExec={} %f\nIcon={}\nTerminal=false\nStartupNotify=true\nStartupWMClass={APP_ID}\nCategories=System;FileTools;FileManager;\nMimeType=inode/directory;\n",
+        "[Desktop Entry]\nType=Application\nVersion=1.0\nName=File Explorer\nName[pt]=Explorador de Arquivos\nName[pt_BR]=Explorador de Arquivos\nExec={} %f\nIcon={}\nTerminal=false\nStartupNotify=true\nStartupWMClass={APP_ID}\nCategories=System;FileTools;FileManager;\nMimeType=inode/directory;\n{MANAGED}\n",
         executable(&utf8(binary)?),
         entry_value(&utf8(&icon_path)?)
     );
@@ -99,6 +123,20 @@ fn register_at(data: &Path, binary: &Path, accent: eframe::egui::Color32) -> io:
 mod tests {
     use super::*;
     use eframe::egui::Color32;
+
+    #[test]
+    fn distinguishes_installed_launchers_from_development_overrides() {
+        let root = tempfile::tempdir().unwrap();
+        let data = root.path().to_owned();
+        register_at(&data, Path::new("/tmp/explorer"), Color32::BLUE).unwrap();
+        assert!(!has_installed_launcher(std::slice::from_ref(&data)));
+        fs::write(
+            data.join("applications").join(format!("{APP_ID}.desktop")),
+            "[Desktop Entry]\nType=Application\nName=Explorer\nExec=linux-system-explorer\n",
+        )
+        .unwrap();
+        assert!(has_installed_launcher(&[data]));
+    }
 
     #[test]
     fn registers_matching_wayland_identity_and_accent_icon_atomically() {

@@ -1,0 +1,41 @@
+name: Experimental Linux packages
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - 'build.rs'
+      - 'src/**'
+      - 'packaging/**'
+      - 'assets/**'
+      - 'scripts/**'
+      - '.github/workflows/packages.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  native:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Install build and packaging dependencies
+        run: sudo apt-get update && sudo apt-get install -y libxkbcommon-dev libwayland-dev dpkg-dev desktop-file-utils appstream
+      - name: Validate metadata
+        run: python3 scripts/package.py check
+      - name: Build optimized executable
+        run: cargo build --locked --release
+      - name: Build experimental native packages
+        run: python3 scripts/package.py build
+      - name: Verify checksums
+        working-directory: dist
+        run: sha256sum --check SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: experimental-linux-x86_64
+          path: dist/
+          if-no-files-found: error
+          retention-days: 14

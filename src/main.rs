@@ -1,5 +1,6 @@
 mod app;
 mod applications;
+mod cli;
 mod columns;
 mod deletions;
 mod desktop;
@@ -19,14 +20,27 @@ mod trashbin;
 use std::path::PathBuf;
 
 fn main() -> eframe::Result {
+    let path = match cli::parse(std::env::args_os().skip(1)) {
+        Ok(cli::Command::Browse(path)) => path,
+        Ok(cli::Command::Version) => {
+            println!("{} {}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
+            return Ok(());
+        }
+        Ok(cli::Command::Help) => {
+            print!("{}", cli::HELP);
+            return Ok(());
+        }
+        Err(error) => {
+            eprintln!("{error}");
+            std::process::exit(2);
+        }
+    };
     let language = settings::Preferences::path()
         .and_then(|path| settings::Preferences::load(&path).ok())
         .unwrap_or_default()
         .language;
     i18n::set_locale(language.resolve());
-    let initial_path = std::env::args_os()
-        .nth(1)
-        .map(PathBuf::from)
+    let initial_path = path
         .or_else(dirs::home_dir)
         .unwrap_or_else(|| PathBuf::from("/"));
     let accent = system_style::accent_color();

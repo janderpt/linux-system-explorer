@@ -1,0 +1,18 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Linux System Explorer
+GenericName=File Manager
+GenericName[pt]=Gerenciador de arquivos
+Comment=Browse and manage files and folders
+Comment[pt]=Navegue e gerencie arquivos e pastas
+Exec=linux-system-explorer %f
+TryExec=linux-system-explorer
+Icon=@APP_ID@
+Terminal=false
+StartupNotify=true
+StartupWMClass=@APP_ID@
+Categories=System;FileTools;FileManager;
+MimeType=inode/directory;
+Keywords=files;folders;explorer;
+Keywords[pt]=arquivos;pastas;explorador;

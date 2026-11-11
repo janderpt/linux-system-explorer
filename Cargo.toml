@@ -5,6 +5,14 @@ edition = "2024"
 rust-version = "1.95"
 description = "Um explorador de arquivos para Linux inspirado no Windows Explorer"
 license = "MIT"
+authors = ["Jander Tavares"]
+repository = "https://github.com/janderpt/linux-system-explorer"
+homepage = "https://github.com/janderpt/linux-system-explorer"
+readme = "README.md"
+
+[package.metadata.distribution]
+maintainer = "Jander Tavares <jander@sonner.com.br>"
+channel = "experimental"
 
 [dependencies]
 chrono = { version = "0.4", default-features = false, features = ["clock"] }

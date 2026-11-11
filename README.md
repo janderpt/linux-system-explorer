@@ -1,5 +1,11 @@
 # Linux System Explorer
 
+[English](README.en.md)
+
+**Versão experimental, em preparação para publicação.** O plano por formato e loja está
+em [Distribuição](docs/DISTRIBUTION.md), com os passos de revisão em
+[Release](docs/RELEASING.md). Ainda não há aprovação em lojas.
+
 Explorador de arquivos desktop para Linux, escrito em Rust e inspirado na organização e na experiência do Windows Explorer. A primeira versão usa [egui/eframe](https://github.com/emilk/egui) com renderização OpenGL e suporte a Wayland e X11.
 
 ## Executar
@@ -22,6 +28,29 @@ Para gerar o executável otimizado:
 cargo build --release
 ./target/release/linux-system-explorer
 ```
+
+`--help` e `--version` funcionam sem abrir uma janela. Use `-- DIRETÓRIO` para um caminho
+que comece com hífen.
+
+## Preparar pacotes experimentais
+
+Com Python 3.11+, `dpkg-dev`, `desktop-file-utils` e `appstream` instalados:
+
+```bash
+python3 scripts/package.py check
+cargo build --locked --release
+python3 scripts/package.py build
+```
+
+São gerados um arquivo `.tar.gz`, um pacote `.deb`, informações da compilação e
+`SHA256SUMS` em `dist/`. Nada é instalado ou publicado automaticamente. Os pacotes
+dependem da ABI do sistema usado na compilação; a base do workflow é Ubuntu 24.04.
+A revisão das licenças e dos avisos de terceiros, vulnerabilidades e testes em sistemas
+limpos ainda é necessária antes da redistribuição pública dos binários.
+
+O Git local e o remoto SSH são preparados para `janderpt/linux-system-explorer`.
+Consulte [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md) e
+[CHANGELOG.md](CHANGELOG.md).
 
 É necessário um ambiente gráfico Linux com OpenGL e bibliotecas de X11 ou Wayland. A abertura de arquivos usa `gio open`, das ferramentas GIO, e os aplicativos associados no sistema. Se GIO não estiver instalado, usa `xdg-open`, normalmente fornecido pelo pacote `xdg-utils`. Em um ambiente mínimo Ubuntu/Debian, as dependências de compilação e execução podem ser instaladas com:
 
@@ -165,7 +194,7 @@ No final do campo, o botão com ícone de árvore de pastas abre **Selecionar pa
 
 O ícone da janela usa a mesma pasta Font Awesome incorporada ao explorador. A cor de destaque é consultada na abertura pelo [portal de configurações do desktop](https://flatpak.github.io/xdg-desktop-portal/docs/doc-org.freedesktop.portal.Settings.html), usando `gdbus`. Na ausência dessa informação, usa a configuração de cores do KDE quando disponível e, por fim, o azul padrão do aplicativo. A consulta possui tempo limite e acontece antes da criação da janela para que o ícone já seja conhecido pelo gerenciador de janelas na abertura. Os dois novos botões do caminho também têm ícones personalizáveis em **Aparência e ícones**.
 
-No Wayland, o gerenciador de janelas obtém o ícone pela identidade desktop do aplicativo. Na inicialização, o explorador registra `io.github.linux-system-explorer.desktop` em `$XDG_DATA_HOME/applications` e um PNG de pasta na cor de destaque em `$XDG_DATA_HOME/icons/hicolor/256x256/apps` (normalmente sob `~/.local/share`). O registro aponta para o executável em uso e não altera o gerenciador de arquivos padrão. No KDE, a descoberta do registro é atualizada antes de abrir a janela. No X11, o mesmo ícone também é definido diretamente na janela.
+No Wayland, o gerenciador de janelas obtém o ícone pela identidade desktop do aplicativo, agora `io.github.janderpt.linux-system-explorer`. Instalações empacotadas usam o lançador e o ícone SVG instalados pelo pacote, sem regravá-los ao abrir. Em builds de desenvolvimento sem um lançador instalado, o explorador registra um atalho em `$XDG_DATA_HOME/applications` e um PNG na cor de destaque em `$XDG_DATA_HOME/icons/hicolor/256x256/apps`. Esse atalho recebe uma marca própria; ele é removido quando há um lançador instalado, sem remover atalhos personalizados do usuário. O registro não altera o gerenciador de arquivos padrão. No KDE, a descoberta do registro de desenvolvimento é atualizada antes de abrir a janela. No X11, o ícone da janela continua usando a cor de destaque. Os detalhes e a migração de atalhos antigos estão em [Distribuição](docs/DISTRIBUTION.md).
 
 ## Lixeira e exclusão permanente
 

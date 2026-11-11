@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>@APP_ID@</id>
+  <metadata_license>MIT</metadata_license>
+  <project_license>MIT</project_license>
+  <name>Linux System Explorer</name>
+  <summary>Browse and manage files with a familiar desktop interface</summary>
+  <summary xml:lang="pt">Navegue e gerencie arquivos com uma interface familiar</summary>
+  <description>
+    <p>A file manager for Linux with folder navigation, configurable columns, multiple selection, and file operations.</p>
+    <p>Choose details, list, or icon views and keep separate layouts and zoom levels for each folder.</p>
+    <p xml:lang="pt">Um gerenciador de arquivos para Linux com navegação por pastas, colunas configuráveis, seleção múltipla e operações de arquivos.</p>
+    <p xml:lang="pt">Escolha detalhes, lista ou ícones e mantenha a visualização e o zoom de cada pasta.</p>
+  </description>
+  <launchable type="desktop-id">@APP_ID@.desktop</launchable>
+  <developer id="io.github.janderpt"><name>Jander Tavares</name></developer>
+  <url type="homepage">https://github.com/janderpt/linux-system-explorer</url>
+  <url type="bugtracker">https://github.com/janderpt/linux-system-explorer/issues</url>
+  <url type="vcs-browser">https://github.com/janderpt/linux-system-explorer</url>
+  <provides><binary>linux-system-explorer</binary></provides>
+  <categories><category>System</category><category>FileManager</category></categories>
+  <content_rating type="oars-1.1"/>
+  <releases><release version="@VERSION@" date="@RELEASE_DATE@" type="development"/></releases>
+</component>
