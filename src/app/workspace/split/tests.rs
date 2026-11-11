@@ -331,3 +331,86 @@ fn keyboard_copy_paste_and_file_drag_work_between_the_two_visible_panes() {
         assert_eq!(app.tabs[right].current, target);
     }
 }
+
+#[test]
+fn copying_then_right_clicking_blank_space_in_the_other_pane_offers_paste_in_every_view() {
+    for view in [View::Details, View::List, View::Icons] {
+        for source_side in [0, 1] {
+            let root = tempfile::tempdir().unwrap();
+            let source = root.path().join("Source");
+            let target = root.path().join("Target");
+            std::fs::create_dir(&source).unwrap();
+            std::fs::create_dir(&target).unwrap();
+            let file = source.join("clipboard.txt");
+            std::fs::write(&file, "copied content").unwrap();
+            std::fs::write(target.join("existing.txt"), "existing content").unwrap();
+            let ctx = egui::Context::default();
+            let mut app = workspace(&ctx, source.clone());
+            app.toggle_split(&ctx);
+            settle(&mut app);
+            let indices = app.split_indices().unwrap();
+            let destination = indices[1 - source_side];
+            app.tabs[destination].navigate(target.clone(), Navigation::Visit);
+            settle(&mut app);
+            for tab in &mut app.tabs {
+                tab.view = view;
+            }
+            render(&mut app, &ctx, vec![], Modifiers::NONE);
+            let output = render(&mut app, &ctx, vec![], Modifiers::NONE);
+            click(&mut app, &ctx, points(&output, "clipboard.txt")[0]);
+            let command = Modifiers {
+                ctrl: true,
+                command: true,
+                ..Default::default()
+            };
+            render(
+                &mut app,
+                &ctx,
+                vec![Event::Key {
+                    key: Key::C,
+                    physical_key: None,
+                    pressed: true,
+                    repeat: false,
+                    modifiers: command,
+                }],
+                command,
+            );
+            let rect = app.split.as_ref().unwrap().rects.unwrap()[1 - source_side];
+            let empty = egui::pos2(rect.right() - 80.0, rect.top() + 260.0);
+            for pressed in [true, false] {
+                render(
+                    &mut app,
+                    &ctx,
+                    vec![
+                        Event::PointerMoved(empty),
+                        Event::PointerButton {
+                            pos: empty,
+                            button: PointerButton::Secondary,
+                            pressed,
+                            modifiers: Modifiers::NONE,
+                        },
+                    ],
+                    Modifiers::NONE,
+                );
+            }
+            assert_eq!(app.active, destination);
+            let output = render(&mut app, &ctx, vec![], Modifiers::NONE);
+            let paste = points(&output, "Colar");
+            assert_eq!(paste.len(), 1, "blank-space menu must offer Paste");
+            click(&mut app, &ctx, paste[0]);
+            let deadline = std::time::Instant::now() + std::time::Duration::from_secs(3);
+            while app.tabs.iter().any(Explorer::busy) {
+                for tab in &mut app.tabs {
+                    tab.poll();
+                }
+                assert!(std::time::Instant::now() < deadline);
+                std::thread::sleep(std::time::Duration::from_millis(2));
+            }
+            assert_eq!(
+                std::fs::read_to_string(target.join("clipboard.txt")).unwrap(),
+                "copied content"
+            );
+            assert_eq!(std::fs::read_to_string(file).unwrap(), "copied content");
+        }
+    }
+}

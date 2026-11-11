@@ -150,7 +150,7 @@ impl Explorer {
         let row_height = 26.0 * scale;
         ui.scope(|ui| {
             ui.spacing_mut().item_spacing.y = 2.0 * scale;
-            egui::ScrollArea::vertical()
+            let rows = egui::ScrollArea::vertical()
                 .id_salt((self.tab_id, &self.current, "list"))
                 .auto_shrink([false, false])
                 .show_rows(ui, row_height, visible.len(), |ui, range| {
@@ -194,6 +194,7 @@ impl Explorer {
                         self.entry_response(ui, response, &entry, visible);
                     }
                 });
+            self.folder_background_area = Some(rows.inner_rect.intersect(ui.clip_rect()));
         });
     }
 }

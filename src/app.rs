@@ -120,6 +120,8 @@ pub struct Explorer {
     dark: bool,
     split_view: bool,
     requested_split: bool,
+    folder_background_area: Option<egui::Rect>,
+    folder_item_regions: Vec<egui::Rect>,
     file_clipboard: Option<file_ops::Clipboard>,
     file_clipboard_text: String,
     clipboard_serial: u64,
@@ -257,6 +259,8 @@ impl Explorer {
             dark: false,
             split_view: false,
             requested_split: false,
+            folder_background_area: None,
+            folder_item_regions: Vec::new(),
             file_clipboard: None,
             file_clipboard_text: String::new(),
             clipboard_serial: 0,
@@ -1003,6 +1007,7 @@ impl Explorer {
     }
 
     fn contents_ui(&mut self, ui: &mut egui::Ui, visible: &[usize]) {
+        self.folder_item_regions.clear();
         ui.spacing_mut().item_spacing.y = 0.0;
         self.folder_path(ui);
         ui.add(egui::Separator::default().spacing(0.0));
@@ -1017,51 +1022,13 @@ impl Explorer {
             });
         }
         let background = ui.available_rect_before_wrap();
+        self.folder_background_area = Some(background);
         self.register_drop_target(ui, background, self.current.clone());
         let background_response = ui.interact(
             background,
             ui.id().with("folder_background"),
             Sense::click(),
         );
-        background_response.context_menu(|ui| {
-            if self.is_trash() {
-                if self
-                    .menu_item(
-                        ui,
-                        Icon::Restore,
-                        crate::i18n::tr("Restaurar"),
-                        "",
-                        self.can_restore(),
-                        false,
-                    )
-                    .clicked()
-                {
-                    self.restore_selected(ui.ctx());
-                    ui.close();
-                }
-                if self
-                    .menu_item(
-                        ui,
-                        Icon::Refresh,
-                        crate::i18n::tr("Atualizar"),
-                        "F5",
-                        !self.loading,
-                        false,
-                    )
-                    .clicked()
-                {
-                    self.refresh();
-                    ui.close();
-                }
-                return;
-            }
-            self.paste_menu(ui);
-            if !self.current.as_os_str().is_empty() && !self.loading && !self.is_trash() {
-                ui.separator();
-                self.folder_actions_menu(ui, &self.current.clone());
-                self.pin_menu(ui, &self.current.clone());
-            }
-        });
         ui.add_enabled_ui(!self.loading, |ui| {
             if visible.is_empty() && !self.loading {
                 ui.add_space(80.0);
@@ -1095,6 +1062,64 @@ impl Explorer {
                 View::List => self.list(ui, visible),
             }
         });
+        // Scroll containers own the hit-test in their empty viewport. Resolve
+        // secondary clicks after rows are rendered, excluding items and scrollbars.
+        let blank_click = !self.has_dialog()
+            && ui.input(|i| i.pointer.secondary_clicked())
+            && ui.ctx().pointer_interact_pos().is_some_and(|point| {
+                self.folder_background_area
+                    .is_some_and(|area| area.contains(point))
+                    && ui.rect_contains_pointer(background)
+                    && !self
+                        .folder_item_regions
+                        .iter()
+                        .any(|rect| rect.contains(point))
+            });
+        let mut popup = egui::Popup::context_menu(&background_response);
+        if blank_click {
+            popup = popup.open_memory(egui::SetOpenCommand::Bool(true));
+        }
+        popup.show(|ui| self.folder_background_menu(ui));
+    }
+
+    fn folder_background_menu(&mut self, ui: &mut egui::Ui) {
+        if self.is_trash() {
+            if self
+                .menu_item(
+                    ui,
+                    Icon::Restore,
+                    crate::i18n::tr("Restaurar"),
+                    "",
+                    self.can_restore(),
+                    false,
+                )
+                .clicked()
+            {
+                self.restore_selected(ui.ctx());
+                ui.close();
+            }
+            if self
+                .menu_item(
+                    ui,
+                    Icon::Refresh,
+                    crate::i18n::tr("Atualizar"),
+                    "F5",
+                    !self.loading,
+                    false,
+                )
+                .clicked()
+            {
+                self.refresh();
+                ui.close();
+            }
+            return;
+        }
+        self.paste_menu(ui);
+        if !self.current.as_os_str().is_empty() && !self.loading && !self.is_trash() {
+            ui.separator();
+            self.folder_actions_menu(ui, &self.current.clone());
+            self.pin_menu(ui, &self.current.clone());
+        }
     }
 
     fn details(&mut self, ui: &mut egui::Ui, visible: &[usize]) {
@@ -1124,7 +1149,7 @@ impl Explorer {
                 ui.add(egui::Separator::default().spacing(0.0));
                 ui.scope(|ui| {
                     ui.spacing_mut().item_spacing.y = 8.0;
-                    egui::ScrollArea::vertical()
+                    let rows = egui::ScrollArea::vertical()
                         .id_salt((self.tab_id, &self.current, "details"))
                         .auto_shrink([false, false])
                         .show_rows(ui, row_height, visible.len(), |ui, range| {
@@ -1185,6 +1210,7 @@ impl Explorer {
                                 self.entry_response(ui, response, &entry, visible);
                             }
                         });
+                    self.folder_background_area = Some(rows.inner_rect.intersect(ui.clip_rect()));
                 });
             });
     }
@@ -1197,7 +1223,7 @@ impl Explorer {
         let gap = ui.spacing().item_spacing.x;
         let columns = (((ui.available_width() + gap) / (tile_width + gap)) as usize).max(1);
         let row_count = visible.len().div_ceil(columns);
-        egui::ScrollArea::vertical()
+        let rows = egui::ScrollArea::vertical()
             .id_salt((self.tab_id, &self.current, "icons"))
             .auto_shrink([false, false])
             .show_rows(ui, row_height, row_count, |ui, range| {
@@ -1238,6 +1264,7 @@ impl Explorer {
                     });
                 }
             });
+        self.folder_background_area = Some(rows.inner_rect.intersect(ui.clip_rect()));
     }
 
     fn entry_response(
@@ -1247,6 +1274,8 @@ impl Explorer {
         entry: &Entry,
         visible: &[usize],
     ) {
+        self.folder_item_regions
+            .push(response.rect.intersect(ui.clip_rect()));
         self.file_drag_response(ui, &response, entry, visible);
         let modifiers = response.ctx.input(|i| i.modifiers);
         if response.clicked() {

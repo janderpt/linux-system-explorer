@@ -2,6 +2,8 @@
 
 ## Unreleased — 0.1.0 experimental
 
+- Fix right-click Paste menus in blank folder space, including switching split panes after Ctrl+C. Exclude file rows/tiles, headers, scrollbars and overlaid windows from blank-space hit testing.
+
 - Give each split pane its own navigation sidebar and paint an opaque theme background, fixing black folder areas in light mode.
 
 - Toolbar toggle for two resizable folder panes in one window, initially showing the same directory. Independent navigation, filtering and selection; per-pane sidebars, shared active-pane toolbar, clipboard and cross-pane drag/drop. Turning the split off preserves both folders as tabs.
