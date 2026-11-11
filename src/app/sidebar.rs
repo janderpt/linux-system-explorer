@@ -133,6 +133,7 @@ impl Explorer {
                     let network:Vec<_>=entries.iter().filter(|e|matches!(e.id,Location::Network(_)|Location::Remote(_))).collect();
                     if network.is_empty() {ui.label(RichText::new(crate::i18n::tr("Nenhum compartilhamento configurado")).small().weak());}
                     for entry in network {self.sidebar_place(ui,entry,active==Some(entry.id));}
+                    if self.menu_item(ui,Icon::ShareFolder,crate::i18n::tr("Gerenciar compartilhamentos locais"),"",!self.loading,false).clicked(){self.request_local_shares(None,ui.ctx());}
                     if self.menu_item(ui,Icon::AddNetwork,crate::i18n::tr("Adicionar compartilhamento de rede"),"",!self.loading,false).on_hover_text(crate::i18n::tr("Adicionar compartilhamento de rede")).clicked(){self.request_network(None,ui.ctx());}
                 }
             });

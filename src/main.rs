@@ -10,6 +10,7 @@ mod filesystem;
 mod filetypes;
 mod i18n;
 mod icons;
+mod local_shares;
 mod native_dnd;
 mod navigation;
 mod network;

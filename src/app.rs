@@ -20,6 +20,7 @@ mod drag_drop;
 mod empty_trash;
 mod folder_actions;
 mod folder_picker;
+mod local_shares;
 mod network;
 mod open_with;
 mod rename;
@@ -75,6 +76,7 @@ pub struct Explorer {
     open_with: Option<open_with::Chooser>,
     rename: Option<rename::RenameDialog>,
     network_dialog: Option<network::ConnectDialog>,
+    local_shares: Option<local_shares::Manager>,
     dnd: drag_drop::DragDrop,
     focus_address: bool,
     query: String,
@@ -206,6 +208,7 @@ impl Explorer {
             open_with: None,
             rename: None,
             network_dialog: None,
+            local_shares: None,
             dnd: drag_drop::DragDrop::default(),
             focus_address: false,
             query: String::new(),
@@ -307,6 +310,7 @@ impl Explorer {
     }
 
     fn poll(&mut self) {
+        self.poll_local_shares();
         if let Some(panel) = &mut self.terminal {
             panel.poll();
         }
@@ -421,6 +425,7 @@ impl Explorer {
             || self.open_with.is_some()
             || self.rename.is_some()
             || self.network_dialog.is_some()
+            || self.local_shares.is_some()
         {
             return;
         }
@@ -1568,6 +1573,7 @@ impl Explorer {
         self.open_with_dialog(ctx);
         self.rename_dialog(ctx);
         self.network_dialog(ctx);
+        self.local_shares_dialog(ctx);
         self.show_notice_toast(ctx);
         self.persist_preferences(ctx);
     }

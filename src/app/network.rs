@@ -190,6 +190,10 @@ impl Explorer {
     }
 
     pub(super) fn configure_network_sharing(&mut self, path: PathBuf, ctx: &egui::Context) {
+        self.request_local_shares(Some(path), ctx);
+    }
+
+    pub(super) fn configure_network_sharing_system(&mut self, path: PathBuf, ctx: &egui::Context) {
         self.post_typed_notice(toast::NoticeKind::Warning,crate::i18n::tr("Na janela do sistema, use a aba Compartilhar para configurar o Samba. O sistema pode solicitar instalação ou permissões de administrador.").into());
         let context = ctx.clone();
         let sender = self.event_sender.clone();

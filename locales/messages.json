@@ -1722,5 +1722,197 @@
   "Último acesso": {
     "en": "Last accessed",
     "pt": "Último acesso"
+  },
+  "Somente leitura": {
+    "pt": "Somente leitura",
+    "en": "Read only"
+  },
+  "Leitura e escrita": {
+    "pt": "Leitura e escrita",
+    "en": "Read and write"
+  },
+  "Sem acesso": {
+    "pt": "Sem acesso",
+    "en": "No access"
+  },
+  "A pasta compartilhada não existe ou não é um caminho absoluto.": {
+    "pt": "A pasta compartilhada não existe ou não é um caminho absoluto.",
+    "en": "The shared folder does not exist or its path is not absolute."
+  },
+  "A descrição deve ter até 256 bytes e não pode conter quebras de linha.": {
+    "pt": "A descrição deve ter até 256 bytes e não pode conter quebras de linha.",
+    "en": "The description must be at most 256 bytes with no line breaks."
+  },
+  "Adicione pelo menos um usuário ou grupo às permissões.": {
+    "pt": "Adicione pelo menos um usuário ou grupo às permissões.",
+    "en": "Add at least one user or group to the permissions."
+  },
+  "Informe usuários ou grupos distintos, sem vírgulas, dois-pontos ou quebras de linha.": {
+    "pt": "Informe usuários ou grupos distintos, sem vírgulas, dois-pontos ou quebras de linha.",
+    "en": "Enter distinct users or groups, without commas, colons or line breaks."
+  },
+  "Use um nome de até 80 bytes, sem separadores de caminho ou caracteres reservados.": {
+    "pt": "Use um nome de até 80 bytes, sem separadores de caminho ou caracteres reservados.",
+    "en": "Use a name of up to 80 bytes, without path separators or reserved characters."
+  },
+  "O Samba retornou uma definição de compartilhamento inválida.": {
+    "pt": "O Samba retornou uma definição de compartilhamento inválida.",
+    "en": "Samba returned an invalid share definition."
+  },
+  "Não foi possível executar o Samba. Verifique a instalação de samba-common-bin.": {
+    "pt": "Não foi possível executar o Samba. Verifique a instalação de samba-common-bin.",
+    "en": "Could not run Samba. Check that samba-common-bin is installed."
+  },
+  "O Samba recusou a operação. Verifique o serviço, o grupo sambashare e as permissões da pasta.": {
+    "pt": "O Samba recusou a operação. Verifique o serviço, o grupo sambashare e as permissões da pasta.",
+    "en": "Samba rejected the operation. Check the service, sambashare group and folder permissions."
+  },
+  "O Samba retornou texto que não pode ser exibido em UTF-8.": {
+    "pt": "O Samba retornou texto que não pode ser exibido em UTF-8.",
+    "en": "Samba returned text that cannot be displayed as UTF-8."
+  },
+  "Somente o proprietário pode alterar este compartilhamento.": {
+    "pt": "Somente o proprietário pode alterar este compartilhamento.",
+    "en": "Only the owner can change this share."
+  },
+  "O compartilhamento foi alterado por outro aplicativo. Atualize a lista antes de continuar.": {
+    "pt": "O compartilhamento foi alterado por outro aplicativo. Atualize a lista antes de continuar.",
+    "en": "Another application changed this share. Refresh the list before continuing."
+  },
+  "A edição deve preservar a pasta e a configuração de convidados.": {
+    "pt": "A edição deve preservar a pasta e a configuração de convidados.",
+    "en": "Editing must preserve the folder and guest configuration."
+  },
+  "Já existe um compartilhamento com esse nome.": {
+    "pt": "Já existe um compartilhamento com esse nome.",
+    "en": "A share with this name already exists."
+  },
+  "Não foi possível concluir a renomeação: {}. Limpeza do novo nome: {}.": {
+    "pt": "Não foi possível concluir a renomeação: {0}. Limpeza do novo nome: {1}.",
+    "en": "Could not finish renaming: {0}. Cleanup of the new name: {1}."
+  },
+  "concluída": {
+    "pt": "concluída",
+    "en": "completed"
+  },
+  "A operação de compartilhamento foi interrompida.": {
+    "pt": "A operação de compartilhamento foi interrompida.",
+    "en": "The sharing operation was interrupted."
+  },
+  "Compartilhamentos locais": {
+    "pt": "Compartilhamentos locais",
+    "en": "Local shares"
+  },
+  "Compartilhamentos Samba de usuários. Apenas os seus podem ser alterados aqui.": {
+    "pt": "Compartilhamentos Samba de usuários. Apenas os seus podem ser alterados aqui.",
+    "en": "Samba user shares. Only your own shares can be changed here."
+  },
+  "Nenhuma pasta compartilhada pelo usuário.": {
+    "pt": "Nenhuma pasta compartilhada pelo usuário.",
+    "en": "No user-shared folders."
+  },
+  "Outro proprietário": {
+    "pt": "Outro proprietário",
+    "en": "Another owner"
+  },
+  "Nome do compartilhamento": {
+    "pt": "Nome do compartilhamento",
+    "en": "Share name"
+  },
+  "Descrição": {
+    "pt": "Descrição",
+    "en": "Description"
+  },
+  "Usuários e permissões": {
+    "pt": "Usuários e permissões",
+    "en": "Users and permissions"
+  },
+  "Usuário ou grupo": {
+    "pt": "Usuário ou grupo",
+    "en": "User or group"
+  },
+  "Remover permissão": {
+    "pt": "Remover permissão",
+    "en": "Remove permission"
+  },
+  "Adicionar usuário ou grupo": {
+    "pt": "Adicionar usuário ou grupo",
+    "en": "Add user or group"
+  },
+  "Use nomes como servidor\\usuário ou Everyone. As permissões da pasta no Linux também se aplicam.": {
+    "pt": "Use nomes como servidor\\usuário ou Everyone. As permissões da pasta no Linux também se aplicam.",
+    "en": "Use names such as server\\user or Everyone. Linux folder permissions also apply."
+  },
+  "Convidados: permitido pela configuração existente.": {
+    "pt": "Convidados: permitido pela configuração existente.",
+    "en": "Guests: allowed by the existing configuration."
+  },
+  "Convidados: desativado. O acesso exige uma conta Samba.": {
+    "pt": "Convidados: desativado. O acesso exige uma conta Samba.",
+    "en": "Guests: disabled. Access requires a Samba account."
+  },
+  "Endereço de acesso": {
+    "pt": "Endereço de acesso",
+    "en": "Access address"
+  },
+  "Copiar endereço SMB": {
+    "pt": "Copiar endereço SMB",
+    "en": "Copy SMB address"
+  },
+  "Copiar endereço Windows": {
+    "pt": "Copiar endereço Windows",
+    "en": "Copy Windows address"
+  },
+  "Selecione um compartilhamento ou use Compartilhar pela rede no menu de uma pasta.": {
+    "pt": "Selecione um compartilhamento ou use Compartilhar pela rede no menu de uma pasta.",
+    "en": "Select a share or use Share over network in a folder menu."
+  },
+  "Atualizando compartilhamentos…": {
+    "pt": "Atualizando compartilhamentos…",
+    "en": "Updating shares…"
+  },
+  "Parar de compartilhar esta pasta?": {
+    "pt": "Parar de compartilhar esta pasta?",
+    "en": "Stop sharing this folder?"
+  },
+  "A pasta e os arquivos serão mantidos. Conexões já abertas podem continuar até serem encerradas.": {
+    "pt": "A pasta e os arquivos serão mantidos. Conexões já abertas podem continuar até serem encerradas.",
+    "en": "The folder and its files will be kept. Existing connections may continue until closed."
+  },
+  "Confirmar remoção do compartilhamento": {
+    "pt": "Confirmar remoção do compartilhamento",
+    "en": "Confirm stopping sharing"
+  },
+  "Configurar pelo sistema": {
+    "pt": "Configurar pelo sistema",
+    "en": "System sharing settings"
+  },
+  "Salvar compartilhamento": {
+    "pt": "Salvar compartilhamento",
+    "en": "Save share"
+  },
+  "Parar de compartilhar": {
+    "pt": "Parar de compartilhar",
+    "en": "Stop sharing"
+  },
+  "Gerenciar compartilhamentos locais": {
+    "pt": "Gerenciar compartilhamentos locais",
+    "en": "Manage local shares"
+  },
+  "Compartilhamento salvo.": {
+    "pt": "Compartilhamento salvo.",
+    "en": "Share saved."
+  },
+  "A pasta deixou de ser compartilhada.": {
+    "pt": "A pasta deixou de ser compartilhada.",
+    "en": "The folder is no longer shared."
+  },
+  "O Samba demorou para responder. Atualize a lista para conferir o resultado antes de tentar novamente.": {
+    "pt": "O Samba demorou para responder. Atualize a lista para conferir o resultado antes de tentar novamente.",
+    "en": "Samba took too long to respond. Refresh the list to check the result before retrying."
+  },
+  "Atualize a lista para conferir os dois nomes.": {
+    "pt": "Atualize a lista para conferir os dois nomes.",
+    "en": "Refresh the list to check both names."
   }
 }

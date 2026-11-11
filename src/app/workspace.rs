@@ -319,6 +319,7 @@ impl Explorer {
             || self.active_restore.is_some()
             || self.active_empty_trash.is_some()
             || self.rename_pending()
+            || self.local_shares_pending()
             || self.dnd.trash_prepare.is_some()
     }
     pub(super) fn has_dialog(&self) -> bool {
@@ -332,6 +333,7 @@ impl Explorer {
             || self.open_with.is_some()
             || self.rename.is_some()
             || self.network_dialog.is_some()
+            || self.local_shares.is_some()
     }
 }
 #[cfg(test)]

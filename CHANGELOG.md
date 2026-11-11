@@ -2,6 +2,8 @@
 
 ## Unreleased — 0.1.0 experimental
 
+- Integrated Samba user-share manager: list, create, rename, edit per-user/group permissions, copy SMB/Windows addresses and stop sharing with confirmation, ownership and stale-edit checks, and rename rollback.
+
 - Linux file manager written in Rust, with native X11 and Wayland windows.
 - Folder tabs with distinct outlines, integrated close buttons, drag-to-reorder with edge scrolling, and persistent ordering/active-tab identity.
 - Scrollable Recently closed tabs submenu for reopening a selected entry independently from the latest-tab shortcut.
