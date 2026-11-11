@@ -143,7 +143,7 @@ impl Explorer {
                     ui.add_space(12.0);
                 }
                 if self.sidebar_options.show_local_shares {
-                    sidebar_heading(ui,crate::i18n::tr("Compartilhamentos locais"));
+                    self.local_share_heading(ui);
                     let local: Vec<_> = entries.iter().filter(|e| matches!(e.id, Location::LocalShare(_))).collect();
                     for entry in &local { self.sidebar_place(ui,entry,active==Some(entry.id)); }
                     let (loaded,error) = { let cache=self.local_share_sidebar.lock().unwrap_or_else(|e|e.into_inner()); (cache.loaded,cache.error.clone()) };
@@ -152,7 +152,6 @@ impl Explorer {
                     } else if local.is_empty() {
                         ui.label(RichText::new(if loaded {crate::i18n::tr("Nenhuma pasta local compartilhada")} else {crate::i18n::tr("Carregando compartilhamentos locais…")} ).small().weak());
                     }
-                    if self.menu_item(ui,Icon::ShareFolder,crate::i18n::tr("Gerenciar compartilhamentos locais"),"",!self.loading,false).on_hover_text(crate::i18n::tr("Gerenciar compartilhamentos locais")).clicked(){self.request_local_shares(None,ui.ctx());}
                     ui.add_space(12.0);
                 }
                 if self.sidebar_options.show_network {
@@ -166,6 +165,50 @@ impl Explorer {
             ui.add_space(5.0);
             ui.label(RichText::new("Linux System Explorer  0.1").small().weak());
         });
+    }
+
+    fn local_share_heading(&mut self, ui: &mut egui::Ui) {
+        let label = crate::i18n::tr("Gerenciar compartilhamentos locais");
+        let response = ui
+            .horizontal(|ui| {
+                ui.label(
+                    RichText::new(crate::i18n::tr("Compartilhamentos locais"))
+                        .small()
+                        .weak()
+                        .strong(),
+                );
+                let response = ui.add_enabled(
+                    !self.loading,
+                    egui::Button::new("")
+                        .frame(false)
+                        .min_size(Vec2::splat(22.0)),
+                );
+                response.widget_info(|| {
+                    egui::WidgetInfo::labeled(
+                        egui::WidgetType::Button,
+                        !self.loading && ui.is_enabled(),
+                        label,
+                    )
+                });
+                let color = ui.visuals().weak_text_color();
+                icons::paint(
+                    ui.painter(),
+                    egui::Rect::from_center_size(response.rect.center(), Vec2::splat(14.0)),
+                    Icon::Settings,
+                    if self.loading {
+                        color.gamma_multiply(0.4)
+                    } else {
+                        color
+                    },
+                    &self.appearance,
+                );
+                response.on_hover_text(label)
+            })
+            .inner;
+        ui.add_space(6.0);
+        if response.clicked() {
+            self.request_local_shares(None, ui.ctx());
+        }
     }
 
     fn sidebar_place(&mut self, ui: &mut egui::Ui, entry: &SidebarEntry, selected: bool) {
