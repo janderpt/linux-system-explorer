@@ -67,6 +67,10 @@
     "en": "QUICK ACCESS",
     "pt": "ACESSO RÁPIDO"
   },
+  "Abas fechadas recentemente": {
+    "en": "Recently closed tabs",
+    "pt": "Abas fechadas recentemente"
+  },
   "Abrir": {
     "en": "Open",
     "pt": "Abrir"

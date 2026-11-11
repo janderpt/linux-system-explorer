@@ -528,6 +528,25 @@ pub fn selectable_button(
     response.on_hover_text(label)
 }
 
+pub fn menu_symbol(ui: &egui::Ui, icon: Icon, appearance: &Appearance) -> egui::Atom<'static> {
+    use egui::AtomExt;
+    let glyph = glyph(appearance.name(icon))
+        .or_else(|| glyph(icon.default_name()))
+        .expect("ícone padrão ausente");
+    let color = if appearance.mode == IconMode::Colored {
+        icon.color(ui.visuals().dark_mode)
+    } else {
+        ui.visuals().text_color()
+    };
+    egui::RichText::new(glyph.character().to_string())
+        .font(FontId::new(
+            appearance.size,
+            FontFamily::Name("fontawesome".into()),
+        ))
+        .color(color)
+        .atom_size(Vec2::splat(appearance.size))
+}
+
 pub fn menu_item(
     ui: &mut egui::Ui,
     icon: Icon,
@@ -538,21 +557,7 @@ pub fn menu_item(
     appearance: &Appearance,
 ) -> egui::Response {
     use egui::AtomExt;
-    let glyph = glyph(appearance.name(icon))
-        .or_else(|| glyph(icon.default_name()))
-        .expect("ícone padrão ausente");
-    let color = if appearance.mode == IconMode::Colored {
-        icon.color(ui.visuals().dark_mode)
-    } else {
-        ui.visuals().text_color()
-    };
-    let symbol = egui::RichText::new(glyph.character().to_string())
-        .font(FontId::new(
-            appearance.size,
-            FontFamily::Name("fontawesome".into()),
-        ))
-        .color(color)
-        .atom_size(Vec2::splat(appearance.size));
+    let symbol = menu_symbol(ui, icon, appearance);
     let button = egui::Button::new((symbol, label.atom_shrink(true)))
         .truncate()
         .shortcut_text(shortcut)

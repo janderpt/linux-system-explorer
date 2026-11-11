@@ -10,6 +10,7 @@ pub(super) enum TabAction {
     CloseOthers,
     CloseRight,
     Reopen,
+    ReopenRecent(u64),
 }
 
 const HEIGHT: f32 = 30.0;
@@ -76,6 +77,7 @@ impl Workspace {
                     .unwrap();
             }
             TabAction::Reopen => self.reopen_closed_tab(ctx),
+            TabAction::ReopenRecent(id) => self.reopen_closed_tab_id(id, ctx),
         }
         ctx.request_repaint();
     }
@@ -200,6 +202,10 @@ impl Workspace {
                                             menu_action = Some((tab.tab_id, TabAction::Reopen));
                                             ui.close();
                                         }
+                                        if let Some(id) = self.recently_closed_menu(ui) {
+                                            menu_action =
+                                                Some((tab.tab_id, TabAction::ReopenRecent(id)));
+                                        }
                                     });
                                     menu_open |= response.context_menu_opened();
                                 }
@@ -229,6 +235,12 @@ impl Workspace {
                                     {
                                         reopen = true;
                                         ui.close();
+                                    }
+                                    if let Some(id) = self.recently_closed_menu(ui) {
+                                        menu_action = Some((
+                                            self.tabs[self.active].tab_id,
+                                            TabAction::ReopenRecent(id),
+                                        ));
                                     }
                                 });
                                 menu_open |= plus.context_menu_opened();

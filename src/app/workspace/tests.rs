@@ -1,6 +1,7 @@
 use super::*;
 use crate::app::tests::complete_navigation;
 mod closed_tabs;
+mod recent_tabs;
 mod tab_drag;
 mod tab_menu;
 fn workspace(ctx: &egui::Context, path: PathBuf) -> Workspace {

@@ -18,7 +18,7 @@ fn key(app: &mut Workspace, ctx: &egui::Context, key: Key, modifiers: Modifiers)
         );
     }
 }
-fn reopen(app: &mut Workspace, ctx: &egui::Context) {
+pub(super) fn reopen(app: &mut Workspace, ctx: &egui::Context) {
     key(app, ctx, Key::T, Modifiers::CTRL | Modifiers::SHIFT);
 }
 
