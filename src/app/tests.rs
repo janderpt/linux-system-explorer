@@ -630,6 +630,35 @@ fn reused_windows_accept_a_pending_destination_but_reject_the_previous_folder() 
 }
 
 #[test]
+fn opening_an_existing_folder_preserves_its_selection_filter_and_layout() {
+    use crate::file_manager::{OpenRequest, window::Request};
+    let directory = tempfile::tempdir().unwrap();
+    let selected = directory.path().join("selected.txt");
+    std::fs::write(&selected, b"test").unwrap();
+    let ctx = egui::Context::default();
+    let mut app = Explorer::with_context(&ctx, directory.path().to_owned());
+    complete_navigation(&mut app);
+    app.selected.insert(selected.clone());
+    app.selection_cursor = Some(selected.clone());
+    app.query = "selected".into();
+    app.view = View::Icons;
+    app.item_scale = 1.5;
+    let layout = app.current_layout();
+    let (request, reply) = Request::for_test(OpenRequest {
+        folder: directory.path().to_owned(),
+        selected: vec![],
+        properties: false,
+    });
+    app.accept_external(request, &ctx);
+    assert!(reply.recv().unwrap());
+    assert_eq!(app.selected, BTreeSet::from([selected.clone()]));
+    assert_eq!(app.selection_cursor, Some(selected));
+    assert_eq!(app.query, "selected");
+    assert!(app.current_layout() == layout);
+    assert!(!app.loading);
+}
+
+#[test]
 fn folders_restore_independent_layouts_through_history_refresh_errors_and_restart() {
     let directory = tempfile::tempdir().unwrap();
     let folder_a = directory.path().join("a");

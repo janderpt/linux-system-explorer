@@ -70,6 +70,12 @@ own current destination and unregisters when closed. Wayland activation forwards
 caller's token through xdg-activation; compositor focus policies still apply. Reopen
 windows from earlier versions after updating to enable reuse.
 
+Opening a directory through the system's desktop launcher (`xdg-open`, GIO) or the
+executable also reuses a matching window. The launching process forwards its activation
+token and exits before initializing another GUI, preserving the window's selection,
+filter and layout. Starting without a path applies this to the home directory. A new
+window opens normally when there is no responsive match.
+
 Window, launcher and taskbar icons share one project SVG and its build-generated PNG.
 The application ID, desktop filename and icon name match on Wayland and X11. The user
 installer refreshes KDE's application and icon caches; reopen older windows after updating.

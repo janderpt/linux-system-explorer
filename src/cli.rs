@@ -23,6 +23,7 @@ Usage: linux-system-explorer [OPTIONS] [DIRECTORY]
   --               Treat the next argument as a directory, even if it starts with '-'
 
 With no directory, open the user's home folder. Use trash: to open the Trash.
+Opening a folder reuses a window already in that directory when available.
 ";
 
 pub fn parse(args: impl IntoIterator<Item = OsString>) -> Result<Command, &'static str> {

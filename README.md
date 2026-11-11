@@ -95,6 +95,12 @@ No Wayland, a ativação usa o token enviado pelo aplicativo solicitante e respe
 a política de foco do compositor. Janelas de versões anteriores devem ser reabertas
 após a atualização para participar dessa integração.
 
+Abrir uma pasta pelo sistema (por exemplo, com `xdg-open` ou GIO) ou pelo executável
+também reutiliza uma janela já naquela pasta. O novo processo encaminha o pedido e
+o token de ativação e termina antes de criar outra interface. A seleção, o filtro
+e o layout da janela são preservados. Abrir o aplicativo sem informar um caminho
+aplica a mesma regra à pasta pessoal. Sem uma janela correspondente, abre normalmente.
+
 É necessário um ambiente gráfico Linux com OpenGL e bibliotecas de X11 ou Wayland. A abertura de arquivos usa `gio open`, das ferramentas GIO, e os aplicativos associados no sistema. Se GIO não estiver instalado, usa `xdg-open`, normalmente fornecido pelo pacote `xdg-utils`. Em um ambiente mínimo Ubuntu/Debian, as dependências de compilação e execução podem ser instaladas com:
 
 ```bash

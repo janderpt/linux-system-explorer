@@ -233,6 +233,25 @@ with tempfile.NamedTemporaryFile(mode='w',dir={:?},delete=False) as f:
         3,
         "reused windows must not launch a new GUI"
     );
+    assert!(window::reuse_folder(
+        Path::new("/tmp/a folder"),
+        "desktop-launch-token"
+    ));
+    let (request, token) = accepted_rx.recv_timeout(Duration::from_secs(2)).unwrap();
+    assert!(request.selected.is_empty() && !request.properties);
+    assert_eq!(token, "desktop-launch-token");
+    // Relative and byte-preserving desktop paths use the same absolute folder
+    // identity as the GUI, without changing the parent process's environment.
+    let relative = PathBuf::from(OsString::from_vec(b"relative folder-\xff".to_vec()));
+    *current.lock().unwrap() = std::env::current_dir().unwrap().join(&relative);
+    assert!(window::reuse_folder(&relative, "relative-token"));
+    let (request, token) = accepted_rx.recv_timeout(Duration::from_secs(2)).unwrap();
+    assert_eq!(
+        request.folder,
+        std::env::current_dir().unwrap().join(&relative)
+    );
+    assert_eq!(token, "relative-token");
+    assert!(!window::reuse_folder(&crate::trashbin::location(), ""));
     // Navigating the window invalidates its previous folder immediately.
     *current.lock().unwrap() = PathBuf::from("/tmp/elsewhere");
     let request = OpenRequest {
@@ -243,6 +262,7 @@ with tempfile.NamedTemporaryFile(mode='w',dir={:?},delete=False) as f:
     assert!(!zbus::block_on(window::reuse(&client, &request, "")));
     stop_tx.send(()).unwrap();
     worker.join().unwrap();
+    assert!(!window::reuse_folder(Path::new("/tmp/a folder"), ""));
     assert!(
         !zbus::block_on(window::reuse(&client, &request, "")),
         "closed windows must disappear from discovery"

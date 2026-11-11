@@ -24,8 +24,12 @@ use std::path::PathBuf;
 fn main() -> eframe::Result {
     let mut selection = Vec::new();
     let mut properties = false;
+    let mut browse = false;
     let path = match cli::parse(std::env::args_os().skip(1)) {
-        Ok(cli::Command::Browse(path)) => path,
+        Ok(cli::Command::Browse(path)) => {
+            browse = true;
+            path
+        }
         Ok(cli::Command::Reveal(paths, show_properties)) => {
             selection = paths
                 .into_iter()
@@ -66,14 +70,19 @@ fn main() -> eframe::Result {
             std::process::exit(2);
         }
     };
+    let initial_path = path
+        .or_else(dirs::home_dir)
+        .unwrap_or_else(|| PathBuf::from("/"));
+    // Desktop Exec handlers (including GIO/xdg-open) launch the executable with
+    // a directory, rather than going through the FileManager1 bridge.
+    if browse && file_manager::window::reuse_folder(&initial_path, &activation::startup_token()) {
+        return Ok(());
+    }
     let language = settings::Preferences::path()
         .and_then(|path| settings::Preferences::load(&path).ok())
         .unwrap_or_default()
         .language;
     i18n::set_locale(language.resolve());
-    let initial_path = path
-        .or_else(dirs::home_dir)
-        .unwrap_or_else(|| PathBuf::from("/"));
     if let Err(error) = desktop::register() {
         eprintln!("Could not register desktop identity: {error}");
     }

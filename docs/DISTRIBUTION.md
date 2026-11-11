@@ -79,6 +79,13 @@ native Wayland surface, or the standard viewport focus request on X11. The suppl
 activation token is forwarded without changing global environment variables. Closing
 a window drops its registration; earlier GUI versions must be reopened after updating.
 
+The desktop Exec entry uses the same per-window protocol directly: normal directory
+launches check for an existing matching window before initializing a GUI. Launchers
+forward XDG_ACTIVATION_TOKEN, falling back to DESKTOP_STARTUP_ID, without changing the
+environment of another process. Relative paths use the same absolute directory identity
+as the GUI, and path bytes are preserved. Failure to reach a matching GUI falls back to
+opening a new window; this path does not require the FileManager1 bridge to be running.
+
 Packaged installations and native windows use the same project SVG, rasterized to PNG
 at build time. The user installer refreshes desktop and icon caches, including KDE's
 icon-change notification. Uninstalled development builds register the same icon and

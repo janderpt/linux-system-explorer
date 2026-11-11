@@ -9,6 +9,21 @@ use wayland_client::{
 };
 use wayland_protocols::xdg::activation::v1::client::xdg_activation_v1::XdgActivationV1;
 
+pub fn startup_token() -> String {
+    choose_startup_token(
+        std::env::var("XDG_ACTIVATION_TOKEN").ok(),
+        std::env::var("DESKTOP_STARTUP_ID").ok(),
+    )
+}
+
+fn choose_startup_token(wayland: Option<String>, desktop: Option<String>) -> String {
+    [wayland, desktop]
+        .into_iter()
+        .flatten()
+        .find(|token| !token.is_empty() && token.len() <= 4096 && !token.contains('\0'))
+        .unwrap_or_default()
+}
+
 pub struct Activation {
     connection: Connection,
     queue: EventQueue<State>,
@@ -73,3 +88,28 @@ impl Dispatch<wl_registry::WlRegistry, GlobalListContents> for State {
     }
 }
 wayland_client::delegate_noop!(State: ignore XdgActivationV1);
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn desktop_launches_prefer_valid_wayland_tokens_and_fall_back_to_startup_ids() {
+        assert_eq!(
+            choose_startup_token(Some("wayland-token".into()), Some("x11-id".into())),
+            "wayland-token"
+        );
+        for unusable in [
+            None,
+            Some(String::new()),
+            Some("bad\0token".into()),
+            Some("x".repeat(4097)),
+        ] {
+            assert_eq!(
+                choose_startup_token(unusable, Some("desktop-token".into())),
+                "desktop-token"
+            );
+        }
+        assert!(choose_startup_token(None, None).is_empty());
+    }
+}

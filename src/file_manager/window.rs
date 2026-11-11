@@ -186,5 +186,35 @@ pub(super) async fn reuse(
     false
 }
 
+/// The desktop launcher can hand its request to a GUI without creating another
+/// native window or starting the public FileManager1 service.
+pub fn reuse_folder(folder: &Path, startup_id: &str) -> bool {
+    if crate::trashbin::is_location(folder) {
+        return false;
+    }
+    let Ok(folder) = crate::filesystem::absolute_path(folder) else {
+        return false;
+    };
+    zbus::block_on(async {
+        let Ok(connection) = zbus::connection::Builder::session()
+            .method_timeout(Duration::from_secs(3))
+            .build()
+            .await
+        else {
+            return false;
+        };
+        reuse(
+            &connection,
+            &OpenRequest {
+                folder,
+                selected: vec![],
+                properties: false,
+            },
+            startup_id,
+        )
+        .await
+    })
+}
+
 #[cfg(test)]
 mod tests;
