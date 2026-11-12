@@ -42,6 +42,8 @@ Archive listing uses an embedded Python 3 helper loading the libarchive 3 C ABI 
 
 CI installs these runtimes plus FFmpeg for synthetic test fixtures. Integration tests exercise image/SVG rendering, real PDF pages, audio/video decoding, playback lifecycle and headless popup interactions. Missing media runtime/codecs are failures in CI; developer environments without the runtime may skip media integration tests.
 
+Icon-view thumbnails reuse these runtimes: GStreamer provides a silent, video-only paused frame at up to 256×256, seeking to 10% of the duration (at most ten seconds) when possible and falling back to the first frame. Frame polling allows ten seconds. Office thumbnails export only page/slide 1 using the same isolated profile/source-copy protections, a 256 MiB input limit and a shorter 30-second conversion deadline, then rasterize with Poppler. Temporary conversion output is released after rasterization. The global two-worker thumbnail budget allows only one Office conversion at a time. Only visible items start work; navigation/scrolling cancels unnecessary jobs. Failed or unavailable renderers silently retain file-type icons, with F5 permitting retry. This adds no runtime dependencies beyond those already declared for previews.
+
 ## Native build and staging
 
 Python 3.11+, a Rust toolchain, `desktop-file-utils`, `appstream` and, for DEB packages,

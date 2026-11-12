@@ -492,6 +492,12 @@ fn missing_preview_tools_only_disable_their_corresponding_renderer() {
                     .kind(),
                 io::ErrorKind::Unsupported
             );
+            assert_eq!(
+                office::thumbnail(&source, &source, &AtomicBool::new(false))
+                    .unwrap_err()
+                    .kind(),
+                io::ErrorKind::Unsupported
+            );
         }
         let html = root.path().join("index.html");
         std::fs::write(&html, "<h1>source</h1>").unwrap();

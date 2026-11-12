@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Extend background icon-view thumbnails to silent video frames and the first page/slide of Office/LibreOffice documents, with bounded conversion, cancellation and file-type fallback when codecs/converters are unavailable.
+
 - Add asynchronous icon-view thumbnails for raster images, SVG and first PDF pages, with bounded decoding/cache, metadata invalidation, cancellation and file-type fallback.
 - Show logical and allocated disk sizes in Properties, including background recursive folder totals, hard-link deduplication, no-follow traversal, partial results and close-to-cancel behavior.
 

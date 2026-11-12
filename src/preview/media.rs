@@ -186,6 +186,9 @@ impl Drop for Player {
 }
 impl Player {
     fn open(path: &std::path::Path, silent: bool) -> io::Result<Self> {
+        Self::open_mode(path, silent, false)
+    }
+    fn open_mode(path: &std::path::Path, silent: bool, thumbnail: bool) -> io::Result<Self> {
         regular(path)?;
         let uri = url::Url::from_file_path(path)
             .map_err(|_| io::Error::other("Invalid media file path"))?;
@@ -206,7 +209,12 @@ impl Player {
                 api,
             };
             let mut error = std::ptr::null_mut();
-            let video = (api.parse_bin)(c"videoconvert ! videoscale add-borders=false ! video/x-raw,format=RGBA,width=[1,960],height=[1,540],pixel-aspect-ratio=1/1 ! appsink name=lse_preview sync=true max-buffers=1 drop=true".as_ptr(), 1, &mut error);
+            let description = if thumbnail {
+                c"videoconvert ! videoscale add-borders=false ! video/x-raw,format=RGBA,width=[1,256],height=[1,256],pixel-aspect-ratio=1/1 ! appsink name=lse_preview sync=false max-buffers=1 drop=true"
+            } else {
+                c"videoconvert ! videoscale add-borders=false ! video/x-raw,format=RGBA,width=[1,960],height=[1,540],pixel-aspect-ratio=1/1 ! appsink name=lse_preview sync=true max-buffers=1 drop=true"
+            };
+            let video = (api.parse_bin)(description.as_ptr(), 1, &mut error);
             if !error.is_null() {
                 if !video.is_null() {
                     (api.unref)(video);
@@ -260,9 +268,18 @@ impl Player {
             (api.set)(
                 pipeline.pointer,
                 c"volume".as_ptr(),
-                0.7_f64,
+                if thumbnail { 0.0_f64 } else { 0.7_f64 },
                 std::ptr::null::<c_char>(),
             );
+            if thumbnail {
+                // GstPlayFlags::VIDEO only: no audio, text or visualizer stream.
+                (api.set)(
+                    pipeline.pointer,
+                    c"flags".as_ptr(),
+                    1_u32,
+                    std::ptr::null::<c_char>(),
+                );
+            }
             let bus = (api.get_bus)(pipeline.pointer);
             if bus.is_null() {
                 return Err(io::Error::other("GStreamer message bus unavailable"));
@@ -272,7 +289,8 @@ impl Player {
                 sink,
                 bus: Object { pointer: bus, api },
             };
-            if (api.set_state)(player.pipeline.pointer, 4) == 0 {
+            // A thumbnail prerolls in PAUSED and never starts playback.
+            if (api.set_state)(player.pipeline.pointer, if thumbnail { 3 } else { 4 }) == 0 {
                 return Err(io::Error::other(crate::i18n::tr(
                     "Não foi possível iniciar a reprodução deste arquivo.",
                 )));
@@ -284,9 +302,15 @@ impl Player {
         let api = self.pipeline.api;
         // SAFETY: a pulled sample owns its caps/buffer references until unref.
         unsafe {
-            let mut sample = (api.pull)(self.sink.pointer, 0);
-            if sample.is_null() && paused {
-                sample = (api.preroll)(self.sink.pointer, 0);
+            // Pull preroll first while paused: pulling a sample clears the
+            // preroll reference even when no playing sample is available.
+            let mut sample = if paused {
+                (api.preroll)(self.sink.pointer, 0)
+            } else {
+                std::ptr::null_mut()
+            };
+            if sample.is_null() {
+                sample = (api.pull)(self.sink.pointer, 0);
             }
             if sample.is_null() {
                 return Ok(None);
@@ -347,6 +371,55 @@ impl Player {
             }
         }
         Ok(ended)
+    }
+}
+
+/// Preroll a single video-only frame, optionally seeking past a short intro.
+/// The caller owns cancellation and bounds concurrent thumbnail work.
+pub(super) fn thumbnail(path: &std::path::Path, cancel: &AtomicBool) -> io::Result<Pixels> {
+    super::check(cancel)?;
+    let player = Player::open_mode(path, true, true)?;
+    let deadline = Instant::now() + Duration::from_secs(10);
+    let mut first = None;
+    let mut seek_deadline = None;
+    loop {
+        super::check(cancel)?;
+        if player.messages()? && first.is_none() {
+            return Err(io::Error::other("Video ended without a frame"));
+        }
+        if let Some(frame) = player.frame(true)? {
+            if first.is_some() {
+                return Ok(frame);
+            }
+            let mut duration = 0_i64;
+            let api = player.pipeline.api;
+            // SAFETY: this worker exclusively owns its paused, silent pipeline.
+            let seek = unsafe {
+                (api.query_duration)(player.pipeline.pointer, 3, &mut duration) != 0
+                    && duration > 2_000_000_000
+                    && (api.seek)(
+                        player.pipeline.pointer,
+                        3,
+                        3,
+                        (duration / 10).min(10_000_000_000),
+                    ) != 0
+            };
+            if !seek {
+                return Ok(frame);
+            }
+            first = Some(frame);
+            seek_deadline = Some((Instant::now() + Duration::from_secs(2)).min(deadline));
+        }
+        if seek_deadline.is_some_and(|time| Instant::now() >= time) {
+            return Ok(first.take().unwrap());
+        }
+        if Instant::now() >= deadline {
+            return Err(io::Error::new(
+                io::ErrorKind::TimedOut,
+                "Video thumbnail timed out",
+            ));
+        }
+        std::thread::sleep(Duration::from_millis(10));
     }
 }
 

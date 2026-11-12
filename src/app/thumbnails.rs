@@ -76,7 +76,12 @@ impl Cache {
             if self.entries.len() >= 512 && oldest.is_none() {
                 return None;
             }
-            let Some(job) = thumbnail::start(entry.path.clone(), stamp.kind, ctx) else {
+            let Some(job) = thumbnail::start(
+                entry.path.clone(),
+                entry.display_path().to_owned(),
+                stamp.kind,
+                ctx,
+            ) else {
                 ctx.request_repaint_after(std::time::Duration::from_millis(50));
                 return None;
             };
@@ -158,8 +163,9 @@ impl Explorer {
 mod tests {
     use super::*;
     use crate::app::tests::{complete_navigation, folder_frame};
+    use std::process::Command;
     fn ready(app: &mut Explorer, ctx: &egui::Context, path: &Path) -> egui::TextureId {
-        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(60);
         loop {
             folder_frame(app, ctx, vec![]);
             if let Some(Cached {
@@ -244,23 +250,115 @@ mod tests {
         assert!(!output.shapes.iter().any(|s|matches!(&s.shape,egui::Shape::Rect(r) if r.fill_texture_id()==app.thumbnails.texture(&app.entries[0],&ctx).unwrap().id())),"details keep their compact type icons");
     }
     #[test]
-    fn unsupported_and_broken_files_keep_icons_without_notices_and_refresh_permits_retry() {
-        let root = tempfile::tempdir().unwrap();
-        for name in ["bad.png", "report.docx"] {
-            std::fs::write(root.path().join(name), b"invalid").unwrap();
+    fn office_and_video_thumbnails_arrive_asynchronously_in_the_icon_grid() {
+        if !crate::preview::tests::office_available() {
+            return;
         }
+        let root = tempfile::tempdir().unwrap();
+        let office = root.path().join("report.docx");
+        crate::preview::tests::test_docx(&office);
+        let video = root.path().join("movie.webm");
+        let result = Command::new("ffmpeg")
+            .args([
+                "-loglevel",
+                "error",
+                "-f",
+                "lavfi",
+                "-i",
+                "color=c=blue:s=64x48:r=5",
+                "-t",
+                "0.4",
+                "-c:v",
+                "libvpx",
+                "-an",
+                "-y",
+            ])
+            .arg(&video)
+            .status();
+        if result.is_err() {
+            assert!(std::env::var_os("CI").is_none(), "ffmpeg is required in CI");
+            return;
+        }
+        assert!(result.unwrap().success());
+        let ctx = egui::Context::default();
+        let mut app = Explorer::with_context(&ctx, root.path().into());
+        complete_navigation(&mut app);
+        app.view = View::Icons;
+        for path in [&office, &video] {
+            let texture = ready(&mut app, &ctx, path);
+            let output = folder_frame(&mut app, &ctx, vec![]);
+            assert!(output.shapes.iter().any(
+                |s| matches!(&s.shape, egui::Shape::Rect(r) if r.fill_texture_id() == texture)
+            ));
+        }
+        assert!(app.notice_toasts.is_empty());
+    }
+    #[test]
+    fn missing_document_tools_keep_office_icons_without_notices() {
+        const CHILD: &str = "LSE_TEST_THUMBNAIL_NO_TOOLS";
+        if std::env::var_os(CHILD).is_none() {
+            let empty = tempfile::tempdir().unwrap();
+            assert!(Command::new(std::env::current_exe().unwrap())
+                .args(["--exact", "app::thumbnails::tests::missing_document_tools_keep_office_icons_without_notices", "--nocapture"])
+                .env(CHILD, "1").env("PATH", empty.path()).status().unwrap().success());
+            return;
+        }
+        let root = tempfile::tempdir().unwrap();
+        let file = root.path().join("report.docx");
+        crate::preview::tests::test_docx(&file);
         let ctx = egui::Context::default();
         let mut app = Explorer::with_context(&ctx, root.path().into());
         complete_navigation(&mut app);
         app.view = View::Icons;
         let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
-        while !matches!(
-            app.thumbnails
-                .entries
-                .get(&root.path().join("bad.png"))
-                .map(|v| &v.state),
-            Some(State::Failed)
-        ) {
+        loop {
+            let output = folder_frame(&mut app, &ctx, vec![]);
+            if matches!(
+                app.thumbnails.entries.get(&file).map(|v| &v.state),
+                Some(State::Failed)
+            ) {
+                assert!(
+                    crate::app::tests::text_center(
+                        &output,
+                        &icons::glyph("file-word").unwrap().character().to_string()
+                    )
+                    .is_some()
+                );
+                assert!(app.notice_toasts.is_empty());
+                break;
+            }
+            assert!(std::time::Instant::now() < deadline);
+            std::thread::sleep(std::time::Duration::from_millis(2));
+        }
+    }
+    #[test]
+    fn unsupported_and_broken_files_keep_icons_without_notices_and_refresh_permits_retry() {
+        let root = tempfile::tempdir().unwrap();
+        for name in ["bad.png", "bad.mp4", "bad.docx", "report.unknown"] {
+            std::fs::write(root.path().join(name), [0_u8, 255, 0, 255]).unwrap();
+        }
+        // A sparse, oversized document exercises the Office input-limit fallback
+        // without relying on LibreOffice's tolerant text-format autodetection.
+        std::fs::File::options()
+            .write(true)
+            .open(root.path().join("bad.docx"))
+            .unwrap()
+            .set_len(257 * 1024 * 1024)
+            .unwrap();
+        let ctx = egui::Context::default();
+        let mut app = Explorer::with_context(&ctx, root.path().into());
+        complete_navigation(&mut app);
+        app.view = View::Icons;
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(60);
+        while !["bad.png", "bad.mp4", "bad.docx"].iter().all(|name| {
+            matches!(
+                app.thumbnails
+                    .entries
+                    .get(&root.path().join(name))
+                    .map(|v| &v.state),
+                Some(State::Failed)
+            )
+        }) {
             folder_frame(&mut app, &ctx, vec![]);
             assert!(std::time::Instant::now() < deadline);
             std::thread::sleep(std::time::Duration::from_millis(2));
@@ -268,7 +366,7 @@ mod tests {
         assert!(
             !app.thumbnails
                 .entries
-                .contains_key(&root.path().join("report.docx"))
+                .contains_key(&root.path().join("report.unknown"))
         );
         assert!(app.notice_toasts.is_empty());
         let output = folder_frame(&mut app, &ctx, vec![]);

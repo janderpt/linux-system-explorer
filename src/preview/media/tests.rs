@@ -32,6 +32,75 @@ fn wave(path: &std::path::Path) {
     data.resize(44 + length as usize, 0);
     std::fs::write(path, data).unwrap();
 }
+
+#[test]
+fn video_thumbnails_are_silent_bounded_keep_aspect_and_seek_past_the_intro() {
+    if runtime().is_none() {
+        return;
+    }
+    if std::process::Command::new("ffmpeg")
+        .arg("-version")
+        .output()
+        .is_err()
+    {
+        assert!(std::env::var_os("CI").is_none(), "ffmpeg is required in CI");
+        return;
+    }
+    let root = tempfile::tempdir().unwrap();
+    for (width, height) in [(640, 360), (360, 640), (64, 64)] {
+        let path = root.path().join(format!("{width}x{height}.webm"));
+        let status = std::process::Command::new("ffmpeg")
+            .args(["-loglevel", "error", "-f", "lavfi", "-i"])
+            .arg(format!("color=c=red:s={width}x{height}:r=10:d=0.2"))
+            .args(["-f", "lavfi", "-i"])
+            .arg(format!("color=c=blue:s={width}x{height}:r=10:d=2.8"))
+            .args([
+                "-f",
+                "lavfi",
+                "-i",
+                "sine=frequency=440:sample_rate=48000",
+                "-filter_complex",
+                "[0:v][1:v]concat=n=2:v=1:a=0[v]",
+                "-map",
+                "[v]",
+                "-map",
+                "2:a",
+                "-t",
+                "3",
+                "-c:v",
+                "libvpx",
+                "-c:a",
+                "libvorbis",
+                "-y",
+            ])
+            .arg(&path)
+            .status()
+            .unwrap();
+        assert!(status.success());
+        let before = std::fs::read(&path).unwrap();
+        let frame = thumbnail(&path, &AtomicBool::new(false)).unwrap();
+        assert!(frame.width <= 256 && frame.height <= 256);
+        assert!(
+            (frame.width as f64 / frame.height as f64 - width as f64 / height as f64).abs() < 0.01
+        );
+        let center = ((frame.height / 2 * frame.width + frame.width / 2) * 4) as usize;
+        assert!(
+            frame.rgba[center + 2] > 180 && frame.rgba[center] < 80,
+            "thumbnail should seek to blue content beyond the red intro"
+        );
+        assert_eq!(std::fs::read(&path).unwrap(), before);
+        assert_eq!(
+            thumbnail(&path, &AtomicBool::new(true))
+                .err()
+                .unwrap()
+                .kind(),
+            io::ErrorKind::Interrupted
+        );
+    }
+    let path = root.path().join("broken.mp4");
+    std::fs::write(&path, b"invalid movie").unwrap();
+    assert!(thumbnail(&path, &AtomicBool::new(false)).is_err());
+}
 #[test]
 fn audio_decodes_reaches_end_replays_and_releases_its_worker_without_an_audio_device() {
     if runtime().is_none() {

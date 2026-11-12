@@ -64,8 +64,16 @@ fn too_large(limit: u64) -> io::Error {
 
 fn copy_source(path: &Path, destination: &Path, limit: u64, cancel: &AtomicBool) -> io::Result<()> {
     regular(path)?;
-    let input = fs::File::open(path)?;
-    if input.metadata()?.len() > limit {
+    let input = fs::File::from(rustix::fs::open(
+        path,
+        rustix::fs::OFlags::RDONLY | rustix::fs::OFlags::NONBLOCK | rustix::fs::OFlags::CLOEXEC,
+        rustix::fs::Mode::empty(),
+    )?);
+    let metadata = input.metadata()?;
+    if !metadata.is_file() {
+        return Err(io::Error::from(io::ErrorKind::InvalidInput));
+    }
+    if metadata.len() > limit {
         return Err(too_large(limit));
     }
     let mut input = input.take(limit + 1);
@@ -105,7 +113,24 @@ impl Document {
 }
 
 pub(super) fn convert(path: &Path, cancel: &AtomicBool) -> io::Result<Document> {
-    let family = match super::Kind::for_path(path) {
+    convert_document(path, path, false, cancel)
+}
+
+pub(super) fn thumbnail(
+    path: &Path,
+    display_path: &Path,
+    cancel: &AtomicBool,
+) -> io::Result<Document> {
+    convert_document(path, display_path, true, cancel)
+}
+
+fn convert_document(
+    path: &Path,
+    display_path: &Path,
+    thumbnail: bool,
+    cancel: &AtomicBool,
+) -> io::Result<Document> {
+    let family = match super::Kind::for_path(display_path) {
         super::Kind::Office(family) => family,
         _ => {
             return Err(io::Error::new(
@@ -115,7 +140,7 @@ pub(super) fn convert(path: &Path, cancel: &AtomicBool) -> io::Result<Document> 
         }
     };
     let required = family.required();
-    let extension = path
+    let extension = display_path
         .extension()
         .and_then(|e| e.to_str())
         .unwrap_or_default()
@@ -160,13 +185,20 @@ pub(super) fn convert(path: &Path, cancel: &AtomicBool) -> io::Result<Document> 
                     "--norestore",
                     "--convert-to",
                 ])
-                .arg(family.filter())
+                .arg(if thumbnail {
+                    format!(
+                        r#"{}:{{"PageRange":{{"type":"string","value":"1"}}}}"#,
+                        family.filter()
+                    )
+                } else {
+                    family.filter().into()
+                })
                 .arg("--outdir")
                 .arg(work.path())
                 .arg(&source)
                 .env("SAL_USE_VCLPLUGIN", "svp"),
             cancel,
-            Duration::from_secs(120),
+            Duration::from_secs(if thumbnail { 30 } else { 120 }),
         );
         match result {
             Err(error) if error.kind() == io::ErrorKind::NotFound => continue,
