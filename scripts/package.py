@@ -183,7 +183,8 @@ def debian_dependencies(binary, work):
     depends = next(line.removeprefix("shlibs:Depends=") for line in result.stdout.splitlines() if line.startswith("shlibs:Depends="))
     # These libraries are opened dynamically; GIO and xdg-utils provide desktop integration.
     preview = json.loads((ROOT / "packaging/preview-runtime.json").read_text())
-    engines = preview["media"]["debian"] + preview["pdf"]["debian"]
+    engines = [package for engine in preview.values() if isinstance(engine, dict)
+               for package in engine.get("debian", [])]
     return depends + ", libx11-6, libxi6, libxcursor1, libxrandr2, libxkbcommon0, libwayland-client0, libegl1, libgl1, libglib2.0-bin, xdg-utils, shared-mime-info, hicolor-icon-theme, " + ", ".join(engines)
 
 

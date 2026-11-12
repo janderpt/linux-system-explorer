@@ -105,7 +105,7 @@ aplica a mesma regra à pasta pessoal. Sem uma janela correspondente, abre norma
 
 ```bash
 sudo apt install build-essential pkg-config libx11-dev libxi-dev libxcursor-dev libxrandr-dev libxkbcommon-dev libwayland-dev libegl1-mesa-dev xdg-utils libglib2.0-bin
-sudo apt install poppler-utils libgstreamer1.0-0 libgstreamer-plugins-base1.0-0 gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-libav
+sudo apt install poppler-utils libgstreamer1.0-0 libgstreamer-plugins-base1.0-0 gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-libav libreoffice-writer fonts-liberation weasyprint
 ```
 
 ## Abas, janelas e terminal integrado
@@ -251,13 +251,15 @@ Também há troca de arquivos com outros aplicativos: arrastar para fora exporta
 Selecione um arquivo e pressione **Espaço**, ou use **Pré-visualizar** no menu de contexto. O popup pertence ao próprio explorador e usa a seleção do painel ativo. **Espaço** novamente, **Esc**, o botão de fechar ou um clique fora encerram o preview e a reprodução. Imagens e vídeos se encaixam na área disponível, centralizados e mantendo a proporção. O popup de vídeo acompanha seu formato horizontal, vertical ou quadrado, dentro dos limites da janela, com controles reorganizados quando necessário. O botão **Abrir no aplicativo padrão** é uma ação explícita e independente. Campos de texto e o terminal continuam recebendo espaços normalmente.
 
 - **Imagens:** PNG, JPEG, WebP, BMP, TIFF, ICO, GIF (primeiro quadro) e SVG, com ajuste à janela, zoom e rolagem. Decodificadores, renderizador SVG e fontes de apoio estão incorporados; imagens externas referenciadas por SVG não são carregadas.
-- **PDF:** renderização de páginas com Anterior/Próxima, zoom e rolagem, usando Poppler.
-- **Texto e código:** leitura de até 128 KiB, com aviso de truncamento. HTML, Markdown, CSV e código são mostrados como texto, sem executar conteúdo.
+- **PDF:** renderização de páginas com Anterior/Próxima, contador e zoom em uma única linha de controles, usando Poppler.
+- **DOCX:** documento formatado e paginado, convertido em segundo plano pelo LibreOffice Writer e exibido no próprio popup. A conversão é reutilizada ao trocar de página.
+- **HTML:** alterne entre **Fonte** e **Apresentação**. A apresentação estática de HTML/CSS usa WeasyPrint, incluindo recursos locais dentro da pasta do documento; scripts e recursos remotos não são carregados.
+- **Texto e código:** leitura de até 128 KiB, com aviso de truncamento. Markdown, CSV e código são mostrados como texto, sem executar conteúdo.
 - **Áudio e vídeo:** reprodução dentro do popup com pausa, posição e volume, usando GStreamer. A disponibilidade de formatos depende dos plugins/codecs distribuídos com o pacote.
 
-Office ainda não tem renderização própria nesta etapa. Arquivos sem preview mostram uma indicação neutra; falhas usam os toasts de erro. O carregamento ocorre em segundo plano, com limites para imagens/texto e cancelamento dos conversores de PDF, sem alterar o arquivo original.
+Arquivos sem preview geram apenas um toast de aviso, sem abrir um popup vazio. Falhas de leitura ou renderização usam toasts de erro e fecham o preview; falhas na apresentação de HTML preservam o acesso ao código-fonte. O carregamento ocorre em segundo plano, com limites de tamanho e cancelamento dos conversores, sem alterar o arquivo original. A conversão DOCX trabalha sobre uma cópia temporária e um perfil isolado, com macros e conteúdo ativo desativados; o perfil pessoal do LibreOffice é preservado. Fontes disponíveis no sistema podem influenciar a paginação.
 
-O preview não depende de um visualizador do KDE ou GNOME. As dependências de execução estão em [preview-runtime.json](packaging/preview-runtime.json); o DEB declara GStreamer, os plugins Base/Good/Libav e `poppler-utils`. Compilações pelo código e arquivos tar precisam desses componentes instalados. A distribuição em outros formatos deve fornecer os mesmos recursos e ser validada em cada ambiente; os pacotes Flatpak e AppImage ainda estão em preparação.
+O preview não depende de um visualizador do KDE ou GNOME. As dependências de execução estão em [preview-runtime.json](packaging/preview-runtime.json); o DEB declara GStreamer, os plugins Base/Good/Libav, `poppler-utils`, LibreOffice Writer, fontes Liberation e WeasyPrint. Sem um conversor, apenas seu recurso fica indisponível e é informado por aviso; o explorador continua funcionando, e o HTML mantém a opção Fonte. Compilações pelo código e arquivos tar precisam desses componentes instalados. A distribuição em outros formatos deve fornecer os mesmos recursos e ser validada em cada ambiente; os pacotes Flatpak e AppImage ainda estão em preparação.
 
 ## Copiar, recortar e colar
 

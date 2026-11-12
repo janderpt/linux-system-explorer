@@ -1,6 +1,6 @@
 use super::*;
 use crate::preview::{
-    Content, Job, Kind, Pixels,
+    Content, Document, Job, Kind, Pixels,
     media::{Control, Session, Snapshot},
 };
 
@@ -21,11 +21,20 @@ pub(super) fn consume_space(ctx: &egui::Context) -> bool {
     })
 }
 
+#[derive(Clone, Copy, PartialEq)]
+enum HtmlView {
+    Source,
+    Presentation,
+}
+
 pub(super) struct Preview {
     path: PathBuf,
     kind: Kind,
     job: Option<Job>,
     content: Option<Content>,
+    document: Option<Document>,
+    html_view: HtmlView,
+    html_source: Option<(String, bool)>,
     texture: Option<egui::TextureHandle>,
     media: Option<Session>,
     playback: Snapshot,
@@ -50,6 +59,9 @@ impl Preview {
             media,
             playback: Snapshot::default(),
             content: None,
+            document: None,
+            html_view: HtmlView::Source,
+            html_source: None,
             texture: None,
             page: 1,
             pages: 1,
@@ -74,12 +86,46 @@ impl Preview {
     }
     fn load_page(&mut self, page: u32, ctx: &egui::Context) {
         self.page = page.clamp(1, self.pages);
-        self.job = Some(Job::start(self.path.clone(), self.page, ctx));
+        self.job = Some(if let Some(document) = &self.document {
+            Job::start_document(document.clone(), self.page, ctx)
+        } else {
+            Job::start(self.path.clone(), self.page, ctx)
+        });
         self.texture = None;
         self.content = None;
         self.failed = false;
     }
-    fn poll(&mut self, ctx: &egui::Context) -> Option<String> {
+    fn switch_html_view(&mut self, view: HtmlView, ctx: &egui::Context) {
+        if self.html_view == view {
+            return;
+        }
+        self.html_view = view;
+        self.job = None;
+        self.content = None;
+        self.texture = None;
+        self.failed = false;
+        match view {
+            HtmlView::Source => {
+                if let Some((text, truncated)) = &self.html_source {
+                    self.content = Some(Content::Text {
+                        text: text.clone(),
+                        truncated: *truncated,
+                    });
+                } else {
+                    self.job = Some(Job::start(self.path.clone(), 1, ctx));
+                }
+            }
+            HtmlView::Presentation => {
+                if self.document.is_some() {
+                    self.load_page(self.page, ctx);
+                } else {
+                    self.job = Some(Job::start_html(self.path.clone(), ctx));
+                }
+            }
+        }
+        ctx.request_repaint();
+    }
+    fn poll(&mut self, ctx: &egui::Context) -> Option<std::io::Error> {
         if let Some(mut state) = self.media.as_ref().map(Session::poll) {
             if let Some(frame) = state.frame.take() {
                 self.image(frame, ctx);
@@ -99,16 +145,26 @@ impl Preview {
                         pixels,
                         page,
                         pages,
+                        document,
                     } => {
                         self.page = page;
                         self.pages = pages;
+                        if document.is_some() {
+                            self.document = document;
+                        }
                         self.image(pixels, ctx);
+                    }
+                    Content::Text { text, truncated } => {
+                        if self.kind == Kind::Html {
+                            self.html_source = Some((text.clone(), truncated));
+                        }
+                        self.content = Some(Content::Text { text, truncated });
                     }
                     other => self.content = Some(other),
                 },
                 Err(error) => {
                     self.failed = true;
-                    return Some(error.to_string());
+                    return Some(error);
                 }
             }
         }
@@ -146,6 +202,18 @@ impl Preview {
             });
     }
     fn body(&mut self, ui: &mut egui::Ui, height: f32, ctx: &egui::Context) -> Option<String> {
+        if self.kind == Kind::Html {
+            let mut view = self.html_view;
+            ui.horizontal(|ui| {
+                ui.selectable_value(&mut view, HtmlView::Source, crate::i18n::tr("Fonte"));
+                ui.selectable_value(
+                    &mut view,
+                    HtmlView::Presentation,
+                    crate::i18n::tr("Apresentação"),
+                );
+            });
+            self.switch_html_view(view, ctx);
+        }
         if let Some(media) = &self.media {
             let error = self.playback.error.take();
             let (playing, duration) = (self.playback.playing, self.playback.duration);
@@ -215,43 +283,48 @@ impl Preview {
             ctx.request_repaint_after(std::time::Duration::from_millis(100));
             return error;
         }
-        if self.kind == Kind::Pdf {
+        let paginated = matches!(self.kind, Kind::Pdf | Kind::Docx)
+            || self.kind == Kind::Html && self.html_view == HtmlView::Presentation;
+        if paginated || self.texture.is_some() {
             ui.horizontal(|ui| {
-                let previous = ui
-                    .add_enabled(
-                        self.page > 1 && self.job.is_none(),
-                        egui::Button::new(crate::i18n::tr("Página anterior")),
-                    )
-                    .clicked();
-                ui.label(crate::i18n::message(
-                    "Página {} de {}",
-                    &[self.page.to_string(), self.pages.to_string()],
-                ));
-                let next = ui
-                    .add_enabled(
-                        self.page < self.pages && self.job.is_none(),
-                        egui::Button::new(crate::i18n::tr("Próxima página")),
-                    )
-                    .clicked();
-                if previous {
-                    self.load_page(self.page - 1, ctx);
-                } else if next {
-                    self.load_page(self.page + 1, ctx);
+                if paginated {
+                    let previous = ui
+                        .add_enabled(
+                            self.page > 1 && self.job.is_none(),
+                            egui::Button::new(crate::i18n::tr("Página anterior")),
+                        )
+                        .clicked();
+                    ui.label(crate::i18n::message(
+                        "Página {} de {}",
+                        &[self.page.to_string(), self.pages.to_string()],
+                    ));
+                    let next = ui
+                        .add_enabled(
+                            self.page < self.pages && self.job.is_none(),
+                            egui::Button::new(crate::i18n::tr("Próxima página")),
+                        )
+                        .clicked();
+                    if previous {
+                        self.load_page(self.page - 1, ctx);
+                    } else if next {
+                        self.load_page(self.page + 1, ctx);
+                    }
+                    ui.add_space(12.0);
                 }
+                ui.add_enabled_ui(self.texture.is_some(), |ui| {
+                    if ui.button("−").clicked() {
+                        self.zoom = (self.zoom / 1.25).max(0.25);
+                    }
+                    if ui.button(crate::i18n::tr("Ajustar à janela")).clicked() {
+                        self.zoom = 1.0;
+                    }
+                    if ui.button("+").clicked() {
+                        self.zoom = (self.zoom * 1.25).min(8.0);
+                    }
+                });
             });
         }
         if self.texture.is_some() {
-            ui.horizontal(|ui| {
-                if ui.button("−").clicked() {
-                    self.zoom = (self.zoom / 1.25).max(0.25);
-                }
-                if ui.button(crate::i18n::tr("Ajustar à janela")).clicked() {
-                    self.zoom = 1.0;
-                }
-                if ui.button("+").clicked() {
-                    self.zoom = (self.zoom * 1.25).min(8.0);
-                }
-            });
             self.picture(ui, (height - 64.0).max(80.0));
         } else if let Some(Content::Text { text, truncated }) = &self.content {
             if *truncated {
@@ -356,13 +429,54 @@ impl Explorer {
             return;
         };
         if let Some(error) = preview.poll(ctx) {
+            if error.kind() == std::io::ErrorKind::Unsupported {
+                self.post_typed_notice(toast::NoticeKind::Warning, error.to_string());
+            } else {
+                self.report_error(crate::i18n::message(
+                    "Não foi possível pré-visualizar o arquivo: {}",
+                    &[error.to_string()],
+                ));
+            }
+            if preview.kind == Kind::Html && preview.html_view == HtmlView::Presentation {
+                preview.switch_html_view(HtmlView::Source, ctx);
+            } else {
+                return;
+            }
+        }
+        if let Some(error) = preview.playback.error.take() {
             self.report_error(crate::i18n::message(
-                "Não foi possível pré-visualizar o arquivo: {}",
+                "Não foi possível reproduzir este arquivo: {}",
                 &[error],
             ));
+            return;
+        }
+        if matches!(&preview.content, Some(Content::Unsupported)) {
+            self.post_typed_notice(
+                toast::NoticeKind::Warning,
+                crate::i18n::message(
+                    "Pré-visualização não disponível para este tipo de arquivo: {}",
+                    &[preview
+                        .path
+                        .file_name()
+                        .unwrap_or_default()
+                        .to_string_lossy()
+                        .into_owned()],
+                ),
+            );
+            return;
         }
         let mut close = ctx.input_mut(|i| i.consume_key(egui::Modifiers::NONE, Key::Escape))
             || consume_space(ctx);
+        if close {
+            return;
+        }
+        // Probe unclassified files as bounded text before showing any modal.
+        // Unsupported binaries must never flash an empty preview popup.
+        if preview.kind == Kind::Unknown && preview.job.is_some() {
+            self.preview = Some(preview);
+            ctx.request_repaint_after(std::time::Duration::from_millis(20));
+            return;
+        }
         let mut open = false;
         let mut media_error = None;
         let Vec2 {

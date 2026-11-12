@@ -11,7 +11,10 @@ use std::{
     },
     time::{Duration, Instant},
 };
+mod html;
 pub mod media;
+mod office;
+pub use office::Document;
 
 const IMAGE_BYTES: u64 = 64 * 1024 * 1024;
 const TEXT_BYTES: u64 = 128 * 1024;
@@ -22,6 +25,8 @@ pub enum Kind {
     Image,
     Svg,
     Pdf,
+    Docx,
+    Html,
     Text,
     Audio,
     Video,
@@ -39,15 +44,15 @@ impl Kind {
             "png" | "jpg" | "jpeg" | "gif" | "webp" | "bmp" | "tif" | "tiff" | "ico" => Self::Image,
             "svg" => Self::Svg,
             "pdf" => Self::Pdf,
+            "docx" => Self::Docx,
+            "html" | "htm" | "xhtml" => Self::Html,
             "mp3" | "wav" | "flac" | "ogg" | "oga" | "opus" | "m4a" | "aac" | "wma" | "aif"
             | "aiff" => Self::Audio,
             "mp4" | "mkv" | "webm" | "avi" | "mov" | "m4v" | "mpg" | "mpeg" | "ogv" | "wmv"
             | "flv" | "3gp" => Self::Video,
             "txt" | "md" | "markdown" | "log" | "csv" | "tsv" | "rs" | "py" | "js" | "ts"
             | "jsx" | "tsx" | "c" | "cpp" | "h" | "hpp" | "java" | "go" | "sh" | "json" | "xml"
-            | "html" | "htm" | "css" | "toml" | "yaml" | "yml" | "ini" | "conf" | "sql" | "rst" => {
-                Self::Text
-            }
+            | "css" | "toml" | "yaml" | "yml" | "ini" | "conf" | "sql" | "rst" => Self::Text,
             _ => Self::Unknown,
         }
     }
@@ -64,6 +69,7 @@ pub enum Content {
         pixels: Pixels,
         page: u32,
         pages: u32,
+        document: Option<Document>,
     },
     Text {
         text: String,
@@ -78,6 +84,21 @@ pub struct Job {
 }
 impl Job {
     pub fn start(path: PathBuf, page: u32, ctx: &eframe::egui::Context) -> Self {
+        Self::spawn(ctx, move |cancel| load(&path, page, cancel))
+    }
+    pub fn start_document(document: Document, page: u32, ctx: &eframe::egui::Context) -> Self {
+        // The closure owns the cache until the converter/page read exits.
+        Self::spawn(ctx, move |cancel| pdf(&document.path(), page, cancel))
+    }
+    pub fn start_html(path: PathBuf, ctx: &eframe::egui::Context) -> Self {
+        Self::spawn(ctx, move |cancel| {
+            converted_content(html::convert(&path, cancel)?, 1, cancel)
+        })
+    }
+    fn spawn(
+        ctx: &eframe::egui::Context,
+        render: impl FnOnce(&AtomicBool) -> io::Result<Content> + Send + 'static,
+    ) -> Self {
         let (send, result) = mpsc::channel();
         let cancelled = Arc::new(AtomicBool::new(false));
         let cancel = cancelled.clone();
@@ -85,7 +106,7 @@ impl Job {
         let locale = crate::i18n::current();
         std::thread::spawn(move || {
             crate::i18n::set_locale(locale);
-            let value = load(&path, page, &cancel);
+            let value = render(&cancel);
             if !cancel.load(Ordering::Acquire) {
                 let _ = send.send(value);
                 context.request_repaint();
@@ -164,6 +185,7 @@ fn load(path: &Path, page: u32, cancel: &AtomicBool) -> io::Result<Content> {
     check(cancel)?;
     match Kind::for_path(path) {
         Kind::Pdf => pdf(path, page, cancel),
+        Kind::Docx => converted_content(office::convert(path, cancel)?, page, cancel),
         Kind::Image | Kind::Svg => {
             let data = read_limited(path, IMAGE_BYTES, cancel)?;
             if data.len() as u64 > IMAGE_BYTES {
@@ -179,7 +201,7 @@ fn load(path: &Path, page: u32, cancel: &AtomicBool) -> io::Result<Content> {
             check(cancel)?;
             Ok(Content::Image(image))
         }
-        Kind::Text | Kind::Unknown => {
+        Kind::Text | Kind::Html | Kind::Unknown => {
             let data = read_limited(path, TEXT_BYTES, cancel)?;
             if data.contains(&0)
                 || Kind::for_path(path) == Kind::Unknown && std::str::from_utf8(&data).is_err()
@@ -195,6 +217,13 @@ fn load(path: &Path, page: u32, cancel: &AtomicBool) -> io::Result<Content> {
         }
         _ => Ok(Content::Unsupported),
     }
+}
+fn converted_content(converted: Document, page: u32, cancel: &AtomicBool) -> io::Result<Content> {
+    let mut content = pdf(&converted.path(), page, cancel)?;
+    if let Content::Pdf { document, .. } = &mut content {
+        *document = Some(converted);
+    }
+    Ok(content)
 }
 fn svg(data: &[u8]) -> io::Result<Pixels> {
     let mut options = resvg::usvg::Options::default();
@@ -239,26 +268,22 @@ fn svg(data: &[u8]) -> io::Result<Pixels> {
     })
 }
 fn command(command: &mut Command, cancel: &AtomicBool) -> io::Result<Vec<u8>> {
+    use std::os::unix::process::CommandExt;
     let mut out = tempfile::tempfile()?;
     let mut err = tempfile::tempfile()?;
     let mut child = command
+        .process_group(0)
         .stdin(Stdio::null())
         .stdout(out.try_clone()?)
         .stderr(err.try_clone()?)
         .env("LC_ALL", "C")
-        .spawn()
-        .map_err(|error| {
-            if error.kind() == io::ErrorKind::NotFound {
-                io::Error::other(crate::i18n::tr(
-                    "O preview de PDF requer Poppler (poppler-utils).",
-                ))
-            } else {
-                error
-            }
-        })?;
+        .spawn()?;
     let deadline = Instant::now() + Duration::from_secs(25);
     loop {
         if cancel.load(Ordering::Acquire) || Instant::now() >= deadline {
+            if let Some(pid) = rustix::process::Pid::from_raw(child.id() as i32) {
+                let _ = rustix::process::kill_process_group(pid, rustix::process::Signal::KILL);
+            }
             let _ = child.kill();
             let _ = child.wait();
             check(cancel)?;
@@ -284,7 +309,7 @@ fn command(command: &mut Command, cancel: &AtomicBool) -> io::Result<Vec<u8>> {
     Ok(bytes)
 }
 fn pdf(path: &Path, page: u32, cancel: &AtomicBool) -> io::Result<Content> {
-    let info = command(Command::new("pdfinfo").arg(path), cancel)?;
+    let info = pdf_command(Command::new("pdfinfo").arg(path), cancel)?;
     let pages = String::from_utf8_lossy(&info)
         .lines()
         .find_map(|line| {
@@ -300,7 +325,7 @@ fn pdf(path: &Path, page: u32, cancel: &AtomicBool) -> io::Result<Content> {
     let page = page.clamp(1, pages);
     let work = tempfile::tempdir()?;
     let prefix = work.path().join("page");
-    command(
+    pdf_command(
         Command::new("pdftoppm")
             .args([
                 "-f",
@@ -321,6 +346,20 @@ fn pdf(path: &Path, page: u32, cancel: &AtomicBool) -> io::Result<Content> {
         pixels: pixels(&data)?,
         page,
         pages,
+        document: None,
+    })
+}
+
+fn pdf_command(program: &mut Command, cancel: &AtomicBool) -> io::Result<Vec<u8>> {
+    command(program, cancel).map_err(|error| {
+        if error.kind() == io::ErrorKind::NotFound {
+            io::Error::new(
+                io::ErrorKind::Unsupported,
+                crate::i18n::tr("O preview de PDF requer Poppler (poppler-utils)."),
+            )
+        } else {
+            error
+        }
     })
 }
 

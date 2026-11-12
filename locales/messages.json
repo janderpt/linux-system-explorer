@@ -2114,5 +2114,37 @@
   "Não foi possível reproduzir este arquivo: {}": {
     "pt": "Não foi possível reproduzir este arquivo: {0}",
     "en": "Could not play this file: {0}"
+  },
+  "Pré-visualização não disponível para este tipo de arquivo: {}": {
+    "pt": "Pré-visualização não disponível para este tipo de arquivo: {0}",
+    "en": "Preview is not available for this file type: {0}"
+  },
+  "O documento excede o limite de tamanho da pré-visualização.": {
+    "pt": "O documento excede o limite de tamanho da pré-visualização.",
+    "en": "The document exceeds the preview size limit."
+  },
+  "O preview de DOCX requer LibreOffice Writer.": {
+    "pt": "O preview de DOCX requer LibreOffice Writer.",
+    "en": "DOCX preview requires LibreOffice Writer."
+  },
+  "Não foi possível converter o DOCX para pré-visualização.": {
+    "pt": "Não foi possível converter o DOCX para pré-visualização.",
+    "en": "Could not convert the DOCX for preview."
+  },
+  "O HTML excede o limite de tamanho da pré-visualização.": {
+    "pt": "O HTML excede o limite de tamanho da pré-visualização.",
+    "en": "The HTML exceeds the preview size limit."
+  },
+  "A apresentação de HTML requer WeasyPrint. O código-fonte continua disponível.": {
+    "pt": "A apresentação de HTML requer WeasyPrint. O código-fonte continua disponível.",
+    "en": "HTML presentation requires WeasyPrint. The source remains available."
+  },
+  "Fonte": {
+    "pt": "Fonte",
+    "en": "Source"
+  },
+  "Apresentação": {
+    "pt": "Apresentação",
+    "en": "Presentation"
   }
 }

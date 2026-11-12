@@ -2,6 +2,10 @@
 
 ## Unreleased — 0.1.0 experimental
 
+- Replace unavailable-preview popups with warning toasts, retaining plain-text detection for unknown extensions and graceful behavior when converters are absent.
+- Add formatted DOCX previews via an isolated LibreOffice Writer conversion with cached PDF pages. Combine PDF/document page navigation and zoom into one toolbar.
+- Add HTML Source/Presentation switching with static WeasyPrint rendering, cached pages, local-only resources and source fallback; declare document/HTML runtimes in native packages and CI.
+
 - Restore split sessions with each pane's folder, the active side and divider ratio, preserving pane identity after tab reordering and compatibility with older sessions.
 - Fit and center image/video previews; size video popups to the decoded aspect ratio with responsive controls instead of a fixed 16:9 canvas. A second Space press closes the preview; key repeat does not toggle it.
 
