@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<office:document xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:table="urn:oasis:names:tc:opendocument:xmlns:table:1.0" xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0" xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0" xmlns:fo="urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0" xmlns:number="urn:oasis:names:tc:opendocument:xmlns:datastyle:1.0" xmlns:of="urn:oasis:names:tc:opendocument:xmlns:of:1.2" office:version="1.2" office:mimetype="application/vnd.oasis.opendocument.spreadsheet">
+<office:automatic-styles>
+<style:style style:name="Column" style:family="table-column"><style:table-column-properties style:column-width="5cm"/></style:style>
+<number:number-style style:name="Decimals"><number:number number:decimal-places="2" number:min-integer-digits="1"/></number:number-style>
+<style:style style:name="Number" style:family="table-cell" style:data-style-name="Decimals"/>
+</office:automatic-styles>
+<office:body><office:spreadsheet>
+<table:table table:name="Sales"><table:table-column table:style-name="Column" table:number-columns-repeated="2"/>
+<table:table-row><table:table-cell office:value-type="string"><text:p>Product</text:p></table:table-cell><table:table-cell office:value-type="string"><text:p>Amount</text:p></table:table-cell></table:table-row>
+<table:table-row><table:table-cell office:value-type="string"><text:p>Apples</text:p></table:table-cell><table:table-cell table:style-name="Number" office:value-type="float" office:value="125.5"><text:p>125.50</text:p></table:table-cell></table:table-row>
+<table:table-row><table:table-cell office:value-type="string"><text:p>Pears</text:p></table:table-cell><table:table-cell table:style-name="Number" office:value-type="float" office:value="24.5"><text:p>24.50</text:p></table:table-cell></table:table-row>
+<table:table-row><table:table-cell office:value-type="string"><text:p>Total</text:p></table:table-cell><table:table-cell table:style-name="Number" table:formula="of:=SUM([.B2:.B3])" office:value-type="float" office:value="150"><text:p>150.00</text:p></table:table-cell></table:table-row>
+</table:table>
+<table:table table:name="Forecast"><table:table-column table:style-name="Column" table:number-columns-repeated="2"/>
+<table:table-row><table:table-cell office:value-type="string"><text:p>Second sheet preview</text:p></table:table-cell><table:table-cell office:value-type="string"><text:p>Forecast</text:p></table:table-cell></table:table-row>
+<table:table-row><table:table-cell office:value-type="string"><text:p>Next year</text:p></table:table-cell><table:table-cell office:value-type="float" office:value="200"><text:p>200</text:p></table:table-cell></table:table-row>
+</table:table>
+</office:spreadsheet></office:body></office:document>

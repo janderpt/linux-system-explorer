@@ -1,4 +1,4 @@
-//! DOCX conversion uses an isolated, disposable LibreOffice profile and source copy.
+//! Office previews use an isolated, disposable LibreOffice profile and source copy.
 use super::{check, command, read_limited};
 use std::{
     fs, io,
@@ -25,6 +25,29 @@ impl Document {
 }
 
 pub(super) fn convert(path: &Path, cancel: &AtomicBool) -> io::Result<Document> {
+    let (extension, filter, required) = match super::Kind::for_path(path) {
+        super::Kind::Docx => (
+            "docx",
+            "pdf:writer_pdf_Export",
+            "O preview de DOCX requer LibreOffice Writer.",
+        ),
+        super::Kind::Xlsx => (
+            "xlsx",
+            "pdf:calc_pdf_Export",
+            "O preview de XLSX requer LibreOffice Calc.",
+        ),
+        super::Kind::Pptx => (
+            "pptx",
+            "pdf:impress_pdf_Export",
+            "O preview de PPTX requer LibreOffice Impress.",
+        ),
+        _ => {
+            return Err(io::Error::new(
+                io::ErrorKind::Unsupported,
+                "Unsupported Office format",
+            ));
+        }
+    };
     const MAX_DOCUMENT_BYTES: u64 = 64 * 1024 * 1024;
     let data = read_limited(path, MAX_DOCUMENT_BYTES, cancel)?;
     if data.len() as u64 > MAX_DOCUMENT_BYTES {
@@ -49,9 +72,12 @@ pub(super) fn convert(path: &Path, cancel: &AtomicBool) -> io::Result<Document> 
 <item oor:path="/org.openoffice.Office.Writer/Content/Update">
 <prop oor:name="Link" oor:op="fuse"><value>2</value></prop>
 </item>
+<item oor:path="/org.openoffice.Office.Calc/Content/Update">
+<prop oor:name="Link" oor:op="fuse"><value>1</value></prop>
+</item>
 </oor:items>"#,
     )?;
-    let source = work.path().join("document.docx");
+    let source = work.path().join(format!("document.{extension}"));
     fs::write(&source, data)?;
     let profile = url::Url::from_directory_path(&profile)
         .map_err(|_| io::Error::other("Invalid LibreOffice profile path"))?;
@@ -67,9 +93,9 @@ pub(super) fn convert(path: &Path, cancel: &AtomicBool) -> io::Result<Document> 
                     "--nodefault",
                     "--norestore",
                     "--convert-to",
-                    "pdf:writer_pdf_Export",
-                    "--outdir",
                 ])
+                .arg(filter)
+                .arg("--outdir")
                 .arg(work.path())
                 .arg(&source)
                 .env("SAL_USE_VCLPLUGIN", "svp"),
@@ -87,14 +113,15 @@ pub(super) fn convert(path: &Path, cancel: &AtomicBool) -> io::Result<Document> 
     if !installed {
         return Err(io::Error::new(
             io::ErrorKind::Unsupported,
-            crate::i18n::tr("O preview de DOCX requer LibreOffice Writer."),
+            crate::i18n::tr(required),
         ));
     }
     check(cancel)?;
     let document = Document { work };
     if !document.path().is_file() {
-        return Err(io::Error::other(crate::i18n::tr(
-            "Não foi possível converter o DOCX para pré-visualização.",
+        return Err(io::Error::other(crate::i18n::message(
+            "Não foi possível converter o documento para pré-visualização. {}",
+            &[crate::i18n::tr(required).to_owned()],
         )));
     }
     Ok(document)

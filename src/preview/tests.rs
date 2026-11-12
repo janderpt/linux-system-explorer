@@ -190,6 +190,70 @@ pub(crate) fn test_docx(path: &Path) {
     std::fs::write(path, include_bytes!("fixtures/two-pages.docx")).unwrap();
 }
 
+pub(crate) fn test_office(path: &Path) {
+    let data: &[u8] = match path.extension().unwrap().to_str().unwrap() {
+        "docx" => include_bytes!("fixtures/two-pages.docx"),
+        "xlsx" => include_bytes!("fixtures/two-sheets.xlsx"),
+        "pptx" => include_bytes!("fixtures/two-slides.pptx"),
+        _ => panic!("unsupported test fixture"),
+    };
+    std::fs::write(path, data).unwrap();
+}
+
+#[test]
+fn spreadsheets_and_presentations_render_formatted_pages_without_changing_sources() {
+    if !office_available() {
+        return;
+    }
+    for (extension, expected) in [
+        ("xlsx", "Second sheet preview"),
+        ("pptx", "Second slide preview"),
+    ] {
+        let root = tempfile::tempdir().unwrap();
+        let source = root.path().join(format!("preview with spaces.{extension}"));
+        test_office(&source);
+        let before = std::fs::read(&source).unwrap();
+        let Content::Pdf {
+            pixels,
+            pages,
+            document: Some(document),
+            ..
+        } = load(&source, 1, &AtomicBool::new(false)).unwrap()
+        else {
+            panic!("formatted Office preview")
+        };
+        assert_eq!(pages, 2);
+        if extension == "pptx" {
+            assert!(pixels.width > pixels.height);
+        }
+        let cached = document.cached_path();
+        let output = Command::new("pdftotext")
+            .arg(&cached)
+            .arg("-")
+            .output()
+            .unwrap();
+        let text = String::from_utf8_lossy(&output.stdout)
+            .split_whitespace()
+            .collect::<Vec<_>>()
+            .join(" ");
+        assert!(text.contains(expected), "{text}");
+        if extension == "xlsx" {
+            assert!(
+                text.contains("Apples") && text.contains("150"),
+                "values and formulas: {text}"
+            );
+        }
+        assert!(matches!(
+            pdf(&cached, 2, &AtomicBool::new(false)).unwrap(),
+            Content::Pdf { page: 2, .. }
+        ));
+        assert_eq!(std::fs::read(&source).unwrap(), before);
+        assert_eq!(std::fs::read_dir(root.path()).unwrap().count(), 1);
+        drop(document);
+        assert!(!cached.exists());
+    }
+}
+
 #[test]
 fn docx_conversion_preserves_formatted_pages_source_and_releases_its_private_cache() {
     if !office_available() {
@@ -298,18 +362,114 @@ fn html_presentation_loads_local_css_without_javascript_or_network_requests() {
 }
 
 #[test]
+fn paginated_html_uses_print_styles_instead_of_screen_only_grid_layouts() {
+    if !html_available() {
+        return;
+    }
+    let root = tempfile::tempdir().unwrap();
+    let source = root.path().join("responsive.html");
+    std::fs::write(&source, r#"<!doctype html><meta charset="utf-8"><style>
+@media screen { .grid { display:grid; grid-template-columns:1fr 1fr } .print {display:none} }
+@media print { .grid {display:block} .screen {display:none} }
+</style><section class="grid"><article class="grid"><p class="screen">SCREEN_ONLY</p><p class="print">PRINT_LAYOUT</p></article></section>"#).unwrap();
+    let before = std::fs::read(&source).unwrap();
+    let document = html::convert(&source, &AtomicBool::new(false)).unwrap();
+    let output = Command::new("pdftotext")
+        .arg(document.cached_path())
+        .arg("-")
+        .output()
+        .unwrap();
+    let text = String::from_utf8_lossy(&output.stdout);
+    assert!(
+        text.contains("PRINT_LAYOUT") && !text.contains("SCREEN_ONLY"),
+        "{text}"
+    );
+    assert_eq!(std::fs::read(&source).unwrap(), before);
+}
+
+#[test]
+fn markdown_presentation_formats_headings_lists_tables_and_code_without_altering_source() {
+    if !html_available() {
+        return;
+    }
+    let root = tempfile::tempdir().unwrap();
+    let source = root.path().join("README.md");
+    std::fs::write(&source, "# Formatted Markdown\n\n- First list item\n- Second list item\n\n| Name | Count |\n| --- | ---: |\n| Alpha | 3 |\n\n```rust\nlet value = \"<tag>\";\n```\n\n<script>document.write('NOT_EXECUTED')</script>\n").unwrap();
+    let before = std::fs::read(&source).unwrap();
+    let document = html::convert(&source, &AtomicBool::new(false)).unwrap();
+    let Content::Pdf { pixels, .. } =
+        pdf(&document.cached_path(), 1, &AtomicBool::new(false)).unwrap()
+    else {
+        panic!("formatted Markdown")
+    };
+    assert!(pixels.height > pixels.width);
+    let output = Command::new("pdftotext")
+        .arg(document.cached_path())
+        .arg("-")
+        .output()
+        .unwrap();
+    let text = String::from_utf8_lossy(&output.stdout)
+        .split_whitespace()
+        .collect::<Vec<_>>()
+        .join(" ");
+    for expected in ["Formatted Markdown", "First list item", "Alpha", "<tag>"] {
+        assert!(text.contains(expected), "{text}");
+    }
+    assert!(!text.contains("# Formatted Markdown") && !text.contains("NOT_EXECUTED"));
+    assert_eq!(std::fs::read(&source).unwrap(), before);
+}
+
+#[test]
+fn html_render_failures_use_a_short_error_instead_of_a_traceback() {
+    const CHILD: &str = "LSE_TEST_HTML_RENDER_ERROR";
+    if std::env::var_os(CHILD).is_none() {
+        let fake = tempfile::tempdir().unwrap();
+        std::fs::write(fake.path().join("weasyprint.py"),"class HTML:\n def __init__(self, *args, **kwargs): raise AssertionError('layout assertion')\ndef default_url_fetcher(*args, **kwargs): pass\n").unwrap();
+        assert!(
+            Command::new(std::env::current_exe().unwrap())
+                .args([
+                    "--exact",
+                    "preview::tests::html_render_failures_use_a_short_error_instead_of_a_traceback",
+                    "--nocapture"
+                ])
+                .env(CHILD, "1")
+                .env("PYTHONPATH", fake.path())
+                .status()
+                .unwrap()
+                .success()
+        );
+        return;
+    }
+    let root = tempfile::tempdir().unwrap();
+    let source = root.path().join("index.html");
+    std::fs::write(&source, "<h1>content</h1>").unwrap();
+    let error = html::convert(&source, &AtomicBool::new(false))
+        .unwrap_err()
+        .to_string();
+    assert!(error.contains("código-fonte"), "{error}");
+    assert!(
+        !error.contains("Traceback")
+            && !error.contains("AssertionError")
+            && !error.contains("LSE_HTML"),
+        "{error}"
+    );
+}
+
+#[test]
 fn missing_preview_tools_only_disable_their_corresponding_renderer() {
     const CHILD: &str = "LSE_TEST_NO_PREVIEW_TOOLS";
     if std::env::var_os(CHILD).is_some() {
         let root = tempfile::tempdir().unwrap();
-        let docx = root.path().join("document.docx");
-        test_docx(&docx);
-        assert_eq!(
-            office::convert(&docx, &AtomicBool::new(false))
-                .unwrap_err()
-                .kind(),
-            io::ErrorKind::Unsupported
-        );
+        for extension in ["docx", "xlsx", "pptx"] {
+            let source = root.path().join(format!("document.{extension}"));
+            test_office(&source);
+            assert_eq!(
+                office::convert(&source, &AtomicBool::new(false))
+                    .unwrap_err()
+                    .kind(),
+                io::ErrorKind::Unsupported
+            );
+        }
         let html = root.path().join("index.html");
         std::fs::write(&html, "<h1>source</h1>").unwrap();
         assert_eq!(
@@ -320,6 +480,18 @@ fn missing_preview_tools_only_disable_their_corresponding_renderer() {
         );
         assert!(matches!(
             load(&html, 1, &AtomicBool::new(false)).unwrap(),
+            Content::Text { .. }
+        ));
+        let markdown = root.path().join("README.md");
+        std::fs::write(&markdown, "# source").unwrap();
+        assert_eq!(
+            html::convert(&markdown, &AtomicBool::new(false))
+                .unwrap_err()
+                .kind(),
+            io::ErrorKind::Unsupported
+        );
+        assert!(matches!(
+            load(&markdown, 1, &AtomicBool::new(false)).unwrap(),
             Content::Text { .. }
         ));
         return;

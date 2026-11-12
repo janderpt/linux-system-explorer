@@ -2146,5 +2146,41 @@
   "Apresentação": {
     "pt": "Apresentação",
     "en": "Presentation"
+  },
+  "O preview de XLSX requer LibreOffice Calc.": {
+    "pt": "O preview de XLSX requer LibreOffice Calc.",
+    "en": "XLSX preview requires LibreOffice Calc."
+  },
+  "O preview de PPTX requer LibreOffice Impress.": {
+    "pt": "O preview de PPTX requer LibreOffice Impress.",
+    "en": "PPTX preview requires LibreOffice Impress."
+  },
+  "Não foi possível converter o documento para pré-visualização. {}": {
+    "pt": "Não foi possível converter o documento para pré-visualização. {0}",
+    "en": "Could not convert the document for preview. {0}"
+  },
+  "Não foi possível apresentar este HTML. O código-fonte continua disponível.": {
+    "pt": "Não foi possível apresentar este HTML. O código-fonte continua disponível.",
+    "en": "Could not present this HTML. The source remains available."
+  },
+  "Slide anterior": {
+    "pt": "Slide anterior",
+    "en": "Previous slide"
+  },
+  "Próximo slide": {
+    "pt": "Próximo slide",
+    "en": "Next slide"
+  },
+  "Slide {} de {}": {
+    "pt": "Slide {0} de {1}",
+    "en": "Slide {0} of {1}"
+  },
+  "A apresentação requer WeasyPrint. O código-fonte continua disponível.": {
+    "pt": "A apresentação requer WeasyPrint. O código-fonte continua disponível.",
+    "en": "Presentation requires WeasyPrint. The source remains available."
+  },
+  "Não foi possível apresentar este Markdown. O código-fonte continua disponível.": {
+    "pt": "Não foi possível apresentar este Markdown. O código-fonte continua disponível.",
+    "en": "Could not present this Markdown. The source remains available."
   }
 }

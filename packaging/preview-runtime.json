@@ -34,11 +34,14 @@
   "embedded": [
     "Raster image decoders",
     "SVG renderer",
-    "Bounded plain-text reader"
+    "Bounded plain-text reader",
+    "CommonMark parser"
   ],
   "office": {
     "debian": [
       "libreoffice-writer",
+      "libreoffice-calc",
+      "libreoffice-impress",
       "fonts-liberation"
     ],
     "executable_alternatives": [

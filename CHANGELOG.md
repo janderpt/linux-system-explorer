@@ -2,6 +2,10 @@
 
 ## Unreleased — 0.1.0 experimental
 
+- Add XLSX print-layout previews via LibreOffice Calc and static PPTX previews via Impress, with cached page/slide navigation and declared runtime dependencies.
+- Add Markdown Source/Presentation views with formatted headings, lists, tables and code, using the bundled CommonMark parser and the existing presentation engine.
+- Fix HTML presentation failures caused by applying screen layouts to paginated output: honor print styles, retain source fallback and replace Python tracebacks with concise localized errors.
+
 - Replace unavailable-preview popups with warning toasts, retaining plain-text detection for unknown extensions and graceful behavior when converters are absent.
 - Add formatted DOCX previews via an isolated LibreOffice Writer conversion with cached PDF pages. Combine PDF/document page navigation and zoom into one toolbar.
 - Add HTML Source/Presentation switching with static WeasyPrint rendering, cached pages, local-only resources and source fallback; declare document/HTML runtimes in native packages and CI.

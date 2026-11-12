@@ -26,7 +26,10 @@ pub enum Kind {
     Svg,
     Pdf,
     Docx,
+    Xlsx,
+    Pptx,
     Html,
+    Markdown,
     Text,
     Audio,
     Video,
@@ -45,14 +48,17 @@ impl Kind {
             "svg" => Self::Svg,
             "pdf" => Self::Pdf,
             "docx" => Self::Docx,
+            "xlsx" => Self::Xlsx,
+            "pptx" => Self::Pptx,
             "html" | "htm" | "xhtml" => Self::Html,
+            "md" | "markdown" => Self::Markdown,
             "mp3" | "wav" | "flac" | "ogg" | "oga" | "opus" | "m4a" | "aac" | "wma" | "aif"
             | "aiff" => Self::Audio,
             "mp4" | "mkv" | "webm" | "avi" | "mov" | "m4v" | "mpg" | "mpeg" | "ogv" | "wmv"
             | "flv" | "3gp" => Self::Video,
-            "txt" | "md" | "markdown" | "log" | "csv" | "tsv" | "rs" | "py" | "js" | "ts"
-            | "jsx" | "tsx" | "c" | "cpp" | "h" | "hpp" | "java" | "go" | "sh" | "json" | "xml"
-            | "css" | "toml" | "yaml" | "yml" | "ini" | "conf" | "sql" | "rst" => Self::Text,
+            "txt" | "log" | "csv" | "tsv" | "rs" | "py" | "js" | "ts" | "jsx" | "tsx" | "c"
+            | "cpp" | "h" | "hpp" | "java" | "go" | "sh" | "json" | "xml" | "css" | "toml"
+            | "yaml" | "yml" | "ini" | "conf" | "sql" | "rst" => Self::Text,
             _ => Self::Unknown,
         }
     }
@@ -90,7 +96,7 @@ impl Job {
         // The closure owns the cache until the converter/page read exits.
         Self::spawn(ctx, move |cancel| pdf(&document.path(), page, cancel))
     }
-    pub fn start_html(path: PathBuf, ctx: &eframe::egui::Context) -> Self {
+    pub fn start_markup(path: PathBuf, ctx: &eframe::egui::Context) -> Self {
         Self::spawn(ctx, move |cancel| {
             converted_content(html::convert(&path, cancel)?, 1, cancel)
         })
@@ -185,7 +191,9 @@ fn load(path: &Path, page: u32, cancel: &AtomicBool) -> io::Result<Content> {
     check(cancel)?;
     match Kind::for_path(path) {
         Kind::Pdf => pdf(path, page, cancel),
-        Kind::Docx => converted_content(office::convert(path, cancel)?, page, cancel),
+        Kind::Docx | Kind::Xlsx | Kind::Pptx => {
+            converted_content(office::convert(path, cancel)?, page, cancel)
+        }
         Kind::Image | Kind::Svg => {
             let data = read_limited(path, IMAGE_BYTES, cancel)?;
             if data.len() as u64 > IMAGE_BYTES {
@@ -201,7 +209,7 @@ fn load(path: &Path, page: u32, cancel: &AtomicBool) -> io::Result<Content> {
             check(cancel)?;
             Ok(Content::Image(image))
         }
-        Kind::Text | Kind::Html | Kind::Unknown => {
+        Kind::Text | Kind::Html | Kind::Markdown | Kind::Unknown => {
             let data = read_limited(path, TEXT_BYTES, cancel)?;
             if data.contains(&0)
                 || Kind::for_path(path) == Kind::Unknown && std::str::from_utf8(&data).is_err()

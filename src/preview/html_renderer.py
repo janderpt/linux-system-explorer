@@ -27,6 +27,18 @@ def local_resource(url, *args, **kwargs):
 
 # WeasyPrint renders HTML/CSS without a JavaScript engine. The fetcher prevents
 # network requests and local references outside this document's directory.
-with snapshot.open("rb") as source:
-    HTML(file_obj=source, base_url=original.resolve().as_uri(),
-         url_fetcher=local_resource, media_type="screen").write_pdf(str(output))
+try:
+    # This output is paginated. Screen-only grids/flex layouts can fail when
+    # fragmented across PDF pages; honor the document's print styles instead.
+    with snapshot.open("rb") as source:
+        HTML(file_obj=source, base_url=original.resolve().as_uri(),
+             url_fetcher=local_resource, media_type="print").write_pdf(str(output))
+except Exception:
+    # Keep library tracebacks out of user-facing toasts. Rust supplies the
+    # localized message and preserves the source view.
+    try:
+        output.with_suffix(".error").write_text("render-failed", encoding="utf-8")
+    except OSError:
+        pass
+    print("LSE_HTML_RENDER_FAILED", file=sys.stderr)
+    raise SystemExit(1)

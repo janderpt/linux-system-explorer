@@ -24,6 +24,8 @@ class PreviewRuntimeTests(unittest.TestCase):
         self.assertIn("gstreamer1.0-libav", depends)
         self.assertIn("poppler-utils", depends)
         self.assertIn("libreoffice-writer", depends)
+        self.assertIn("libreoffice-calc", depends)
+        self.assertIn("libreoffice-impress", depends)
         self.assertIn("weasyprint", depends)
 
 

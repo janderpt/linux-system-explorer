@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<office:document xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:draw="urn:oasis:names:tc:opendocument:xmlns:drawing:1.0" xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0" xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0" xmlns:fo="urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0" xmlns:svg="urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0" office:version="1.2" office:mimetype="application/vnd.oasis.opendocument.presentation">
+<office:automatic-styles>
+<style:page-layout style:name="Page"><style:page-layout-properties fo:page-width="28cm" fo:page-height="15.75cm" style:print-orientation="landscape"/></style:page-layout>
+<style:style style:name="Title" style:family="paragraph"><style:text-properties fo:font-size="28pt" fo:font-weight="bold" fo:color="#2060A0"/></style:style>
+<style:style style:name="Body" style:family="paragraph"><style:text-properties fo:font-size="20pt"/></style:style>
+</office:automatic-styles>
+<office:master-styles><style:master-page style:name="Default" style:page-layout-name="Page"/></office:master-styles>
+<office:body><office:presentation>
+<draw:page draw:name="First" draw:master-page-name="Default">
+<draw:frame svg:x="1cm" svg:y="1cm" svg:width="26cm" svg:height="3cm"><draw:text-box><text:p text:style-name="Title">First slide preview</text:p></draw:text-box></draw:frame>
+<draw:frame svg:x="1cm" svg:y="5cm" svg:width="26cm" svg:height="4cm"><draw:text-box><text:p text:style-name="Body">Formatted presentation</text:p></draw:text-box></draw:frame>
+</draw:page>
+<draw:page draw:name="Second" draw:master-page-name="Default">
+<draw:frame svg:x="1cm" svg:y="1cm" svg:width="26cm" svg:height="3cm"><draw:text-box><text:p text:style-name="Title">Second slide preview</text:p></draw:text-box></draw:frame>
+<draw:frame svg:x="1cm" svg:y="5cm" svg:width="26cm" svg:height="4cm"><draw:text-box><text:p text:style-name="Body">Second slide content</text:p></draw:text-box></draw:frame>
+</draw:page>
+</office:presentation></office:body></office:document>

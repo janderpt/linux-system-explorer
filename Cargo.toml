@@ -38,6 +38,7 @@ wayland-client = { version = "0.31.15", features = ["system"] }
 wayland-protocols = { version = "0.32.13", features = ["client", "staging"] }
 portable-pty = "0.9.0"
 vt100 = "0.18.1"
+pulldown-cmark = { version = "0.13", default-features = false, features = ["html"] }
 
 [profile.release]
 lto = "thin"

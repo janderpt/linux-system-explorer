@@ -184,76 +184,92 @@ fn unknown_extensions_still_preview_text_after_the_background_probe() {
 }
 
 #[test]
-fn html_switches_between_source_and_presentation_and_reuses_the_rendered_cache() {
+fn markup_switches_between_source_and_presentation_and_reuses_the_rendered_cache() {
     if !crate::preview::tests::html_available() {
         return;
     }
-    let root = tempfile::tempdir().unwrap();
-    let file = root.path().join("index.html");
-    std::fs::write(
-        &file,
-        "<!doctype html><meta charset=utf-8><h1>HTML preview</h1><p>Formatted content</p>",
-    )
-    .unwrap();
-    let before = std::fs::read(&file).unwrap();
-    let ctx = egui::Context::default();
-    let mut app = Explorer::with_context(&ctx, root.path().into());
-    complete_navigation(&mut app);
-    app.request_preview(file.clone(), &ctx);
-    wait(&mut app, &ctx);
-    let output = render(&mut app, &ctx, vec![]);
-    assert!(text_center(&output, "Fonte").is_some());
-    assert!(app.preview.as_ref().unwrap().texture.is_none());
-    for label in ["Apresentação", "Fonte", "Apresentação"] {
-        let output = render(&mut app, &ctx, vec![]);
-        let position = text_center(&output, label).unwrap();
-        for pressed in [true, false] {
-            render(
-                &mut app,
-                &ctx,
-                vec![
-                    Event::PointerMoved(position),
-                    Event::PointerButton {
-                        pos: position,
-                        button: PointerButton::Primary,
-                        pressed,
-                        modifiers: Modifiers::NONE,
-                    },
-                ],
-            );
-        }
+    for (name, source, marker) in [
+        (
+            "index.html",
+            "<!doctype html><meta charset=utf-8><h1>HTML preview</h1><p>Formatted content</p>",
+            "<h1>",
+        ),
+        (
+            "README.md",
+            "# Markdown preview\n\n- Formatted list item\n",
+            "# Markdown",
+        ),
+    ] {
+        let root = tempfile::tempdir().unwrap();
+        let file = root.path().join(name);
+        std::fs::write(&file, source).unwrap();
+        let before = std::fs::read(&file).unwrap();
+        let ctx = egui::Context::default();
+        let mut app = Explorer::with_context(&ctx, root.path().into());
+        complete_navigation(&mut app);
+        app.request_preview(file.clone(), &ctx);
         wait(&mut app, &ctx);
-        let preview = app.preview.as_ref().unwrap();
-        if label == "Fonte" {
-            assert!(
-                matches!(&preview.content,Some(Content::Text{text,..}) if text.contains("<h1>"))
-            );
-            assert!(preview.texture.is_none());
-        } else {
-            assert!(preview.texture.is_some());
+        let output = render(&mut app, &ctx, vec![]);
+        assert!(text_center(&output, "Fonte").is_some());
+        assert!(app.preview.as_ref().unwrap().texture.is_none());
+        let mut initial_cache = None;
+        for label in ["Apresentação", "Fonte", "Apresentação"] {
+            let output = render(&mut app, &ctx, vec![]);
+            let position = text_center(&output, label).unwrap();
+            for pressed in [true, false] {
+                render(
+                    &mut app,
+                    &ctx,
+                    vec![
+                        Event::PointerMoved(position),
+                        Event::PointerButton {
+                            pos: position,
+                            button: PointerButton::Primary,
+                            pressed,
+                            modifiers: Modifiers::NONE,
+                        },
+                    ],
+                );
+            }
+            wait(&mut app, &ctx);
+            let preview = app.preview.as_ref().unwrap();
+            if label == "Fonte" {
+                assert!(
+                    matches!(&preview.content,Some(Content::Text{text,..}) if text.contains(marker))
+                );
+                assert!(preview.texture.is_none());
+            } else {
+                assert!(preview.texture.is_some());
+                let cache = preview.document.as_ref().unwrap().cached_path();
+                if let Some(initial) = &initial_cache {
+                    assert_eq!(initial, &cache);
+                } else {
+                    initial_cache = Some(cache);
+                }
+            }
         }
+        let cache = app
+            .preview
+            .as_ref()
+            .unwrap()
+            .document
+            .as_ref()
+            .unwrap()
+            .cached_path();
+        render(&mut app, &ctx, vec![key(Key::Space)]);
+        assert!(app.preview.is_none());
+        assert!(!cache.exists());
+        assert_eq!(std::fs::read(&file).unwrap(), before);
     }
-    let cache = app
-        .preview
-        .as_ref()
-        .unwrap()
-        .document
-        .as_ref()
-        .unwrap()
-        .cached_path();
-    render(&mut app, &ctx, vec![key(Key::Space)]);
-    assert!(app.preview.is_none());
-    assert!(!cache.exists());
-    assert_eq!(std::fs::read(&file).unwrap(), before);
 }
 
 #[test]
-fn absent_converters_warn_and_leave_html_source_and_file_navigation_usable() {
+fn absent_converters_warn_and_leave_markup_source_and_file_navigation_usable() {
     const CHILD: &str = "LSE_TEST_PREVIEW_UI_NO_TOOLS";
     if std::env::var_os(CHILD).is_none() {
         let empty = tempfile::tempdir().unwrap();
         assert!(std::process::Command::new(std::env::current_exe().unwrap())
-            .args(["--exact","app::preview::tests::absent_converters_warn_and_leave_html_source_and_file_navigation_usable","--nocapture"])
+            .args(["--exact","app::preview::tests::absent_converters_warn_and_leave_markup_source_and_file_navigation_usable","--nocapture"])
             .env(CHILD,"1").env("PATH",empty.path()).status().unwrap().success());
         return;
     }
@@ -278,12 +294,12 @@ fn absent_converters_warn_and_leave_html_source_and_file_navigation_usable() {
     app.preview
         .as_mut()
         .unwrap()
-        .switch_html_view(HtmlView::Presentation, &ctx);
+        .switch_markup_view(MarkupView::Presentation, &ctx);
     wait(&mut app, &ctx);
     assert!(
         app.preview
             .as_ref()
-            .is_some_and(|p| p.html_view == HtmlView::Source)
+            .is_some_and(|p| p.markup_view == MarkupView::Source)
     );
     assert!(
         matches!(&app.preview.as_ref().unwrap().content,Some(Content::Text{text,..}) if text.contains("<h1>source</h1>"))
@@ -358,58 +374,68 @@ fn pdf_preview_changes_pages_and_keeps_the_source_unchanged() {
 }
 
 #[test]
-fn docx_preview_uses_formatted_pages_and_reuses_the_conversion_when_navigating() {
+fn office_previews_use_formatted_pages_and_reuse_the_conversion_when_navigating() {
     if !crate::preview::tests::office_available() {
         return;
     }
-    let root = tempfile::tempdir().unwrap();
-    let file = root.path().join("document.docx");
-    crate::preview::tests::test_docx(&file);
-    let before = std::fs::read(&file).unwrap();
-    let ctx = egui::Context::default();
-    let mut app = Explorer::with_context(&ctx, root.path().into());
-    complete_navigation(&mut app);
-    app.request_preview(file.clone(), &ctx);
-    wait(&mut app, &ctx);
-    let preview = app.preview.as_ref().expect("DOCX preview remains open");
-    assert_eq!(preview.pages, 2);
-    let cache = preview.document.as_ref().unwrap().cached_path();
-    let converted = std::fs::read(&cache).unwrap();
-    let output = render(&mut app, &ctx, vec![]);
-    let position = text_center(&output, "Próxima página").unwrap();
-    assert!((position.y - text_center(&output, "Ajustar à janela").unwrap().y).abs() < 1.0);
-    for pressed in [true, false] {
-        render(
-            &mut app,
-            &ctx,
-            vec![
-                Event::PointerMoved(position),
-                Event::PointerButton {
-                    pos: position,
-                    button: PointerButton::Primary,
-                    pressed,
-                    modifiers: Modifiers::NONE,
-                },
-            ],
+    for extension in ["docx", "xlsx", "pptx"] {
+        let root = tempfile::tempdir().unwrap();
+        let file = root.path().join(format!("document.{extension}"));
+        crate::preview::tests::test_office(&file);
+        let before = std::fs::read(&file).unwrap();
+        let ctx = egui::Context::default();
+        let mut app = Explorer::with_context(&ctx, root.path().into());
+        complete_navigation(&mut app);
+        app.request_preview(file.clone(), &ctx);
+        wait(&mut app, &ctx);
+        let preview = app.preview.as_ref().expect("Office preview remains open");
+        assert_eq!(preview.pages, 2);
+        let cache = preview.document.as_ref().unwrap().cached_path();
+        let converted = std::fs::read(&cache).unwrap();
+        let output = render(&mut app, &ctx, vec![]);
+        let label = if extension == "pptx" {
+            "Próximo slide"
+        } else {
+            "Próxima página"
+        };
+        let position = text_center(&output, label).unwrap();
+        if extension == "pptx" {
+            assert!(text_center(&output, "Slide 1 de 2").is_some());
+        }
+        assert!((position.y - text_center(&output, "Ajustar à janela").unwrap().y).abs() < 1.0);
+        for pressed in [true, false] {
+            render(
+                &mut app,
+                &ctx,
+                vec![
+                    Event::PointerMoved(position),
+                    Event::PointerButton {
+                        pos: position,
+                        button: PointerButton::Primary,
+                        pressed,
+                        modifiers: Modifiers::NONE,
+                    },
+                ],
+            );
+        }
+        wait(&mut app, &ctx);
+        assert_eq!(app.preview.as_ref().unwrap().page, 2);
+        assert_eq!(
+            app.preview
+                .as_ref()
+                .unwrap()
+                .document
+                .as_ref()
+                .unwrap()
+                .cached_path(),
+            cache
         );
+        assert_eq!(std::fs::read(&cache).unwrap(), converted);
+        render(&mut app, &ctx, vec![key(Key::Space)]);
+        assert!(app.preview.is_none());
+        assert!(!cache.exists());
+        assert_eq!(std::fs::read(&file).unwrap(), before);
     }
-    wait(&mut app, &ctx);
-    assert_eq!(app.preview.as_ref().unwrap().page, 2);
-    assert_eq!(
-        app.preview
-            .as_ref()
-            .unwrap()
-            .document
-            .as_ref()
-            .unwrap()
-            .cached_path(),
-        cache
-    );
-    assert_eq!(std::fs::read(&cache).unwrap(), converted);
-    render(&mut app, &ctx, vec![key(Key::Space)]);
-    assert!(app.preview.is_none());
-    assert!(!cache.exists());
-    assert_eq!(std::fs::read(&file).unwrap(), before);
 }
 
 #[test]

@@ -22,7 +22,7 @@ pub(super) fn consume_space(ctx: &egui::Context) -> bool {
 }
 
 #[derive(Clone, Copy, PartialEq)]
-enum HtmlView {
+enum MarkupView {
     Source,
     Presentation,
 }
@@ -33,8 +33,8 @@ pub(super) struct Preview {
     job: Option<Job>,
     content: Option<Content>,
     document: Option<Document>,
-    html_view: HtmlView,
-    html_source: Option<(String, bool)>,
+    markup_view: MarkupView,
+    markup_source: Option<(String, bool)>,
     texture: Option<egui::TextureHandle>,
     media: Option<Session>,
     playback: Snapshot,
@@ -60,8 +60,8 @@ impl Preview {
             playback: Snapshot::default(),
             content: None,
             document: None,
-            html_view: HtmlView::Source,
-            html_source: None,
+            markup_view: MarkupView::Source,
+            markup_source: None,
             texture: None,
             page: 1,
             pages: 1,
@@ -95,18 +95,18 @@ impl Preview {
         self.content = None;
         self.failed = false;
     }
-    fn switch_html_view(&mut self, view: HtmlView, ctx: &egui::Context) {
-        if self.html_view == view {
+    fn switch_markup_view(&mut self, view: MarkupView, ctx: &egui::Context) {
+        if self.markup_view == view {
             return;
         }
-        self.html_view = view;
+        self.markup_view = view;
         self.job = None;
         self.content = None;
         self.texture = None;
         self.failed = false;
         match view {
-            HtmlView::Source => {
-                if let Some((text, truncated)) = &self.html_source {
+            MarkupView::Source => {
+                if let Some((text, truncated)) = &self.markup_source {
                     self.content = Some(Content::Text {
                         text: text.clone(),
                         truncated: *truncated,
@@ -115,11 +115,11 @@ impl Preview {
                     self.job = Some(Job::start(self.path.clone(), 1, ctx));
                 }
             }
-            HtmlView::Presentation => {
+            MarkupView::Presentation => {
                 if self.document.is_some() {
                     self.load_page(self.page, ctx);
                 } else {
-                    self.job = Some(Job::start_html(self.path.clone(), ctx));
+                    self.job = Some(Job::start_markup(self.path.clone(), ctx));
                 }
             }
         }
@@ -155,8 +155,8 @@ impl Preview {
                         self.image(pixels, ctx);
                     }
                     Content::Text { text, truncated } => {
-                        if self.kind == Kind::Html {
-                            self.html_source = Some((text.clone(), truncated));
+                        if matches!(self.kind, Kind::Html | Kind::Markdown) {
+                            self.markup_source = Some((text.clone(), truncated));
                         }
                         self.content = Some(Content::Text { text, truncated });
                     }
@@ -202,17 +202,17 @@ impl Preview {
             });
     }
     fn body(&mut self, ui: &mut egui::Ui, height: f32, ctx: &egui::Context) -> Option<String> {
-        if self.kind == Kind::Html {
-            let mut view = self.html_view;
+        if matches!(self.kind, Kind::Html | Kind::Markdown) {
+            let mut view = self.markup_view;
             ui.horizontal(|ui| {
-                ui.selectable_value(&mut view, HtmlView::Source, crate::i18n::tr("Fonte"));
+                ui.selectable_value(&mut view, MarkupView::Source, crate::i18n::tr("Fonte"));
                 ui.selectable_value(
                     &mut view,
-                    HtmlView::Presentation,
+                    MarkupView::Presentation,
                     crate::i18n::tr("Apresentação"),
                 );
             });
-            self.switch_html_view(view, ctx);
+            self.switch_markup_view(view, ctx);
         }
         if let Some(media) = &self.media {
             let error = self.playback.error.take();
@@ -283,25 +283,38 @@ impl Preview {
             ctx.request_repaint_after(std::time::Duration::from_millis(100));
             return error;
         }
-        let paginated = matches!(self.kind, Kind::Pdf | Kind::Docx)
-            || self.kind == Kind::Html && self.html_view == HtmlView::Presentation;
+        let paginated = matches!(self.kind, Kind::Pdf | Kind::Docx | Kind::Xlsx | Kind::Pptx)
+            || matches!(self.kind, Kind::Html | Kind::Markdown)
+                && self.markup_view == MarkupView::Presentation;
         if paginated || self.texture.is_some() {
             ui.horizontal(|ui| {
                 if paginated {
                     let previous = ui
                         .add_enabled(
                             self.page > 1 && self.job.is_none(),
-                            egui::Button::new(crate::i18n::tr("Página anterior")),
+                            egui::Button::new(crate::i18n::tr(if self.kind == Kind::Pptx {
+                                "Slide anterior"
+                            } else {
+                                "Página anterior"
+                            })),
                         )
                         .clicked();
                     ui.label(crate::i18n::message(
-                        "Página {} de {}",
+                        if self.kind == Kind::Pptx {
+                            "Slide {} de {}"
+                        } else {
+                            "Página {} de {}"
+                        },
                         &[self.page.to_string(), self.pages.to_string()],
                     ));
                     let next = ui
                         .add_enabled(
                             self.page < self.pages && self.job.is_none(),
-                            egui::Button::new(crate::i18n::tr("Próxima página")),
+                            egui::Button::new(crate::i18n::tr(if self.kind == Kind::Pptx {
+                                "Próximo slide"
+                            } else {
+                                "Próxima página"
+                            })),
                         )
                         .clicked();
                     if previous {
@@ -437,8 +450,10 @@ impl Explorer {
                     &[error.to_string()],
                 ));
             }
-            if preview.kind == Kind::Html && preview.html_view == HtmlView::Presentation {
-                preview.switch_html_view(HtmlView::Source, ctx);
+            if matches!(preview.kind, Kind::Html | Kind::Markdown)
+                && preview.markup_view == MarkupView::Presentation
+            {
+                preview.switch_markup_view(MarkupView::Source, ctx);
             } else {
                 return;
             }
