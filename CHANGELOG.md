@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add a configurable Drives sidebar with background UDisks2 volume discovery, capacity/free-space usage, revalidated mount/open, no-force unmount and safe eject/power-off through desktop Polkit; share inventory across tabs/panes, refresh after changes, protect system volumes, and handle busy/denied/cancelled operations without leaving stale directory views.
+
 - Add per-folder Font Awesome icons and exact colors through Properties → Appearance and a Customize folder context shortcut; save atomically, share across tabs/panes, preserve overrides across theme/icon-mode changes and folder renames, and restore only the chosen folder with Apply/Cancel support.
 
 - Fix KDE printing by obtaining fresh settings/confirmation with PreparePrint before Print; reject missing/malformed tokens, never reuse earlier printer configuration and ensure cancellation or preparation failure sends no document. Add a safe manual settings-only smoke test for the actual desktop portal.

@@ -28,6 +28,7 @@ mod system_style;
 mod terminal;
 mod transfers;
 mod trashbin;
+mod volumes;
 mod windows;
 
 use std::path::PathBuf;

@@ -38,6 +38,10 @@ impl Editor {
             &mut self.draft.sidebar.show_trash,
             crate::i18n::tr("Exibir Lixeira"),
         );
+        ui.checkbox(
+            &mut self.draft.sidebar.show_volumes,
+            crate::i18n::tr("Exibir seção Unidades"),
+        );
         ui.separator();
         ui.checkbox(
             &mut self.draft.sidebar.show_pinned,

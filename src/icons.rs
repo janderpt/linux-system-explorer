@@ -24,6 +24,9 @@ pub enum Icon {
     Music,
     Video,
     Drive,
+    MountVolume,
+    UnmountVolume,
+    EjectVolume,
     Mount,
     Removable,
     Edit,
@@ -101,7 +104,7 @@ pub enum Icon {
 }
 
 impl Icon {
-    pub const ALL: [Self; 90] = [
+    pub const ALL: [Self; 93] = [
         Self::Applications,
         Self::SoftwareManager,
         Self::Print,
@@ -118,6 +121,9 @@ impl Icon {
         Self::Music,
         Self::Video,
         Self::Drive,
+        Self::MountVolume,
+        Self::UnmountVolume,
+        Self::EjectVolume,
         Self::Mount,
         Self::Removable,
         Self::Back,
@@ -197,6 +203,9 @@ impl Icon {
     pub fn label(self) -> &'static str {
         match self {
             Self::CustomizeFolder => crate::i18n::tr("Personalizar pasta…"),
+            Self::MountVolume => crate::i18n::tr("Montar e abrir"),
+            Self::UnmountVolume => crate::i18n::tr("Desmontar"),
+            Self::EjectVolume => crate::i18n::tr("Ejetar com segurança"),
             Self::Applications => crate::i18n::tr("Aplicativos"),
             Self::SoftwareManager => crate::i18n::tr("Gerenciador de software"),
             Self::Print => crate::i18n::tr("Imprimir…"),
@@ -324,6 +333,9 @@ impl Icon {
             Self::Moon => "moon",
             Self::Folder => "folder",
             Self::CustomizeFolder => "palette",
+            Self::MountVolume => "hard-drive",
+            Self::UnmountVolume => "arrow-up-from-bracket",
+            Self::EjectVolume => "eject",
             Self::File => "file",
             Self::Link => "link",
             Self::Back => "arrow-left",

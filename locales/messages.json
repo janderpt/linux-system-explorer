@@ -2654,5 +2654,105 @@
   "Não foi possível salvar a aparência da pasta: {}": {
     "pt": "Não foi possível salvar a aparência da pasta: {0}",
     "en": "Could not save folder appearance: {0}"
+  },
+  "{} livres de {}": {
+    "pt": "{0} livres de {1}",
+    "en": "{0} free of {1}"
+  },
+  "{} · espaço livre indisponível": {
+    "pt": "{0} · espaço livre indisponível",
+    "en": "{0} · free space unavailable"
+  },
+  "{} · Desmontado": {
+    "pt": "{0} · Desmontado",
+    "en": "{0} · Unmounted"
+  },
+  "A unidade mudou ou foi desconectada. Atualize a lista.": {
+    "pt": "A unidade mudou ou foi desconectada. Atualize a lista.",
+    "en": "The volume changed or was disconnected. Refresh the list."
+  },
+  "Não é possível desmontar este volume do sistema.": {
+    "pt": "Não é possível desmontar este volume do sistema.",
+    "en": "This system volume cannot be unmounted."
+  },
+  "Esta unidade não permite ejeção segura.": {
+    "pt": "Esta unidade não permite ejeção segura.",
+    "en": "This drive does not support safe removal."
+  },
+  "Esta unidade contém volumes essenciais do sistema.": {
+    "pt": "Esta unidade contém volumes essenciais do sistema.",
+    "en": "This drive contains essential system volumes."
+  },
+  "A atualização das unidades foi interrompida.": {
+    "pt": "A atualização das unidades foi interrompida.",
+    "en": "The volume refresh was interrupted."
+  },
+  "Não foi possível listar as unidades: {}": {
+    "pt": "Não foi possível listar as unidades: {0}",
+    "en": "Could not list volumes: {0}"
+  },
+  "A operação da unidade foi interrompida.": {
+    "pt": "A operação da unidade foi interrompida.",
+    "en": "The volume operation was interrupted."
+  },
+  "Unidade ejetada: {}": {
+    "pt": "Unidade ejetada: {0}",
+    "en": "Drive safely removed: {0}"
+  },
+  "Volume desmontado: {}": {
+    "pt": "Volume desmontado: {0}",
+    "en": "Volume unmounted: {0}"
+  },
+  "Não foi possível concluir a operação da unidade: {}": {
+    "pt": "Não foi possível concluir a operação da unidade: {0}",
+    "en": "Could not complete the volume operation: {0}"
+  },
+  "UNIDADES": {
+    "pt": "UNIDADES",
+    "en": "DRIVES"
+  },
+  "Unidades indisponíveis no Flatpak experimental.": {
+    "pt": "Unidades indisponíveis no Flatpak experimental.",
+    "en": "Drives are unavailable in the experimental Flatpak."
+  },
+  "Unidades indisponíveis": {
+    "pt": "Unidades indisponíveis",
+    "en": "Drives unavailable"
+  },
+  "Nenhum volume disponível": {
+    "pt": "Nenhum volume disponível",
+    "en": "No volumes available"
+  },
+  "Carregando unidades…": {
+    "pt": "Carregando unidades…",
+    "en": "Loading drives…"
+  },
+  "Montar e abrir": {
+    "pt": "Montar e abrir",
+    "en": "Mount and open"
+  },
+  "Desmontar": {
+    "pt": "Desmontar",
+    "en": "Unmount"
+  },
+  "Ejetar com segurança": {
+    "pt": "Ejetar com segurança",
+    "en": "Safely remove"
+  },
+  "Exibir seção Unidades": {
+    "pt": "Exibir seção Unidades",
+    "en": "Show Drives section"
+  },
+  "O sistema não retornou o ponto de montagem.": {
+    "pt": "O sistema não retornou o ponto de montagem.",
+    "en": "The system did not return a mount point."
+  },
+  "O sistema retornou um ponto de montagem inválido.": {
+    "pt": "O sistema retornou um ponto de montagem inválido.",
+    "en": "The system returned an invalid mount point."
+  },
+  "Aguardando operação da unidade…": {
+    "pt": "Aguardando operação da unidade…",
+    "en": "Waiting for the drive operation…"
   }
 }

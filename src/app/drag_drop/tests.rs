@@ -89,6 +89,8 @@ fn dragging_a_selection_copies_to_rows_and_moves_to_sidebar_in_every_view() {
         complete_navigation(&mut app);
         app.view = view;
         app.places = vec![(locations::Item::Home, source.clone())];
+        // Refresh repopulates places: keep the pinned drop target in the viewport.
+        app.sidebar_options.visible = BTreeSet::from([locations::Item::Home]);
         app.sidebar_options
             .pinned
             .push(locations::Shortcut::new(outside.clone()));

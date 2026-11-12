@@ -1,5 +1,9 @@
 # Próximos recursos de interface
 
+## Unidades
+
+Implementado na instalação nativa: volumes UDisks2, capacidade/espaço livre, montagem e abertura, desmontagem/ejeção com Polkit, atualização entre abas/painéis e visibilidade configurável. Desbloqueio de volumes criptografados e integração de unidades no Flatpak permanecem pendentes.
+
 ## Aparência das pastas
 
 Implementado: cor e ícone por pasta em **Propriedades → Aparência**, com atalho no menu de contexto, persistência independente do tema e restauração individual do padrão.

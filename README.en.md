@@ -26,6 +26,14 @@ Context menus separate common commands from type-specific actions. Recognized ar
 
 Multi-selection gets extraction actions only if every selected item is an archive file. Mixed selections and directories named with archive suffixes do not receive partial extraction. Work runs in the background, and the folder refreshes when the invoked process finishes; **F5** refreshes after work completed in another window if needed. Errors and missing tools use toasts, without claiming successful extraction merely because it was delegated. Extraction icons are customizable. Host archive-manager extraction is unavailable in the experimental Flatpak; internal preview remains available.
 
+## Drives
+
+The sidebar's **Drives** section lists mountable SSD/HDD/removable volumes recognized by **UDisks2**, with capacity, user-available free space and a usage bar. Unmounted volumes show capacity and their state; free space is read after mounting. Toggle the section in **Settings → Sidebar → Show Drives section**. Existing preferences enable it by default.
+
+Click to open, rechecking current system state and mounting first when needed. Context menus offer **Mount and open**, **Unmount** and **Safely remove** as applicable. Removal unmounts related volumes before drive power-off or media ejection. Essential system volumes cannot be unmounted and their drives cannot be removed. Operations never force an unmount; busy/permission failures use toasts, and dismissed authorization is handled without a success notice. Other tabs viewing a removed volume return home.
+
+Discovery, space queries and operations run in background workers, with a shared inventory across tabs/panes, five-second refreshes, F5 and refresh after operations. Authorization uses the desktop's Polkit agent without explorer password fields or terminals. Native installations need UDisks2 and a desktop authorization agent; the Debian package recommends `udisks2` and `polkitd`. This host integration is explicitly unavailable in the experimental Flatpak. Ignored volumes, Snap loops and swap are excluded. Already unlocked encrypted filesystems can appear; unlocking encrypted storage is outside this feature. `/mnt` and `/media` remain independent directory shortcuts.
+
 ## System applications
 
 **Applications** is the first sidebar item. It shows menu launchers in a flat collection without folders or categories, using the toolbar’s **Details**, **List** and **Icons** modes. Details has sortable Name, Description and Application ID columns; Icons displays a grid with installed application icons. View mode and zoom are saved for this location independently of folders. Filter by name using the search field or **Ctrl+F**. A single click selects; double-click or **Enter** launches. **F5** refreshes the list after installing or removing programs. Catalog loading and icon decoding run in the background, with a generic icon when necessary.

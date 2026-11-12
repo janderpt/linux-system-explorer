@@ -41,6 +41,7 @@ mod toolbar;
 mod transfers;
 mod trash;
 mod type_actions;
+mod volumes;
 mod workspace;
 pub use workspace::Workspace;
 
@@ -99,6 +100,9 @@ pub struct Explorer {
     network_dialog: Option<network::ConnectDialog>,
     local_shares: Option<local_shares::Manager>,
     local_share_sidebar: local_shares::sidebar_cache::SharedSidebar,
+    volume_sidebar: volumes::Shared,
+    volume_operation: Option<volumes::Pending>,
+    volume_seen: u64,
     dnd: drag_drop::DragDrop,
     focus_address: bool,
     query: String,
@@ -182,6 +186,10 @@ impl Explorer {
             }
         }
         app.activation = crate::activation::Activation::attach(cc);
+        app.volume_sidebar
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .enabled = true;
         app.local_share_sidebar
             .lock()
             .unwrap_or_else(|e| e.into_inner())
@@ -257,6 +265,9 @@ impl Explorer {
             network_dialog: None,
             local_shares: None,
             local_share_sidebar: Default::default(),
+            volume_sidebar: Default::default(),
+            volume_operation: None,
+            volume_seen: 0,
             dnd: drag_drop::DragDrop::default(),
             focus_address: false,
             query: String::new(),
@@ -358,6 +369,10 @@ impl Explorer {
     }
 
     fn refresh(&mut self) {
+        self.volume_sidebar
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .invalidate();
         self.local_share_sidebar
             .lock()
             .unwrap_or_else(|e| e.into_inner())
@@ -373,6 +388,7 @@ impl Explorer {
     }
 
     fn poll(&mut self) {
+        self.poll_volumes();
         self.poll_local_shares();
         if let Some(panel) = &mut self.terminal {
             panel.poll();

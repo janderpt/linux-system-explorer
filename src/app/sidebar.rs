@@ -9,6 +9,7 @@ pub(super) enum Location {
     Remote(usize),
     LocalShare(usize),
     Trash,
+    Volume(usize),
 }
 
 pub(super) struct SidebarEntry {
@@ -62,6 +63,23 @@ impl Explorer {
                 path: crate::trashbin::location(),
                 icon: Icon::TrashBin,
             });
+        }
+        if self.sidebar_options.show_volumes && !crate::sandbox::active() {
+            entries.extend(
+                self.volume_entries()
+                    .iter()
+                    .enumerate()
+                    .map(|(index, volume)| SidebarEntry {
+                        id: Location::Volume(index),
+                        label: volume.name.clone(),
+                        path: volume.mount().map(Path::to_owned).unwrap_or_default(),
+                        icon: if volume.removable {
+                            Icon::Removable
+                        } else {
+                            Icon::Drive
+                        },
+                    }),
+            );
         }
         if self.sidebar_options.show_pinned {
             entries.extend(
@@ -145,6 +163,9 @@ impl Explorer {
     }
 
     fn sidebar_body(&mut self, ui: &mut egui::Ui) {
+        if self.sidebar_options.show_volumes {
+            self.refresh_volumes(ui.ctx());
+        }
         if self.sidebar_options.show_local_shares && !crate::sandbox::active() {
             self.refresh_local_share_sidebar(ui.ctx());
         }
@@ -166,6 +187,7 @@ impl Explorer {
                         ui.add_space(12.0);
                     }
                 }
+                if self.sidebar_options.show_volumes {self.volumes_section(ui,&entries,active);}
                 if self.sidebar_options.show_pinned {
                     sidebar_heading(ui,crate::i18n::tr("PASTAS FIXADAS"));
                     for entry in entries.iter().filter(|e|matches!(e.id,Location::Pinned(_))) {self.sidebar_place(ui,entry,active==Some(entry.id));}

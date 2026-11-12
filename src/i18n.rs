@@ -262,6 +262,8 @@ mod tests {
             include_str!("filesystem.rs"),
             include_str!("icons.rs"),
             include_str!("sidebar.rs"),
+            include_str!("volumes.rs"),
+            include_str!("app/volumes.rs"),
             include_str!("deletions.rs"),
             include_str!("transfers.rs"),
             include_str!("settings/sidebar_ui.rs"),
