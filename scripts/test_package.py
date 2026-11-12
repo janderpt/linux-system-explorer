@@ -12,6 +12,22 @@ SPEC.loader.exec_module(PACKAGE)
 
 
 class PreviewRuntimeTests(unittest.TestCase):
+    def test_prerelease_version_sorts_before_the_final_debian_version(self):
+        self.assertEqual(PACKAGE.debian_version("0.1.0-alpha.1"), "0.1.0~alpha.1-1")
+        import subprocess
+        subprocess.run(["dpkg", "--compare-versions", PACKAGE.debian_version("0.1.0-alpha.1"), "lt", PACKAGE.debian_version("0.1.0")], check=True)
+
+    def test_mpl_dependencies_include_their_published_sources(self):
+        with tempfile.TemporaryDirectory() as directory:
+            report = PACKAGE.third_party(Path(directory), PACKAGE.host_target())
+            self.assertEqual(report["packages_without_notice_files"], [])
+            covered = [p for p in report["packages"] if "MPL-2.0" in (p["license"] or "")]
+            self.assertEqual({p["name"] for p in covered}, {"freedesktop-desktop-entry", "option-ext"})
+            for package in covered:
+                source = Path(directory) / package["included_source"]
+                self.assertTrue((source / "src/lib.rs").is_file())
+                self.assertTrue((source / "Cargo.toml").is_file())
+
     def test_dynamic_preview_backends_are_declared_in_debian_dependencies(self):
         with tempfile.TemporaryDirectory() as directory:
             with patch.object(PACKAGE, "run", return_value=SimpleNamespace(stdout="shlibs:Depends=libc6 (>= 2.39)\n")):
@@ -21,6 +37,7 @@ class PreviewRuntimeTests(unittest.TestCase):
         for section in ["media", "pdf", "office", "html", "archive"]:
             for dependency in runtime[section]["debian"]:
                 self.assertIn(dependency, depends.split(", "))
+        self.assertIn("libxkbcommon-x11-0", depends)
         self.assertIn("gstreamer1.0-libav", depends)
         self.assertIn("poppler-utils", depends)
         self.assertIn("libreoffice-writer", depends)

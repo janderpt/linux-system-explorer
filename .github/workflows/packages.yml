@@ -26,6 +26,8 @@ jobs:
       - name: Install build and packaging dependencies
         timeout-minutes: 10
         run: sudo env GITHUB_ACTIONS=true python3 scripts/ci-dependencies.py libxkbcommon-dev libwayland-dev dpkg-dev desktop-file-utils appstream
+      - name: Fetch locked dependency sources
+        run: cargo fetch --locked
       - name: Validate metadata
         run: python3 scripts/package.py check
       - name: Build optimized executable

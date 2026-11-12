@@ -184,7 +184,14 @@ impl Explorer {
                 }
             });
         ui.add_space(5.0);
-        ui.label(RichText::new("Linux System Explorer  0.1").small().weak());
+        ui.label(
+            RichText::new(concat!(
+                "Linux System Explorer  ",
+                env!("CARGO_PKG_VERSION")
+            ))
+            .small()
+            .weak(),
+        );
         // Entries are a snapshot of the indices used throughout this frame. Apply
         // removals only after every entry and its context menu has been rendered.
         if let Some(index) = remove_remote {

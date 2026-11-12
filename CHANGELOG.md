@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.1.0-alpha.1 — 2026-11-12
+
+- First GitHub alpha with Ubuntu 24.04 x86_64 DEB/TAR.GZ packages, SHA-256 checksums, build/audit/license records and bilingual installation notes.
+- Include unmodified MPL dependency source and font/icon attribution in each binary package; preserve Debian prerelease ordering and validate install/reinstall/removal in a clean container.
+
+
 ## 0.1.0 development snapshot — 2026-11-12
 
 Source publication on `main`; this snapshot does not introduce a stable binary release or a store submission.
@@ -77,4 +83,4 @@ Highlights: independent split panes with session restoration; integrated local S
 - Normal system/desktop directory launches reuse matching windows as well, preserving their selection, filter and per-folder layout.
 - One application icon shared by native windows, desktop launchers and taskbar entries, with KDE icon-cache refresh.
 
-No public release or store submission has been made yet. This version is experimental.
+The first alpha is published for testing; no stable release or store submission is claimed.

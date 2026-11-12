@@ -2,11 +2,14 @@
 
 [English](README.en.md)
 
-**Código-fonte publicado no GitHub — versão 0.1.0 em desenvolvimento.** O plano por formato e loja está
+**Código-fonte publicado no GitHub — versão 0.1.0-alpha.1 em desenvolvimento.** O plano por formato e loja está
 em [Distribuição](docs/DISTRIBUTION.md), com os passos de revisão em
 [Release](docs/RELEASING.md). Ainda não há aprovação em lojas.
 
 Explorador de arquivos desktop para Linux, escrito em Rust e inspirado na organização e na experiência do Windows Explorer. A primeira versão usa [egui/eframe](https://github.com/emilk/egui) com renderização OpenGL e suporte a Wayland e X11.
+
+
+Pré-release **v0.1.0-alpha.1**: pacotes Ubuntu 24.04+ x86_64, checksums e [instruções de instalação](docs/releases/v0.1.0-alpha.1.md). [Downloads no GitHub](https://github.com/janderpt/linux-system-explorer/releases/tag/v0.1.0-alpha.1).
 
 ## Executar
 
@@ -127,7 +130,7 @@ aplica a mesma regra à pasta pessoal. Sem uma janela correspondente, abre norma
 
 ```bash
 sudo apt update
-sudo apt install git python3 desktop-file-utils appstream build-essential pkg-config libx11-dev libxi-dev libxcursor-dev libxrandr-dev libxkbcommon-dev libwayland-dev libegl1-mesa-dev xdg-utils libglib2.0-bin
+sudo apt install git python3 desktop-file-utils appstream build-essential pkg-config libx11-dev libxi-dev libxcursor-dev libxrandr-dev libxkbcommon-dev libxkbcommon-x11-0 libwayland-dev libegl1-mesa-dev xdg-utils libglib2.0-bin
 sudo apt install poppler-utils libgstreamer1.0-0 libgstreamer-plugins-base1.0-0 gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-libav libreoffice-writer libreoffice-calc libreoffice-impress libreoffice-draw libreoffice-math fonts-liberation weasyprint libarchive13t64
 ```
 

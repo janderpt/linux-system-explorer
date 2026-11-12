@@ -3,7 +3,10 @@
 [Português](README.md)
 
 A Linux desktop file manager written in Rust with egui/eframe, inspired by familiar
-desktop file explorers. **Source published on GitHub; version 0.1.0 remains a development build, without a stable release or store approval.**
+desktop file explorers. **Source published on GitHub; version 0.1.0-alpha.1 remains a development build, without a stable release or store approval.**
+
+
+**v0.1.0-alpha.1** prerelease: Ubuntu 24.04+ x86_64 packages, checksums and [installation notes](docs/releases/v0.1.0-alpha.1.md). [GitHub downloads](https://github.com/janderpt/linux-system-explorer/releases/tag/v0.1.0-alpha.1).
 
 ## File previews with Space
 
@@ -43,7 +46,7 @@ Use Rust 1.95 or newer and a graphical Linux session with OpenGL. Install Rust t
 
 ```sh
 sudo apt update
-sudo apt install git python3 desktop-file-utils appstream build-essential pkg-config libxkbcommon-dev libwayland-dev libx11-dev libxi-dev libxcursor-dev libxrandr-dev libegl1-mesa-dev xdg-utils libglib2.0-bin
+sudo apt install git python3 desktop-file-utils appstream build-essential pkg-config libxkbcommon-dev libxkbcommon-x11-0 libwayland-dev libx11-dev libxi-dev libxcursor-dev libxrandr-dev libegl1-mesa-dev xdg-utils libglib2.0-bin
 sudo apt install poppler-utils libgstreamer1.0-0 libgstreamer-plugins-base1.0-0 gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-libav libreoffice-writer libreoffice-calc libreoffice-impress libreoffice-draw libreoffice-math fonts-liberation weasyprint libarchive13t64
 git clone https://github.com/janderpt/linux-system-explorer.git
 cd linux-system-explorer

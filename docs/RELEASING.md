@@ -1,6 +1,6 @@
 # Release checklist
 
-The current 0.1.0 source is experimental and has no public stable release. Building
+The current 0.1.0-alpha.1 source is experimental and has no public stable release. Building
 packages does not publish anything. Use GitHub prereleases for initial native testing.
 
 ## Publishing source updates
@@ -24,15 +24,13 @@ The source repository already exists at `janderpt/linux-system-explorer`. Publis
 - Build through the packaging workflow or `cargo build --locked --release` and
   `python3 scripts/package.py build`; verify `SHA256SUMS`.
 - Test extraction, installation, removal and upgrade on a clean supported distribution.
-- Test GNOME and KDE, X11 and Wayland; default app opening, file selection, cut/copy/paste,
-  drag and drop, Trash/restore/permanent deletion, mounted shares and preferences.
+- Record which GNOME/KDE and X11/Wayland sessions were actually tested, including file operations, mounted shares and preferences. An alpha may publish a partial desktop matrix only when its limitations are explicit; stable/store releases require the complete supported matrix.
 - Use only disposable files and an isolated Trash during destructive validation.
 - Update CHANGELOG, document known limitations, test the actual release executable and
-  review English/Portuguese text. Add screenshots made from that release.
+  review English/Portuguese text. Use only disposable data in any release screenshots.
 - Confirm Cargo version/tag match and commit the reviewed source. Create an annotated
   version tag and a GitHub prerelease only after these checks.
-- Attach reviewed artifacts, checksums and notices. CI currently uploads draft workflow
-  artifacts only; it does not create GitHub releases or publish to stores.
+- Attach reviewed artifacts, checksums and notices. The alpha workflow publishes a GitHub prerelease only after its build, tests, audit, source/notices checks and clean-container smoke test pass. It does not submit to stores.
 
 ## Stable releases and stores
 
@@ -46,3 +44,9 @@ release history, identity and metadata before submission.
 
 Flatpak manifests and Flathub submission/review interactions must follow the human-only
 parts of Flathub's current AI policy. Acceptance is the store's decision.
+
+## First alpha publication
+
+The `Publish alpha prerelease` workflow handles `v*-alpha.*` tags. Cargo/tag versions must match; Debian converts `-alpha` to `~alpha` so it sorts before the final release. It uses Rust 1.99.1 and Ubuntu 24.04, records the exact source/lockfile, audits RustSec, includes MPL-covered sources, and tests DEB install/reinstall/removal and X11 startup in a clean Ubuntu container. It publishes only the validated artifact from its read-only build job; the final job alone has release-write permission.
+
+Review docs/releases/v0.1.0-alpha.1.md and docs/THIRD_PARTY_REVIEW.md, commit the source, run local checks and optionally use packaging/Dockerfile.prerelease for Ubuntu validation. Then create and push an annotated matching tag. Do not move published tags. Failed runs leave the version unpublished; fix/review failures before retrying. The first alpha documents the incomplete GNOME/KDE and Wayland/X11 matrix rather than claiming certification.

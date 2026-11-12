@@ -10,6 +10,7 @@ import platform
 import re
 import shutil
 import subprocess
+import struct
 import tarfile
 import tempfile
 import tomllib
@@ -28,6 +29,11 @@ def run(args, **kwargs):
 
 def rust_tool(name):
     return shutil.which(name) or str(Path.home() / ".cargo/bin" / name)
+
+
+def debian_version(version):
+    # Debian sorts ~alpha before the corresponding final version.
+    return version.replace("-", "~", 1) + "-1"
 
 
 def host_target():
@@ -78,6 +84,25 @@ def validate(prefix):
         run([tool, *args])
 
 
+def font_copyright(font):
+    """Preserve copyright/license name records from the original embedded SFNT font."""
+    data = font.read_bytes()
+    for index in range(struct.unpack_from(">H", data, 4)[0]):
+        record = 12 + index * 16
+        if data[record:record + 4] != b"name":
+            continue
+        offset = struct.unpack_from(">I", data, record + 8)[0]
+        _, count, strings = struct.unpack_from(">HHH", data, offset)
+        texts = set()
+        for index in range(count):
+            platform_id, _, _, name_id, length, position = struct.unpack_from(">6H", data, offset + 6 + 12 * index)
+            if name_id in (0, 13, 14):
+                raw = data[offset + strings + position:offset + strings + position + length]
+                texts.add(raw.decode("utf-16-be" if platform_id in (0, 3) else "mac_roman", errors="replace"))
+        return "\n".join(sorted(texts))
+    raise ValueError(f"Font name table is missing: {font.name}")
+
+
 def third_party(destination, target):
     """Inventory metadata and available notices; this is not a legal audit."""
     result = run([rust_tool("cargo"), "metadata", "--locked", "--offline", "--format-version", "1",
@@ -89,10 +114,16 @@ def third_party(destination, target):
     active = {tuple(line.split()[:2]) for line in tree.splitlines()}
     bundled = json.loads((ROOT / "packaging/third-party/sources.json").read_text())
     inventory = []
+    font_notices = ["Copyright/license metadata preserved from the unmodified embedded fonts.", ""]
+    fontawesome = ROOT / "assets/fontawesome/fa-solid-900.otf"
+    font_notices += [fontawesome.name, font_copyright(fontawesome), ""]
     for package in sorted(metadata["packages"], key=lambda p: (p["name"], p["version"])):
         if (package["name"], "v" + package["version"]) not in active or package["name"] == NAME:
             continue
         source = Path(package["manifest_path"]).parent
+        if package["name"] == "epaint_default_fonts":
+            for font in sorted((source / "fonts").glob("*.ttf")):
+                font_notices += [font.name, font_copyright(font), ""]
         texts = []
         for path in source.rglob("*"):
             is_notice = any(word in path.name.lower() for word in ("license", "licence", "copying", "copyright", "notice"))
@@ -119,11 +150,16 @@ def third_party(destination, target):
                 shutil.copyfile(path, output)
                 texts.append(str(output.relative_to(destination)))
                 upstream.append(notice)
+        source_bundle = None
+        if "MPL-2.0" in (package.get("license") or ""):
+            output = destination / "third-party-sources" / f"{package['name']}-{package['version']}"
+            shutil.copytree(source, output)
+            source_bundle = str(output.relative_to(destination))
         inventory.append({
             "name": package["name"], "version": package["version"],
             "license": package.get("license"), "repository": package.get("repository"),
             "source": package.get("source"), "notices": sorted(texts),
-            "upstream_notices": upstream,
+            "upstream_notices": upstream, "included_source": source_bundle,
         })
     report = {
         "target": target, "review_required": True,
@@ -133,9 +169,12 @@ def third_party(destination, target):
         "packages_without_notice_files": [p["name"] + "-" + p["version"] for p in inventory if not p["notices"]],
     }
     destination.mkdir(parents=True, exist_ok=True)
+    (destination / "FONT-COPYRIGHTS.txt").write_text("\n".join(font_notices) + "\n")
     (destination / "THIRD_PARTY.json").write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n")
     lines = [report["note"], "", f"Target: {target}", ""]
     lines.extend(f"{p['name']} {p['version']}: {p['license'] or 'MISSING LICENSE DECLARATION'}" for p in inventory)
+    lines += ["", "Unmodified MPL-covered source is included alongside these notices:"]
+    lines.extend(f"{p['name']} {p['version']}: {p['included_source']}" for p in inventory if p['included_source'])
     (destination / "THIRD_PARTY_NOTICES.txt").write_text("\n".join(lines) + "\n")
     return report
 
@@ -161,13 +200,18 @@ def stage(destination, prefix, binary):
     shutil.copyfile(ROOT / "packaging/file-manager.service.in", service)
     doc = install / "share/doc" / NAME
     doc.mkdir(parents=True, exist_ok=True)
-    for source in ["LICENSE", "README.md", "CHANGELOG.md", "docs/RELEASING.md", "docs/DISTRIBUTION.md"]:
+    for source in ["LICENSE", "README.md", "CHANGELOG.md", "docs/RELEASING.md", "docs/DISTRIBUTION.md", "README.en.md", "docs/THIRD_PARTY_REVIEW.md"]:
         shutil.copyfile(ROOT / source, doc / Path(source).name)
+    release_notes = ROOT / "docs/releases" / f"v{VERSION}.md"
+    if release_notes.is_file():
+        shutil.copyfile(release_notes, doc / "INSTALL.md")
     shutil.copyfile(ROOT / "packaging/preview-runtime.json", doc / "preview-runtime.json")
     notices = install / "share/licenses" / APP_ID
     notices.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(ROOT / "LICENSE", notices / "LICENSE")
     shutil.copyfile(ROOT / "assets/fontawesome/LICENSE.txt", notices / "FontAwesome-Free-LICENSE.txt")
+    shutil.copyfile(ROOT / "assets/fontawesome/README.md", notices / "FontAwesome-ATTRIBUTION.md")
+    shutil.copyfile(ROOT / "docs/THIRD_PARTY_REVIEW.md", notices / "DISTRIBUTION-REVIEW.md")
     report = third_party(notices, host_target())
     validate(install)
     run([bindir / NAME, "--version"])
@@ -185,7 +229,7 @@ def debian_dependencies(binary, work):
     preview = json.loads((ROOT / "packaging/preview-runtime.json").read_text())
     engines = [package for engine in preview.values() if isinstance(engine, dict)
                for package in engine.get("debian", [])]
-    return depends + ", libx11-6, libxi6, libxcursor1, libxrandr2, libxkbcommon0, libwayland-client0, libegl1, libgl1, libglib2.0-bin, xdg-utils, shared-mime-info, hicolor-icon-theme, " + ", ".join(engines)
+    return depends + ", libx11-6, libxi6, libxcursor1, libxrandr2, libxkbcommon0, libxkbcommon-x11-0, libwayland-client0, libegl1, libgl1, libglib2.0-bin, xdg-utils, shared-mime-info, hicolor-icon-theme, " + ", ".join(engines)
 
 
 def build(output, binary, formats):
@@ -213,7 +257,7 @@ def build(output, binary, formats):
             debian.mkdir()
             size = sum(p.stat().st_size for p in root.rglob("*") if p.is_file()) // 1024 + 1
             (debian / "control").write_text(
-                f"Package: {NAME}\nVersion: {VERSION}-1\nArchitecture: {architecture}\n"
+                f"Package: {NAME}\nVersion: {debian_version(VERSION)}\nArchitecture: {architecture}\n"
                 f"Section: utils\nPriority: optional\nInstalled-Size: {size}\n"
                 f"Maintainer: {PACKAGE['metadata']['distribution']['maintainer']}\n"
                 f"Homepage: {PACKAGE['homepage']}\nDepends: {depends}\n"
@@ -221,7 +265,7 @@ def build(output, binary, formats):
                 " Configurable views, per-folder layouts, file operations and Trash support.\n"
                 " Experimental build; not yet approved for store distribution.\n"
             )
-            artifact = output / f"{NAME}_{VERSION}-1_{architecture}.deb"
+            artifact = output / f"{NAME}_{debian_version(VERSION)}_{architecture}.deb"
             run(["dpkg-deb", "--root-owner-group", "--build", root, artifact])
             artifacts.append(artifact)
     revision = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True, text=True)
@@ -229,7 +273,10 @@ def build(output, binary, formats):
     manifest = {
         "name": NAME, "version": VERSION, "application_id": APP_ID, "target": target,
         "channel": PACKAGE["metadata"]["distribution"]["channel"],
-        "build_libc": platform.libc_ver(), "license_review_required": report["review_required"],
+        "build_libc": platform.libc_ver(),
+        "rustc": run([rust_tool("rustc"), "--version"], capture_output=True, text=True).stdout.strip(),
+        "cargo_lock_sha256": hashlib.sha256((ROOT / "Cargo.lock").read_bytes()).hexdigest(),
+        "license_review_required": report["review_required"],
         "source_revision": revision.stdout.strip() if revision.returncode == 0 else None,
         "source_has_uncommitted_changes": bool(status.stdout) if status.returncode == 0 else None,
         "packages_without_notice_files": report["packages_without_notice_files"],

@@ -1,0 +1,13 @@
+FROM ubuntu:24.04
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates git build-essential pkg-config python3 dpkg-dev desktop-file-utils appstream \
+    libxkbcommon-dev libxkbcommon-x11-0 libwayland-dev libx11-dev libxi-dev libxcursor-dev libxrandr-dev libegl1-mesa-dev \
+    dbus-daemon dbus-x11 xvfb xauth libgl1-mesa-dri ffmpeg \
+    xdg-utils libglib2.0-bin poppler-utils libgstreamer1.0-0 libgstreamer-plugins-base1.0-0 \
+    gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-libav \
+    libreoffice-writer libreoffice-calc libreoffice-impress libreoffice-draw libreoffice-math \
+    fonts-liberation weasyprint libarchive13t64 \
+    && rm -rf /var/lib/apt/lists/*
+# Mount a Rust toolchain and Cargo cache when using this optional local builder.
+WORKDIR /work

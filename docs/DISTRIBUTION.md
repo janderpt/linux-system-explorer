@@ -11,7 +11,7 @@ The repository contains the published source, desktop metadata, build scripts an
 | Channel | Current preparation | Remaining gates |
 | --- | --- | --- |
 | GitHub source | Published repository, MIT license, CI, source installation/update instructions and contribution docs | Maintain reviewed commits and passing CI |
-| GitHub binary downloads | Native tar.gz and DEB builders, checksums and build information | License/security review, clean-system tests and reviewed release |
+| GitHub binary downloads | First alpha workflow: Ubuntu 24.04 x86_64 DEB/TAR.GZ, checksums, audit/build records, notices and included MPL sources | Continued maintainer review, broader desktop/session tests and stable-release validation |
 | Debian/Ubuntu packages | Experimental DEB with binary-derived libc dependencies and desktop metadata | Install/remove/upgrade tests, maintainer review, repository signing and native distro policy |
 | AppImage | Relocatable archive and shared desktop assets | AppDir, library bundling, older supported build baseline and clean-host tests; not yet an AppImage |
 | Flatpak / Flathub | Shared application identity, desktop launcher, AppStream and icon | Human-authored packaging, sandbox adaptations, upstream support, history, stable releases and review |
@@ -123,8 +123,7 @@ with exact upstream revisions, source URLs and hashes verified at package time.
 and source-availability obligations still need individual verification. The inventory
 is an aid, not an assertion of license compliance. `review_required` deliberately stays
 true because file coverage alone does not establish that a maintainer has completed the
-review. Do not publicly redistribute these draft artifacts until those obligations have
-been checked. A reviewed license tool such as cargo-about can be used as an additional aid.
+review. The first alpha technical review is recorded in [THIRD_PARTY_REVIEW.md](THIRD_PARTY_REVIEW.md). Its packages include unmodified MPL-covered crate source and preserve the font/attribution notices. A reviewed license tool such as cargo-about can be used as an additional aid.
 
 ## Flatpak-specific engineering
 
