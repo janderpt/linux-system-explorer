@@ -1180,7 +1180,11 @@ fn native_clipboard_events_copy_repeatedly_then_cut_multiple_files_and_folders()
     assert!(app.file_clipboard.is_none(), "recorte concluído é limpo");
 }
 
-fn folder_frame(app: &mut Explorer, ctx: &egui::Context, events: Vec<Event>) -> FullOutput {
+pub(super) fn folder_frame(
+    app: &mut Explorer,
+    ctx: &egui::Context,
+    events: Vec<Event>,
+) -> FullOutput {
     let visible = filesystem::visible_entries(
         &app.entries,
         &app.query,

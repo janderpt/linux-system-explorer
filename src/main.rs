@@ -5,6 +5,7 @@ mod cli;
 mod columns;
 mod deletions;
 mod desktop;
+mod disk_usage;
 mod file_manager;
 mod filesystem;
 mod filetypes;

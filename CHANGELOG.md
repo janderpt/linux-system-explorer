@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Add asynchronous icon-view thumbnails for raster images, SVG and first PDF pages, with bounded decoding/cache, metadata invalidation, cancellation and file-type fallback.
+- Show logical and allocated disk sizes in Properties, including background recursive folder totals, hard-link deduplication, no-follow traversal, partial results and close-to-cancel behavior.
+
 ## 0.1.0-alpha.1 — 2026-11-12
 
 - First GitHub alpha with Ubuntu 24.04 x86_64 DEB/TAR.GZ packages, SHA-256 checksums, build/audit/license records and bilingual installation notes.

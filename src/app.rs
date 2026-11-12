@@ -24,6 +24,7 @@ mod local_shares;
 mod network;
 mod open_with;
 mod preview;
+mod properties;
 mod rename;
 mod selection;
 mod sidebar;
@@ -31,6 +32,7 @@ mod table;
 mod terminal_panel;
 #[cfg(test)]
 mod tests;
+mod thumbnails;
 mod toast;
 mod toolbar;
 mod transfers;
@@ -76,6 +78,7 @@ pub struct Explorer {
     folder_picker: Option<folder_picker::FolderPicker>,
     open_with: Option<open_with::Chooser>,
     preview: Option<preview::Preview>,
+    thumbnails: thumbnails::Cache,
     rename: Option<rename::RenameDialog>,
     network_dialog: Option<network::ConnectDialog>,
     local_shares: Option<local_shares::Manager>,
@@ -119,6 +122,7 @@ pub struct Explorer {
     network_mounts: Vec<locations::Shortcut>,
     new_folder: Option<String>,
     properties: Option<Entry>,
+    properties_usage: Option<crate::disk_usage::Job>,
     dark: bool,
     split_view: bool,
     requested_split: bool,
@@ -217,6 +221,7 @@ impl Explorer {
             folder_picker: None,
             open_with: None,
             preview: None,
+            thumbnails: Default::default(),
             rename: None,
             network_dialog: None,
             local_shares: None,
@@ -260,6 +265,7 @@ impl Explorer {
             network_mounts: locations::network_mounts(),
             new_folder: None,
             properties: None,
+            properties_usage: None,
             dark: false,
             split_view: false,
             requested_split: false,
@@ -287,6 +293,7 @@ impl Explorer {
     }
 
     fn navigate(&mut self, path: PathBuf, navigation: Navigation) {
+        self.thumbnails.cancel_pending();
         if self.loading {
             return;
         }
@@ -1238,6 +1245,13 @@ impl Explorer {
             .id_salt((self.tab_id, &self.current, "icons"))
             .auto_shrink([false, false])
             .show_rows(ui, row_height, row_count, |ui, range| {
+                let requested = visible
+                    .iter()
+                    .skip(range.start * columns)
+                    .take((range.end - range.start) * columns)
+                    .map(|&i| self.entries[i].path.clone())
+                    .collect();
+                self.thumbnails.cancel_unseen(&requested);
                 self.reveal_selected_row(ui, visible, range.start, row_height, columns);
                 for row in range {
                     ui.horizontal(|ui| {
@@ -1265,7 +1279,7 @@ impl Explorer {
                                     .layout(Layout::top_down(Align::Center)),
                             );
                             child.multiply_opacity(self.cut_opacity(&entry.path));
-                            self.file_icon(&mut child, &entry, 46.0 * scale);
+                            self.grid_picture(&mut child, &entry, scale);
                             child.add(
                                 egui::Label::new(RichText::new(&entry.name).size(13.0 * scale))
                                     .truncate()
@@ -1489,78 +1503,7 @@ impl Explorer {
                 }
             }
         }
-        if let Some(entry) = self.properties.clone() {
-            let mut open = true;
-            egui::Window::new(crate::i18n::tr("Propriedades"))
-                .collapsible(false)
-                .resizable(false)
-                .default_width(420.0)
-                .open(&mut open)
-                .show(ctx, |ui| {
-                    ui.horizontal(|ui| {
-                        self.file_icon(ui, &entry, 38.0);
-                        ui.label(RichText::new(&entry.name).strong().size(18.0));
-                    });
-                    ui.separator();
-                    ui.label(crate::i18n::message(
-                        "Tipo: {}",
-                        &[(entry.kind()).to_string()],
-                    ));
-                    ui.label(crate::i18n::message(
-                        "Local: {}",
-                        &[entry
-                            .trash
-                            .as_ref()
-                            .map(|record| record.original_path.as_path())
-                            .unwrap_or(&entry.path)
-                            .display()
-                            .to_string()],
-                    ));
-                    if let Some(size) = entry.size {
-                        ui.label(crate::i18n::message(
-                            "Tamanho: {} ({size} bytes)",
-                            &[
-                                (filesystem::format_size(size)).to_string(),
-                                (size).to_string(),
-                            ],
-                        ));
-                    }
-                    ui.label(crate::i18n::message(
-                        "Modificado: {}",
-                        &[(modified_label(&entry)).to_string()],
-                    ));
-                    if entry.is_symlink
-                        && let Ok(target) = std::fs::read_link(&entry.path)
-                    {
-                        ui.label(crate::i18n::message(
-                            "Destino do link: {}",
-                            &[(target.display()).to_string()],
-                        ));
-                    }
-                    if ui
-                        .button(if entry.trash.is_some() {
-                            crate::i18n::tr("Copiar caminho original")
-                        } else {
-                            crate::i18n::tr("Copiar caminho")
-                        })
-                        .clicked()
-                    {
-                        self.file_clipboard = None;
-                        ctx.copy_text(
-                            entry
-                                .trash
-                                .as_ref()
-                                .map(|record| record.original_path.as_path())
-                                .unwrap_or(&entry.path)
-                                .display()
-                                .to_string(),
-                        );
-                    }
-                });
-            if !open {
-                self.properties = None;
-            }
-        }
+        self.properties_dialog(ctx);
     }
 }
 

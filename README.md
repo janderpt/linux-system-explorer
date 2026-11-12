@@ -348,6 +348,8 @@ A engrenagem abre as abas **Geral**, **Barra lateral**, **Colunas** e **Aparênc
 
 ### Ícones de arquivos e abertura no aplicativo padrão
 
+No modo **Ícones**, imagens raster, SVG e a primeira página de PDFs podem mostrar **miniaturas do conteúdo**, ajustadas ao espaço sem recorte. Elas são geradas apenas para os itens visíveis, em segundo plano, com até dois decodificadores simultâneos e cache em memória por aba. Alterações de tamanho, datas ou identidade do arquivo invalidam a miniatura quando a pasta é atualizada; F5 permite tentar novamente as que falharam. Ao navegar ou rolar, trabalhos que deixaram de ser necessários são cancelados. Miniaturas de SVG limitam a entrada a 2 MiB, e demais limites de leitura/decodificação continuam se aplicando. Tipos não suportados, arquivos inválidos ou conversores ausentes mantêm o ícone de tipo, sem gerar avisos repetidos. Detalhes e Lista mantêm seus ícones compactos.
+
 Os três modos de visualização e a janela de propriedades usam ícones conforme a família do arquivo. Em modo colorido, PDF usa vermelho, documentos Word/Writer usam azul, planilhas e CSV usam verde e apresentações usam laranja. Imagens, áudio, vídeo, arquivos compactados, código, texto, pacotes, executáveis, certificados e chaves, bancos de dados, discos, diagramas, fontes, binários, backups e calendários também têm ícones próprios. **Aparência e ícones** permite personalizar cada categoria, mantendo a escolha entre coloridos e monocromáticos.
 
 A classificação usa a extensão sem diferenciar maiúsculas de minúsculas, nomes conhecidos como Dockerfile e README e os bits de execução do Linux. Nomes desconhecidos usam o ícone genérico. Na Lixeira, a classificação usa o nome original. Pastas e marcadores de links simbólicos continuam sendo reconhecidos.
@@ -409,6 +411,12 @@ As colunas incluem nome, tipo, extensão, tamanho, modificação, criação, úl
 - **Sem bits de escrita** indica apenas os bits POSIX. Não é uma avaliação completa do acesso efetivo por ACLs, privilégios ou montagem.
 - **Espaço alocado** usa os blocos reportados pelo sistema multiplicados por 512; pode diferir do tamanho lógico em arquivos esparsos.
 - Os metadados de um **link simbólico** descrevem o próprio link, como em `lstat`. A navegação em links para pastas segue o destino. Proprietários e grupos desconhecidos aparecem pelo identificador numérico.
+
+## Tamanho nas propriedades
+
+**Propriedades** mostra o tamanho lógico e **Tamanho em disco**, incluindo os valores em bytes. Para pastas reais, calcula os totais e a quantidade de arquivos/links e subpastas em segundo plano, incluindo itens ocultos. Fechar a janela cancela a leitura; reabrir recalcula. Links simbólicos não são percorridos: suas propriedades descrevem o próprio link.
+
+O tamanho lógico da pasta soma os arquivos e os próprios links por nome. O tamanho em disco usa os blocos reportados pelo Linux × 512 bytes, inclui os blocos dos diretórios e conta links físicos para o mesmo inode apenas uma vez. Arquivos esparsos podem ocupar menos disco que seu tamanho lógico. Compressão e blocos compartilhados dependem do sistema de arquivos; isso não mede a capacidade livre do volume. Itens sem acesso ou alterados durante a leitura deixam os totais parciais, identificados na janela. A travessia usa descritores e não segue diretórios substituídos por links durante o cálculo.
 
 ## Verificar
 

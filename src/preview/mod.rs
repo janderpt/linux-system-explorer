@@ -15,6 +15,7 @@ pub mod archive;
 mod html;
 pub mod media;
 mod office;
+pub mod thumbnail;
 pub use office::{Document, Family};
 
 const IMAGE_BYTES: u64 = 64 * 1024 * 1024;
@@ -167,7 +168,16 @@ fn regular(path: &Path) -> io::Result<()> {
 }
 fn read_limited(path: &Path, limit: u64, cancel: &AtomicBool) -> io::Result<Vec<u8>> {
     regular(path)?;
-    let mut file = File::open(path)?.take(limit + 1);
+    let source = File::from(rustix::fs::open(
+        path,
+        rustix::fs::OFlags::RDONLY | rustix::fs::OFlags::NONBLOCK | rustix::fs::OFlags::CLOEXEC,
+        rustix::fs::Mode::empty(),
+    )?);
+    // Recheck the opened object: a regular path may have been replaced after stat.
+    if !source.metadata()?.is_file() {
+        return Err(io::Error::from(io::ErrorKind::InvalidInput));
+    }
+    let mut file = source.take(limit + 1);
     let mut data = Vec::new();
     let mut chunk = [0_u8; 16384];
     loop {

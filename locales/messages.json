@@ -2222,5 +2222,41 @@
   "{} itens no arquivo compactado": {
     "en": "{0} entries in the archive",
     "pt": "{0} itens no arquivo compactado"
+  },
+  "Não foi possível calcular o tamanho: {}": {
+    "en": "Unable to calculate size: {0}",
+    "pt": "Não foi possível calcular o tamanho: {0}"
+  },
+  "Tamanho: {}": {
+    "en": "Size: {0}",
+    "pt": "Tamanho: {0}"
+  },
+  "Tamanho em disco: {}": {
+    "en": "Size on disk: {0}",
+    "pt": "Tamanho em disco: {0}"
+  },
+  "Indisponível": {
+    "en": "Unavailable",
+    "pt": "Indisponível"
+  },
+  "Tamanho em disco: {} ({} bytes)": {
+    "en": "Size on disk: {0} ({1} bytes)",
+    "pt": "Tamanho em disco: {0} ({1} bytes)"
+  },
+  "Blocos alocados pelo Linux (512 bytes por bloco). Inclui as pastas e conta links físicos uma única vez; links simbólicos não são percorridos. Compressão e blocos compartilhados dependem do sistema de arquivos.": {
+    "en": "Blocks allocated by Linux (512 bytes per block). Includes directories and counts hard links once; symbolic links are not followed. Compression and shared blocks depend on the filesystem.",
+    "pt": "Blocos alocados pelo Linux (512 bytes por bloco). Inclui as pastas e conta links físicos uma única vez; links simbólicos não são percorridos. Compressão e blocos compartilhados dependem do sistema de arquivos."
+  },
+  "Contém: {} arquivos/links e {} pastas": {
+    "en": "Contains: {0} files/links and {1} folders",
+    "pt": "Contém: {0} arquivos/links e {1} pastas"
+  },
+  "Totais parciais: {} itens não puderam ser lidos.": {
+    "en": "Partial totals: {0} entries could not be read.",
+    "pt": "Totais parciais: {0} itens não puderam ser lidos."
+  },
+  "Calculando tamanho…": {
+    "en": "Calculating size…",
+    "pt": "Calculando tamanho…"
   }
 }
