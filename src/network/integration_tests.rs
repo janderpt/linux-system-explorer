@@ -189,6 +189,74 @@ fn cancelling_a_gvfs_connection_stops_and_reaps_its_helper() {
 }
 
 #[test]
+fn ftp_uses_native_gvfs_authentication_on_kde_without_changing_other_protocols() {
+    for kde in [false, true] {
+        for kio in [false, true] {
+            assert_eq!(
+                choose_mount_backend("ftp://user@server/", kde, kio, true),
+                Some(Backend::Gvfs)
+            );
+        }
+    }
+    assert_eq!(
+        choose_mount_backend("ftp://server/", true, true, false),
+        Some(Backend::Kio)
+    );
+    assert_eq!(
+        choose_mount_backend("ftp://server/", false, false, false),
+        None
+    );
+    for uri in ["smb://server/share", "sftp://server/", "dav://server/"] {
+        assert_eq!(
+            choose_mount_backend(uri, true, true, true),
+            Some(Backend::Kio)
+        );
+        assert_eq!(
+            choose_mount_backend(uri, false, true, true),
+            Some(Backend::Gvfs)
+        );
+    }
+}
+
+#[test]
+fn ftp_authentication_errors_and_cancellation_do_not_trigger_a_second_dialog() {
+    let uri = remote_url("FTP://user@server/folder%20name").unwrap();
+    let backend = choose_mount_backend(&uri, true, true, true).unwrap();
+    for kind in [io::ErrorKind::PermissionDenied, io::ErrorKind::Interrupted] {
+        let mut calls = Vec::new();
+        let result =
+            connect_with_fallback(&uri, backend, true, &Cancellation::default(), |backend| {
+                calls.push(backend);
+                Err(io::Error::from(kind))
+            });
+        assert_eq!(result.unwrap_err().kind(), kind);
+        assert_eq!(calls, [Backend::Gvfs]);
+    }
+}
+
+#[test]
+fn ftp_helper_receives_the_username_and_path_without_shell_interpretation() {
+    use std::os::unix::fs::PermissionsExt;
+    let root = tempfile::tempdir().unwrap();
+    let helper = root.path().join("ftp-helper");
+    let expected = serde_json::to_string(&crate::settings::folder_key(root.path())).unwrap();
+    std::fs::write(
+        &helper,
+        format!("#!/bin/sh\nprintf '%s\\n' \"$@\" > \"$0.args\"\ncat <<'END_MOUNT_PATH'\n{expected}\nEND_MOUNT_PATH\n"),
+    )
+    .unwrap();
+    std::fs::set_permissions(&helper, std::fs::Permissions::from_mode(0o700)).unwrap();
+    let uri = remote_url("ftp://user%40domain@server/folder%20%24%28ignored%29/").unwrap();
+    let mount =
+        run_written_helper(|| connect_gvfs_with(&helper, &uri, &Cancellation::default())).unwrap();
+    assert_eq!(mount, root.path());
+    assert_eq!(
+        std::fs::read_to_string(helper.with_extension("args")).unwrap(),
+        format!("--mount-network\n{uri}\n")
+    );
+}
+
+#[test]
 fn browse_helper_drains_large_output_and_keeps_the_uri_as_a_literal_argument() {
     use std::os::unix::fs::PermissionsExt;
     let root = tempfile::tempdir().unwrap();

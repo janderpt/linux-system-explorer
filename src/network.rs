@@ -53,6 +53,16 @@ fn choose_backend(kde: bool, kio: bool, gvfs: bool) -> Option<Backend> {
         None
     }
 }
+fn choose_mount_backend(uri: &str, kde: bool, kio: bool, gvfs: bool) -> Option<Backend> {
+    // Use GTK's mount operation for FTP authentication even on KDE. Starting
+    // with KIO can cancel before showing credentials; retrying after that would
+    // also risk reopening authentication after the user deliberately cancelled.
+    if uri.starts_with("ftp://") && gvfs {
+        Some(Backend::Gvfs)
+    } else {
+        choose_backend(kde, kio, gvfs)
+    }
+}
 fn available_services() -> Vec<String> {
     zbus::block_on(async {
         let Ok(conn) = zbus::connection::Builder::session()
@@ -179,7 +189,8 @@ pub fn connect_cancellable(input: &str, cancel: &Cancellation) -> io::Result<Pat
         return Err(cancelled());
     }
     let gvfs_available = services.iter().any(|s| s == "org.gtk.vfs.Daemon");
-    let backend = choose_backend(
+    let backend = choose_mount_backend(
+        &uri,
         is_kde(),
         services.iter().any(|s| s == "org.kde.KIOFuse"),
         gvfs_available,

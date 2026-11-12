@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Prefer native GIO/GVfs authentication for FTP when available, including on KDE, avoiding a KIO cancellation before the credential dialog appears; preserve other protocol routing and do not retry FTP authentication after cancellation or failure.
+
 ## 0.1.0-alpha.3 — 2026-11-12
 
 - Add Open file location to search-result context menus, with a configurable icon; refresh/navigate to the containing folder in the same pane, clear the search and select/reveal the clicked file or folder, including same-folder hits, hidden/raw-byte names and normal navigation error handling.
