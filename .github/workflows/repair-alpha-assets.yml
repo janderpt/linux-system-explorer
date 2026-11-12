@@ -1,9 +1,6 @@
 name: Reconcile alpha asset filenames
 
 on:
-  push:
-    branches: [main]
-    paths: ['.github/workflows/repair-alpha-assets.yml']
   workflow_dispatch:
 
 permissions:
