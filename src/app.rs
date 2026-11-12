@@ -120,6 +120,7 @@ pub struct Explorer {
     dark: bool,
     split_view: bool,
     requested_split: bool,
+    cut_transfer_running: bool,
     folder_background_area: Option<egui::Rect>,
     folder_item_regions: Vec<egui::Rect>,
     file_clipboard: Option<file_ops::Clipboard>,
@@ -259,6 +260,7 @@ impl Explorer {
             dark: false,
             split_view: false,
             requested_split: false,
+            cut_transfer_running: false,
             folder_background_area: None,
             folder_item_regions: Vec::new(),
             file_clipboard: None,
@@ -1177,6 +1179,7 @@ impl Explorer {
                                         .max_rect(rect)
                                         .layout(Layout::left_to_right(Align::Center)),
                                 );
+                                child.multiply_opacity(self.cut_opacity(&entry.path));
                                 for &(column, column_width) in &columns {
                                     if column == Column::Name {
                                         child.allocate_ui_with_layout(
@@ -1253,6 +1256,7 @@ impl Explorer {
                                     .max_rect(rect.shrink(8.0))
                                     .layout(Layout::top_down(Align::Center)),
                             );
+                            child.multiply_opacity(self.cut_opacity(&entry.path));
                             self.file_icon(&mut child, &entry, 46.0 * scale);
                             child.add(
                                 egui::Label::new(RichText::new(&entry.name).size(13.0 * scale))

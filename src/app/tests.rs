@@ -3346,6 +3346,7 @@ fn empty_trash_context_menu_confirms_and_only_purges_the_confirmed_snapshot_in_a
     );
 }
 
+mod cut;
 mod file_icons;
 mod opening;
 mod trash_deletion;

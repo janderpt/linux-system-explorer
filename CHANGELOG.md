@@ -2,6 +2,8 @@
 
 ## Unreleased — 0.1.0 experimental
 
+- Dim pending cut items in every file view and allow Escape to cancel the pending cut across tabs/panes without altering files or cancelling an already started transfer.
+
 - Fix right-click Paste menus in blank folder space, including switching split panes after Ctrl+C. Exclude file rows/tiles, headers, scrollbars and overlaid windows from blank-space hit testing.
 
 - Give each split pane its own navigation sidebar and paint an opaque theme background, fixing black folder areas in light mode.

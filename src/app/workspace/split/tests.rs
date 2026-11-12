@@ -414,3 +414,128 @@ fn copying_then_right_clicking_blank_space_in_the_other_pane_offers_paste_in_eve
         }
     }
 }
+
+#[test]
+fn escape_in_the_other_pane_cancels_cut_and_restores_both_folder_views() {
+    let root = tempfile::tempdir().unwrap();
+    let file = root.path().join("cut.txt");
+    std::fs::write(&file, "preserved").unwrap();
+    let ctx = egui::Context::default();
+    let mut app = workspace(&ctx, root.path().into());
+    app.toggle_split(&ctx);
+    settle(&mut app);
+    render(&mut app, &ctx, vec![], Modifiers::NONE);
+    let output = render(&mut app, &ctx, vec![], Modifiers::NONE);
+    click(&mut app, &ctx, points(&output, "cut.txt")[0]);
+    let command = Modifiers {
+        ctrl: true,
+        command: true,
+        ..Default::default()
+    };
+    render(
+        &mut app,
+        &ctx,
+        vec![Event::Key {
+            key: Key::X,
+            physical_key: None,
+            pressed: true,
+            repeat: false,
+            modifiers: command,
+        }],
+        command,
+    );
+    let faded = render(&mut app, &ctx, vec![], Modifiers::NONE);
+    let alphas = |output: &FullOutput| {
+        output
+            .shapes
+            .iter()
+            .filter_map(|shape| match &shape.shape {
+                egui::Shape::Text(text) if text.galley.text() == "cut.txt" => {
+                    Some(text.fallback_color.a())
+                }
+                _ => None,
+            })
+            .collect::<Vec<_>>()
+    };
+    assert!(alphas(&faded).iter().all(|a| *a < 200));
+    let rect = app.split.as_ref().unwrap().rects.unwrap()[1];
+    click(
+        &mut app,
+        &ctx,
+        egui::pos2(rect.right() - 80.0, rect.top() + 260.0),
+    );
+    assert_eq!(app.active, app.split_indices().unwrap()[1]);
+    render(
+        &mut app,
+        &ctx,
+        vec![Event::Key {
+            key: Key::Escape,
+            physical_key: None,
+            pressed: true,
+            repeat: false,
+            modifiers: Modifiers::NONE,
+        }],
+        Modifiers::NONE,
+    );
+    assert!(
+        app.tabs
+            .iter()
+            .all(|tab| tab.file_clipboard.is_none() && !tab.can_paste())
+    );
+    let output = render(&mut app, &ctx, vec![], Modifiers::NONE);
+    assert_eq!(alphas(&output), vec![255, 255]);
+    assert_eq!(std::fs::read_to_string(file).unwrap(), "preserved");
+}
+
+#[test]
+fn escape_does_not_clear_the_clipboard_of_an_already_started_move_in_another_pane() {
+    let root = tempfile::tempdir().unwrap();
+    let source = root.path().join("Source");
+    let target = root.path().join("Target");
+    std::fs::create_dir(&source).unwrap();
+    std::fs::create_dir(&target).unwrap();
+    let file = source.join("conflict.txt");
+    std::fs::write(&file, "source").unwrap();
+    std::fs::write(target.join("conflict.txt"), "target").unwrap();
+    let ctx = egui::Context::default();
+    let mut app = workspace(&ctx, source);
+    app.toggle_split(&ctx);
+    settle(&mut app);
+    let [left, right] = app.split_indices().unwrap();
+    app.tabs[left].selected.insert(file.clone());
+    app.tabs[left].capture_files(file_ops::Mode::Cut, &ctx);
+    app.share();
+    let clipboard = app.tabs[left].file_clipboard.clone().unwrap();
+    app.tabs[right].start_file_transfer(clipboard.clone(), target.clone(), &ctx);
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(3);
+    while app.tabs[right].transfer_conflict.is_none() {
+        app.tabs[right].poll();
+        assert!(std::time::Instant::now() < deadline);
+        std::thread::sleep(std::time::Duration::from_millis(1));
+    }
+    render(
+        &mut app,
+        &ctx,
+        vec![Event::Key {
+            key: Key::Escape,
+            physical_key: None,
+            pressed: true,
+            repeat: false,
+            modifiers: Modifiers::NONE,
+        }],
+        Modifiers::NONE,
+    );
+    assert!(app.tabs[left].file_clipboard.as_ref() == Some(&clipboard));
+    assert!(app.tabs[right].active_transfer.is_some());
+    app.tabs[right].cancel_transfer();
+    while app.tabs[right].active_transfer.is_some() {
+        app.tabs[right].poll();
+        assert!(std::time::Instant::now() < deadline);
+        std::thread::sleep(std::time::Duration::from_millis(1));
+    }
+    assert_eq!(std::fs::read_to_string(file).unwrap(), "source");
+    assert_eq!(
+        std::fs::read_to_string(target.join("conflict.txt")).unwrap(),
+        "target"
+    );
+}

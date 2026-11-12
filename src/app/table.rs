@@ -177,10 +177,12 @@ impl Explorer {
                             rect.left_center() + Vec2::new(14.0 * scale, 0.0),
                             Vec2::splat(18.0 * scale),
                         );
-                        self.paint_file_icon(ui.painter(), icon, &entry);
+                        let mut painter = ui.painter().clone();
+                        painter.multiply_opacity(self.cut_opacity(&entry.path));
+                        self.paint_file_icon(&painter, icon, &entry);
                         let mut text_rect = rect;
                         text_rect.min.x += 32.0 * scale;
-                        ui.painter().with_clip_rect(text_rect).text(
+                        painter.with_clip_rect(text_rect).text(
                             text_rect.left_center(),
                             egui::Align2::LEFT_CENTER,
                             &entry.name,

@@ -9,6 +9,8 @@ use std::{
 
 pub(super) struct ActiveTransfer {
     pub progress: file_ops::Progress,
+    pub clipboard_id: u64,
+    pub mode: file_ops::Mode,
     cancel: Arc<AtomicBool>,
 }
 
@@ -19,6 +21,35 @@ pub(super) struct ConflictPrompt {
 }
 
 impl Explorer {
+    pub(super) fn cut_opacity(&self, path: &Path) -> f32 {
+        if self.file_clipboard.as_ref().is_some_and(|clipboard| {
+            clipboard.mode == file_ops::Mode::Cut && clipboard.paths.iter().any(|p| p == path)
+        }) {
+            0.45
+        } else {
+            1.0
+        }
+    }
+
+    fn cancel_pending_cut(&mut self, ctx: &egui::Context) -> bool {
+        let Some(clipboard) = &self.file_clipboard else {
+            return false;
+        };
+        if clipboard.mode != file_ops::Mode::Cut
+            || self.cut_transfer_running
+            || self.active_transfer.as_ref().is_some_and(|job| {
+                job.clipboard_id == clipboard.id && job.mode == file_ops::Mode::Cut
+            })
+        {
+            return false;
+        }
+        self.file_clipboard = None;
+        self.file_clipboard_text.clear();
+        self.clipboard_serial = self.clipboard_serial.wrapping_add(1);
+        ctx.request_repaint();
+        true
+    }
+
     pub(super) fn process_transfer_refresh(&mut self) {
         if self.refresh_after_transfer && !self.loading {
             self.refresh_after_transfer = false;
@@ -124,6 +155,8 @@ impl Explorer {
         destination: PathBuf,
         ctx: &egui::Context,
     ) {
+        let clipboard_id = clipboard.id;
+        let mode = clipboard.mode;
         let request = file_ops::Request {
             clipboard,
             destination,
@@ -184,7 +217,12 @@ impl Explorer {
             });
         match worker {
             Ok(_) => {
-                self.active_transfer = Some(ActiveTransfer { progress, cancel });
+                self.active_transfer = Some(ActiveTransfer {
+                    progress,
+                    cancel,
+                    clipboard_id,
+                    mode,
+                });
                 self.error = None;
             }
             Err(error) => self.report_error(crate::i18n::message(
@@ -271,6 +309,9 @@ impl Explorer {
             if copy || cut {
                 self.file_clipboard = None;
             }
+            return;
+        }
+        if ctx.input(|i| i.key_pressed(Key::Escape)) && self.cancel_pending_cut(ctx) {
             return;
         }
         if copy {

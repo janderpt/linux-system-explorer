@@ -257,6 +257,21 @@ impl Workspace {
             .map(|tab| (tab.tab_id, tab.busy()))
             .collect();
         self.background();
+        let moving: Vec<_> = self
+            .tabs
+            .iter()
+            .filter_map(|tab| {
+                tab.active_transfer
+                    .as_ref()
+                    .filter(|job| job.mode == file_ops::Mode::Cut)
+                    .map(|job| job.clipboard_id)
+            })
+            .collect();
+        for tab in &mut self.tabs {
+            tab.cut_transfer_running = tab.file_clipboard.as_ref().is_some_and(|clipboard| {
+                clipboard.mode == file_ops::Mode::Cut && moving.contains(&clipboard.id)
+            });
+        }
         self.normalize_split();
         self.focus_split(ctx);
         let requests = self
