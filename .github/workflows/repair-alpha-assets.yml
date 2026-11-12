@@ -1,0 +1,31 @@
+name: Reconcile alpha asset filenames
+
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/repair-alpha-assets.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  reconcile:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Reconcile this prerelease's download names and instructions
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          mkdir -p dist/reconcile
+          gh release download v0.1.0-alpha.1 --dir dist/reconcile
+          python3 scripts/normalize-release-assets.py dist/reconcile docs/releases/v0.1.0-alpha.1.md
+          cd dist/reconcile
+          sha256sum --check SHA256SUMS
+          gh release upload v0.1.0-alpha.1 BUILD-INFO.json INSTALL.md SHA256SUMS --clobber
+          gh release edit v0.1.0-alpha.1 --notes-file INSTALL.md --prerelease

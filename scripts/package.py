@@ -265,7 +265,7 @@ def build(output, binary, formats):
                 " Configurable views, per-folder layouts, file operations and Trash support.\n"
                 " Experimental build; not yet approved for store distribution.\n"
             )
-            artifact = output / f"{NAME}_{debian_version(VERSION)}_{architecture}.deb"
+            artifact = output / f"{NAME}_{debian_version(VERSION).replace('~', '.')}_{architecture}.deb"
             run(["dpkg-deb", "--root-owner-group", "--build", root, artifact])
             artifacts.append(artifact)
     revision = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True, text=True)
