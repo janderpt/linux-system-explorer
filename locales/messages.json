@@ -2618,5 +2618,13 @@
   "Formato de imagem não reconhecido.": {
     "pt": "Formato de imagem não reconhecido.",
     "en": "Unrecognized image format."
+  },
+  "O sistema não retornou uma configuração de impressão válida.": {
+    "pt": "O sistema não retornou uma configuração de impressão válida.",
+    "en": "The system did not return valid print settings."
+  },
+  "O sistema não conseguiu abrir a configuração de impressão.": {
+    "pt": "O sistema não conseguiu abrir a configuração de impressão.",
+    "en": "The system could not open the print settings."
   }
 }

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fix KDE printing by obtaining fresh settings/confirmation with PreparePrint before Print; reject missing/malformed tokens, never reuse earlier printer configuration and ensure cancellation or preparation failure sends no document. Add a safe manual settings-only smoke test for the actual desktop portal.
+
 - Add built-in image rotation, aspect-preserving/exact resizing and PNG/JPEG/WebP/BMP/TIFF conversion, including batch processing, EXIF orientation, transparency handling, cancellable workers and numbered atomic no-replace output; preserve originals and reject animated/multipage input instead of silently flattening it.
 - Add type-aware Print/Print selection through the desktop Print portal, always requiring its dialog; prepare read-only image/text/markup/Office sources as temporary PDFs, merge selections in display order, handle cancellation and report submission rather than physical printing.
 
