@@ -12,3 +12,32 @@ Implementado para instalações nativas. A integração do menu do host no Flatp
 - Aplicativos não recebem ações de arquivo como recortar, excluir ou arrastar para a Lixeira.
 - Na instalação nativa, usar o registro desktop e lançamento por GIO, preservando os argumentos do launcher.
 - No Flatpak, a descoberta e o lançamento dos aplicativos do **host** ainda exigem uma integração própria. Não apresentar os programas do runtime como se fossem todo o menu do sistema nem adicionar execução irrestrita no host para contornar isso.
+
+## Ações específicas por tipo
+
+Primeira etapa implementada para compactados: seção própria no menu, preview do conteúdo e extração delegada ao gerenciador instalado. As opções abaixo são sugestões para próximas etapas, ainda não implementadas como ações de contexto. Quando já houver preview correspondente, a proposta é permitir acessá-lo diretamente pela seção do tipo.
+
+| Tipo | Sugestões |
+| --- | --- |
+| Imagens | Girar, redimensionar, converter, definir como plano de fundo |
+| PDF | Imprimir, separar/juntar páginas, extrair texto |
+| Documentos Word/Writer | Exportar PDF, imprimir |
+| Planilhas Excel/Calc e CSV | Ver planilhas, exportar CSV/PDF, imprimir |
+| Apresentações PowerPoint/Impress | Apresentar, exportar PDF/imagens |
+| HTML e Markdown | Ver fonte/apresentação, exportar PDF, abrir HTML no navegador |
+| Texto, código e scripts | Abrir no editor, comparar arquivos, escolher codificação; executar script no terminal apenas por ação explícita |
+| Áudio | Reproduzir, ver/editar metadados, converter |
+| Vídeo | Reproduzir, capturar quadro, extrair áudio, converter |
+| ISO e imagens de disco | Montar para leitura, desmontar, abrir ferramenta de gravação |
+| Pacotes de software | Abrir no gerenciador de software para revisar instalação/atualização/remoção |
+| AppImage e lançadores | Gerenciar integração, permissões e informações do aplicativo |
+| Certificados e chaves | Ver informações públicas, validade e impressão digital; importar certificado |
+| Bancos de dados | Ver esquema/tabelas, exportar CSV, abrir no cliente disponível |
+| Diagramas e desenhos | Exportar PNG/SVG/PDF, abrir no editor |
+| Fontes | Ver amostra e instalar para o usuário |
+| Agenda e contatos | Importar no calendário ou catálogo de contatos |
+| Backups | Comparar com o original e restaurar para destino escolhido |
+| Binários e tipos desconhecidos | Calcular SHA-256, ver metadados, abrir no editor hexadecimal |
+| Pastas | Agrupar as ações existentes de terminal/compartilhamento e acrescentar compactação |
+
+Ações aparecem conforme o tipo, a seleção e os componentes disponíveis. Sugestão de prioridade: PDF e imagens primeiro; documentos e montagem de ISO depois. Conversões devem preservar o original e produzir um novo arquivo, com operações e confirmações apresentadas pelo componente responsável.

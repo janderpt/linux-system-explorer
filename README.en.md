@@ -10,6 +10,12 @@ desktop file explorers. **Source published on GitHub; version 0.1.0-alpha.2 rema
 
 A local **experimental Flatpak** and the remaining Flathub work are documented in [Flatpak](docs/FLATPAK.md). It does not yet provide all native-package integrations/renderers.
 
+## File type actions
+
+Context menus separate common commands from type-specific actions. Recognized archives have an **Archive** section with **View contents**, **Extract here** and **Extract to…**. Preview stays inside the explorer. Extraction is delegated to Ark, File Roller or Engrampa according to the desktop and installed tools, with Ark preferred on KDE and File Roller on GNOME. XFCE and other desktops use an available compatible tool. The manager owns destination selection, password/conflict dialogs and format support; no force-overwrite options are passed. Extract-here folder organization follows that tool’s behavior, including Ark’s automatic subfolder when needed.
+
+Multi-selection gets extraction actions only if every selected item is an archive file. Mixed selections and directories named with archive suffixes do not receive partial extraction. Work runs in the background, and the folder refreshes when the invoked process finishes; **F5** refreshes after work completed in another window if needed. Errors and missing tools use toasts, without claiming successful extraction merely because it was delegated. Extraction icons are customizable. Host archive-manager extraction is unavailable in the experimental Flatpak; internal preview remains available.
+
 ## System applications
 
 **Applications** is the first sidebar item. It shows menu launchers in a flat collection without folders or categories, using the toolbar’s **Details**, **List** and **Icons** modes. Details has sortable Name, Description and Application ID columns; Icons displays a grid with installed application icons. View mode and zoom are saved for this location independently of folders. Filter by name using the search field or **Ctrl+F**. A single click selects; double-click or **Enter** launches. **F5** refreshes the list after installing or removing programs. Catalog loading and icon decoding run in the background, with a generic icon when necessary.

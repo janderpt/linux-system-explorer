@@ -2326,5 +2326,45 @@
   "Não foi possível abrir o gerenciador de software: {}": {
     "en": "Could not open the software manager: {0}",
     "pt": "Não foi possível abrir o gerenciador de software: {0}"
+  },
+  "Arquivo compactado": {
+    "en": "Archive",
+    "pt": "Arquivo compactado"
+  },
+  "Ver conteúdo": {
+    "en": "View contents",
+    "pt": "Ver conteúdo"
+  },
+  "Ver conteúdo deste arquivo": {
+    "en": "View this archive’s contents",
+    "pt": "Ver conteúdo deste arquivo"
+  },
+  "Extrair aqui": {
+    "en": "Extract here",
+    "pt": "Extrair aqui"
+  },
+  "Extrair em…": {
+    "en": "Extract to…",
+    "pt": "Extrair em…"
+  },
+  "A extração pelo gerenciador do sistema ainda não está disponível no Flatpak experimental.": {
+    "en": "Extraction through the system archive manager is not yet available in the experimental Flatpak.",
+    "pt": "A extração pelo gerenciador do sistema ainda não está disponível no Flatpak experimental."
+  },
+  "Selecione apenas arquivos compactados existentes para extrair.": {
+    "en": "Select only existing archive files to extract.",
+    "pt": "Selecione apenas arquivos compactados existentes para extrair."
+  },
+  "Nenhum gerenciador de compactados compatível foi encontrado. Instale o Ark, File Roller ou Engrampa.": {
+    "en": "No compatible archive manager was found. Install Ark, File Roller or Engrampa.",
+    "pt": "Nenhum gerenciador de compactados compatível foi encontrado. Instale o Ark, File Roller ou Engrampa."
+  },
+  "O gerenciador de compactados retornou um erro: {}": {
+    "en": "The archive manager returned an error: {0}",
+    "pt": "O gerenciador de compactados retornou um erro: {0}"
+  },
+  "Não foi possível abrir o gerenciador de compactados: {}": {
+    "en": "Could not open the archive manager: {0}",
+    "pt": "Não foi possível abrir o gerenciador de compactados: {0}"
   }
 }

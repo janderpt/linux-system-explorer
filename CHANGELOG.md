@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add a file-type-specific archive context section with internal content preview and external Extract here/Extract to actions, desktop-aware Ark/File Roller/Engrampa selection, whole-selection validation, configurable icons, background execution and error toasts; keep host extraction explicitly unavailable in the experimental Flatpak.
+
 - Enable Details, List and Icons for Applications, with sortable application metadata columns, a zoomable icon grid, keyboard navigation and saved location view/zoom; add a configurable software-manager context action for Discover/GNOME Software, including XFCE availability-based selection, AppStream-to-desktop mapping, name-search fallback and startup error toasts.
 
 - Add Applications as the configurable first sidebar item in native installations, with a flat localized launcher list, installed icons, name filtering, double-click/Enter launching, asynchronous catalog/icon loading and tab/history/session support; exclude file operations and explicitly report the experimental Flatpak host-menu limitation.

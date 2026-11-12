@@ -38,6 +38,7 @@ mod toast;
 mod toolbar;
 mod transfers;
 mod trash;
+mod type_actions;
 mod workspace;
 pub use workspace::Workspace;
 
@@ -56,6 +57,7 @@ enum Event {
         Navigation,
     ),
     OpenFailed(String),
+    ArchiveManagerFinished(Result<(), String>),
     SoftwareOpened(Result<bool, String>),
     TransferProgress(file_ops::Progress),
     TransferConflict(Box<transfers::ConflictPrompt>),
@@ -400,6 +402,10 @@ impl Explorer {
                     self.applications.replace(items, error);
                 }
                 Event::OpenFailed(message) => self.report_error(message),
+                Event::ArchiveManagerFinished(result) => {
+                    if let Err(error) = result { self.report_error(error); }
+                    self.refresh_after_transfer = true;
+                }
                 Event::SoftwareOpened(result) => match result {
                     Ok(true) => self.post_typed_notice(toast::NoticeKind::Warning, crate::i18n::tr("Aplicativo sem registro AppStream. O gerenciador foi aberto com uma busca pelo nome.").into()),
                     Ok(false) => {},
@@ -1427,6 +1433,7 @@ impl Explorer {
                 return;
             }
             let multiple = self.selected.len() > 1;
+            let archive_actions = !self.selected_archives(entry).is_empty();
             if self
                 .menu_item(
                     ui,
@@ -1446,6 +1453,7 @@ impl Explorer {
                 ui.close();
             }
             if !entry.is_dir
+                && !archive_actions
                 && self
                     .menu_item(
                         ui,
@@ -1482,6 +1490,7 @@ impl Explorer {
             if entry.is_dir {
                 self.folder_actions_menu(ui, &entry.path);
             }
+            self.type_actions_menu(ui, entry);
             self.file_transfer_menu(ui, entry);
             if self
                 .menu_item(

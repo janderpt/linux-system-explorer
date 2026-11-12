@@ -1,5 +1,6 @@
 //! Installed desktop applications; execution is delegated to GIO so field codes,
 //! terminal applications, Flatpak/Snap launchers and D-Bus activation stay native.
+pub mod archives;
 pub mod menu;
 
 use freedesktop_desktop_entry::{DesktopEntry, Iter};

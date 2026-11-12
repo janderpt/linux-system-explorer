@@ -10,6 +10,8 @@ use std::{
 pub enum Icon {
     Applications,
     SoftwareManager,
+    ExtractHere,
+    ExtractTo,
     Home,
     Desktop,
     Download,
@@ -94,9 +96,11 @@ pub enum Icon {
 }
 
 impl Icon {
-    pub const ALL: [Self; 83] = [
+    pub const ALL: [Self; 85] = [
         Self::Applications,
         Self::SoftwareManager,
+        Self::ExtractHere,
+        Self::ExtractTo,
         Self::Home,
         Self::Desktop,
         Self::Download,
@@ -184,6 +188,8 @@ impl Icon {
         match self {
             Self::Applications => crate::i18n::tr("Aplicativos"),
             Self::SoftwareManager => crate::i18n::tr("Gerenciador de software"),
+            Self::ExtractHere => crate::i18n::tr("Extrair aqui"),
+            Self::ExtractTo => crate::i18n::tr("Extrair em…"),
             Self::Home => crate::i18n::tr("Pasta pessoal"),
             Self::Desktop => crate::i18n::tr("Área de trabalho"),
             Self::Download => crate::i18n::tr("Downloads"),
@@ -272,6 +278,8 @@ impl Icon {
         match self {
             Self::Applications => "shapes",
             Self::SoftwareManager => "store",
+            Self::ExtractHere => "box-open",
+            Self::ExtractTo => "folder-open",
             Self::Home => "house",
             Self::Desktop => "desktop",
             Self::Download => "download",

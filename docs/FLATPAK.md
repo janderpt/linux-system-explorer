@@ -31,7 +31,7 @@ As preferências ficam em `~/.var/app/io.github.janderpt.linux-system-explorer/`
 | Pastas, abas, dois painéis, layouts e operações | Mesma implementação Rust; acesso aos arquivos autorizado pelo Flatpak | Exercitar arquivos descartáveis em KDE/GNOME, Wayland/X11 e mídias externas |
 | Imagens, SVG e texto | Decodificação incorporada, incluindo miniaturas de imagens | Conferir limites e imagens grandes em máquinas limpas |
 | Áudio e vídeo | GStreamer do runtime e extensão de codecs; sem dependência do player do host | Validar codecs e áudio na sessão real |
-| Compactados | Python e libarchive do runtime | Conferir ZIP, TAR, 7z e RAR |
+| Compactados | Preview com Python e libarchive do runtime; extração pelo gerenciador do host indisponível | Conferir ZIP, TAR, 7z e RAR; projetar integração de extração apropriada ao sandbox |
 | PDF, Office e HTML/Markdown formatado | Conversores ainda não incluídos; fonte HTML/Markdown continua disponível e as miniaturas mantêm o ícone | Incluir Poppler, LibreOffice e WeasyPrint a partir de fontes e revisar licenças/tamanho; instalar esses componentes apenas no host não resolve |
 | Abrir e Abrir com | OpenFile do portal, passando descritor do arquivo; o seletor e as associações ficam com o desktop | Conferir o backend de portal KDE/GNOME e cancelamento |
 | Associação padrão de tipos de arquivo | A escolha fica com o portal; não há gravação direta no registro MIME do host | Avaliar o fluxo oferecido por cada backend |
