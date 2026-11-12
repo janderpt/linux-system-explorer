@@ -73,7 +73,7 @@ def gui(work, label):
     return {'seconds_alive': 8, 'renderer': 'Xvfb/software OpenGL'}
 
 
-def sandbox_tests(binary, fixtures):
+def sandbox_tests(binary, fixtures, converters=False):
     base = ['flatpak', 'run', '--user', '--branch=experimental',
             '--filesystem=' + str(binary.parent) + ':ro',
             '--filesystem=' + str(fixtures) + ':ro',
@@ -99,6 +99,26 @@ def sandbox_tests(binary, fixtures):
     output = run(*base, '--exact', selection, '--ignored', '--nocapture')
     assert '1 passed; 0 failed' in output
     results.append({'selection': selection, 'passed': 1})
+    if converters:
+        # CI makes missing tools fail these tests rather than being skipped.
+        # The test process gets only /app and the Platform, never host programs.
+        base.insert(base.index('--command=' + str(binary)), '--env=CI=1')
+        selections = [
+            'preview::tests::pdf_renderer_handles_real_pages_',
+            'preview::tests::office_families_render_',
+            'preview::tests::docx_conversion_preserves_',
+            'preview::tests::html_presentation_loads_',
+            'preview::tests::paginated_html_uses_',
+            'preview::tests::markdown_presentation_formats_',
+            'preview::thumbnail::tests::image_svg_and_pdf_',
+            'preview::thumbnail::tests::office_thumbnails_export_',
+            'printing::tests::printable_types_prepare_and_merge_',
+        ]
+        for selection in selections:
+            output = run(*base, selection, '--nocapture', '--test-threads=1')
+            if '1 passed; 0 failed' not in output:
+                raise RuntimeError('Preview converter test did not run: ' + selection)
+            results.append({'selection': selection, 'passed': 1})
     return {'passed': sum(r['passed'] for r in results), 'groups': results}
 
 
@@ -144,7 +164,7 @@ def main():
             old_version = version().removeprefix('linux-system-explorer ')
             old_commit = run('flatpak', 'info', '--user', '--show-commit', REF)
             old_origin = run('flatpak', 'info', '--user', '--show-origin', REF)
-            assert old_version != metadata['version'] and old_commit != new_commit
+            assert old_commit != new_commit, 'upgrade must install a different build'
             preferences = json.dumps({
                 'language': 'english', 'dark': True, 'restore_tabs': False,
                 'show_hidden': True, 'item_scale': 1.5,
@@ -168,7 +188,8 @@ from pathlib import Path
 print((Path(os.environ['XDG_CONFIG_HOME'])/'linux-system-explorer/preferences.json').read_text())''')
             assert before == after, 'bundle update must preserve user preferences byte for byte'
             upgraded = gui(work, 'upgraded-install')
-            functional = sandbox_tests(args.test_binary, args.fixtures) if args.test_binary else None
+            functional = sandbox_tests(args.test_binary, args.fixtures,
+                                       bool(metadata.get('preview_converters'))) if args.test_binary else None
             for path, data in untouched.items():
                 assert path.read_bytes() == data, 'native settings/MIME defaults must remain untouched'
             permissions = run('flatpak', 'info', '--user', '--show-permissions', REF)

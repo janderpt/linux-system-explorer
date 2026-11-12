@@ -49,7 +49,7 @@ def tree_hashes(root):
             if path.is_file() and path != root / 'flatpak-stage.json'}
 
 
-def stage(destination, binary):
+def stage(destination, binary, converters=None):
     install, report = PACKAGE.stage(destination, '/app', binary)
     if report['packages_without_notice_files']:
         raise ValueError('Dependency notices must be complete before bundling')
@@ -62,6 +62,8 @@ def stage(destination, binary):
     documentation = install / f'share/doc/{PACKAGE.NAME}'
     shutil.copyfile(ROOT / 'docs/FLATPAK.md', documentation / 'INSTALL.md')
     shutil.copyfile(ROOT / 'docs/FLATPAK.md', documentation / 'FLATPAK.md')
+    shutil.copyfile(ROOT / 'docs/FLATPAK-PREVIEW.md', documentation / 'FLATPAK-PREVIEW.md')
+    preview = add_converters(install, converters) if converters is not None else None
     PACKAGE.validate(install)
     metadata = {
         'app_id': PACKAGE.APP_ID, 'version': PACKAGE.VERSION,
@@ -73,10 +75,42 @@ def stage(destination, binary):
         'binary_sha256': digest(install / 'bin' / PACKAGE.NAME),
         'native_target': PACKAGE.host_target(),
         'stage_kind': 'experimental-flatpak',
+        'preview_converters': preview,
         'staged_files': tree_hashes(install),
     }
     (install / 'flatpak-stage.json').write_text(json.dumps(metadata, indent=2) + '\n')
     print(f'Flatpak staging: {install}')
+
+
+def add_converters(install, payload):
+    report_path = payload / 'PREVIEW-CONVERTERS.json'
+    report = json.loads(report_path.read_text())
+    lock = ROOT / 'packaging/flatpak-converters.lock.json'
+    if (report['lock_sha256'] != digest(lock) or report['runtime_branch'] != RUNTIME_VERSION
+            or report['architecture'] != PACKAGE.host_target().split('-')[0]):
+        raise ValueError('Converter payload does not match the locked inputs/runtime/architecture')
+    if tree_hashes(payload / 'app') != report['files']:
+        raise ValueError('Converter payload checksum mismatch')
+    source = payload / 'FLATPAK-PREVIEW-SOURCES.tar'
+    expected = dict(line.split('  ', 1)[::-1]
+                    for line in (payload / 'SHA256SUMS').read_text().splitlines())
+    for path in [report_path, source]:
+        if expected.get(path.name) != digest(path):
+            raise ValueError('Converter sources/report checksum mismatch')
+    # Reject collisions rather than silently replacing native files.
+    for relative in report['files']:
+        target = install / relative
+        if target.exists():
+            raise ValueError('Converter payload collides with staging: ' + relative)
+    for relative in report['files']:
+        target = install / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(payload / 'app' / relative, target)
+    notices = install / 'share/licenses/lse-preview'
+    notices.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(report_path, notices / 'PREVIEW-CONVERTERS.json')
+    shutil.copyfile(source, install.parent / source.name)
+    return report | {'source_artifact': source.name, 'source_sha256': digest(source)}
 
 
 def validate_stage(install):
@@ -88,6 +122,9 @@ def validate_stage(install):
         raise ValueError('Staged binary checksum mismatch')
     if metadata['staged_files'] != tree_hashes(install):
         raise ValueError('Staged file checksum mismatch')
+    if preview := metadata.get('preview_converters'):
+        if digest(install.parent / preview['source_artifact']) != preview['source_sha256']:
+            raise ValueError('Corresponding preview sources checksum mismatch')
     return metadata
 
 
@@ -149,10 +186,18 @@ def build(install, work, output):
                         minimum_host_xdg_dbus_proxy='0.1.9',
                         submission_ready=False, flathub_manifest_included=False,
                         artifacts={name: digest(artifact)})
+        artifacts = [artifact]
+        if preview := metadata.get('preview_converters'):
+            if not all(capabilities.get(name) for name in ['pdf', 'office', 'html_markdown_presentation']):
+                raise RuntimeError('Bundled preview converters failed the runtime probe')
+            sources = output / preview['source_artifact']
+            shutil.copyfile(install.parent / sources.name, sources)
+            metadata['artifacts'][sources.name] = digest(sources)
+            artifacts.append(sources)
         report = output / 'FLATPAK-BUILD-INFO.json'
         report.write_text(json.dumps(metadata, indent=2) + '\n')
         (output / 'SHA256SUMS').write_text(''.join(
-            f'{digest(path)}  {path.name}\n' for path in [artifact, report]))
+            f'{digest(path)}  {path.name}\n' for path in [*artifacts, report]))
         print(f'Experimental bundle: {artifact}')
 
 
@@ -161,12 +206,14 @@ def main():
     parser.add_argument('action', choices=['stage', 'build'])
     parser.add_argument('--binary', type=Path, default=ROOT / 'target/release' / PACKAGE.NAME)
     parser.add_argument('--destdir', type=Path, default=ROOT / 'build/flatpak-stage')
+    parser.add_argument('--converters', type=Path, default=ROOT / 'build/flatpak-preview-converters',
+                        help='Verified payload produced by flatpak-converters.py')
     parser.add_argument('--stage', type=Path, default=ROOT / 'build/flatpak-stage/app')
     parser.add_argument('--work-dir', type=Path, default=ROOT / 'build/flatpak-build')
     parser.add_argument('--output', type=Path, default=ROOT / 'dist/flatpak-experimental')
     args = parser.parse_args()
     if args.action == 'stage':
-        stage(args.destdir, args.binary)
+        stage(args.destdir, args.binary, args.converters)
     else:
         build(args.stage, args.work_dir, args.output)
 

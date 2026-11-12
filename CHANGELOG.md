@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Bundle pinned Poppler, LibreOffice and WeasyPrint conversion engines/dependencies in the experimental Flatpak; compile native helpers offline in the Freedesktop SDK, preserve notices and supply corresponding source/build inputs as a separate archive. Verify PDF/Office/HTML/Markdown, thumbnails and print preparation inside the installed sandbox, and retain compatibility with the older native WeasyPrint API. Publish the converter-equipped alpha.4 variant with distinct asset names, exact application source, checksums and revised same-ref upgrade instructions.
+
 - Publish the tested alpha.4 experimental Flatpak as separate GitHub release assets with explicit limitations, prefixed installation/checksum files and source provenance; preserve the existing native packages and immutable tag.
 
 - Refresh the separate experimental Flatpak bundle for alpha.4, document same-ref updates from the existing alpha.2 prototype and add a disposable-container smoke test for fresh installation, upgrade, private preference preservation, X11 startup and removal.

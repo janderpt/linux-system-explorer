@@ -5,7 +5,13 @@ import sys
 from urllib.parse import unquote_to_bytes, urlsplit
 
 try:
-    from weasyprint import HTML, default_url_fetcher
+    from weasyprint import HTML
+    try:
+        from weasyprint import URLFetcher
+    except ImportError:
+        # Distribution packages still expose the pre-70 callable API.
+        from weasyprint import default_url_fetcher
+        URLFetcher = None
 except ImportError:
     print("LSE_HTML_RUNTIME_MISSING", file=sys.stderr)
     raise SystemExit(78)
@@ -14,25 +20,38 @@ snapshot, original, output = map(Path, sys.argv[1:4])
 root = original.resolve().parent
 
 
-def local_resource(url, *args, **kwargs):
+def check_resource(url):
     parsed = urlsplit(url)
     if parsed.scheme == "data":
-        return default_url_fetcher(url, timeout=3)
+        return
     if parsed.scheme == "file" and parsed.netloc in ("", "localhost"):
         target = Path(os.fsdecode(unquote_to_bytes(parsed.path))).resolve()
         if root in target.parents and target.is_file() and target.stat().st_size <= 16 * 1024 * 1024:
-            return default_url_fetcher(url, timeout=3)
+            return
     raise ValueError("Preview only loads embedded resources and files within the HTML directory")
+
+
+if URLFetcher is not None:
+    class LocalFetcher(URLFetcher):
+        def fetch(self, url, headers=None):
+            check_resource(url)
+            return super().fetch(url, headers)
+else:
+    def local_resource(url, *args, **kwargs):
+        check_resource(url)
+        return default_url_fetcher(url, timeout=3)
 
 
 # WeasyPrint renders HTML/CSS without a JavaScript engine. The fetcher prevents
 # network requests and local references outside this document's directory.
 try:
+    fetcher = (LocalFetcher(timeout=3, allowed_protocols={"file", "data"}, allow_redirects=False)
+               if URLFetcher is not None else local_resource)
     # This output is paginated. Screen-only grids/flex layouts can fail when
     # fragmented across PDF pages; honor the document's print styles instead.
     with snapshot.open("rb") as source:
         HTML(file_obj=source, base_url=original.resolve().as_uri(),
-             url_fetcher=local_resource, media_type="print").write_pdf(str(output))
+             url_fetcher=fetcher, media_type="print").write_pdf(str(output))
 except Exception:
     # Keep library tracebacks out of user-facing toasts. Rust supplies the
     # localized message and preserves the source view.

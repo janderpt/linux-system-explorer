@@ -36,6 +36,8 @@ The source repository already exists at `janderpt/linux-system-explorer`. Publis
 
 See [FLATPAK.md](FLATPAK.md) for the local bundle builder, capability differences, installation/removal and remaining store gates. A tested experimental bundle may accompany a native alpha release when explicitly identified as experimental, with its own installation/limitation notes and prefixed metadata/checksums. Preserve existing native assets and their checksums; do not present sandbox behavior as certified or move the native tag. The local educational manifest is not a Flathub submission manifest and may not be used as its starting point. Keep experimental artifacts and their metadata/checksums separate. A human must independently author the eventual offline source-build manifest and handle Flathub submission/review interactions.
 
+Builds with the [bundled preview payload](FLATPAK-PREVIEW.md) must also attach `FLATPAK-PREVIEW-SOURCES.tar` at the same download location, checksum it, retain the converter lock/report and pass the sandbox PDF/Office/HTML/Markdown/thumbnail/print-preparation tests. Do not replace an older published bundle or its checksum silently. The original alpha.4 experimental asset predates this payload. The converter-equipped variant uses distinct `flatpak-previews` and `FLATPAK-PREVIEW-*` names; retain the original assets/tag and explicitly link the recommended variant from the release notes.
+
 ## Stable releases and stores
 
 Complete the channel-specific gates in DISTRIBUTION.md. Do not mark this build stable

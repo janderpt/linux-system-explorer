@@ -1,6 +1,8 @@
 import importlib.util
 import json
+import io
 from pathlib import Path
+import tarfile
 import tempfile
 import unittest
 from types import SimpleNamespace
@@ -9,6 +11,9 @@ from unittest.mock import patch
 SPEC = importlib.util.spec_from_file_location('lse_flatpak', Path(__file__).with_name('flatpak.py'))
 FLATPAK = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(FLATPAK)
+SPEC = importlib.util.spec_from_file_location('lse_flatpak_converters', Path(__file__).with_name('flatpak-converters.py'))
+CONVERTERS = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(CONVERTERS)
 
 
 class FlatpakStagingTests(unittest.TestCase):
@@ -81,6 +86,68 @@ class FlatpakStagingTests(unittest.TestCase):
                 else:
                     with self.assertRaisesRegex(RuntimeError, 'old proxies'):
                         FLATPAK.proxy_version()
+
+    def test_converter_payload_rejects_changed_binaries_sources_and_file_collisions(self):
+        payload = self.install.parent / 'converters'
+        converter = payload / 'app/bin/pdfinfo'
+        converter.parent.mkdir(parents=True)
+        converter.write_bytes(b'converter fixture')
+        (payload / 'app/share/licenses/lse-preview').mkdir(parents=True)
+        source = payload / 'FLATPAK-PREVIEW-SOURCES.tar'
+        source.write_bytes(b'corresponding source fixture')
+        report_path = payload / 'PREVIEW-CONVERTERS.json'
+        report_path.write_text(json.dumps({
+            'lock_sha256': FLATPAK.digest(FLATPAK.ROOT / 'packaging/flatpak-converters.lock.json'),
+            'runtime_branch': FLATPAK.RUNTIME_VERSION, 'architecture': 'x86_64',
+            'files': FLATPAK.tree_hashes(payload / 'app'),
+        }))
+        (payload / 'SHA256SUMS').write_text(''.join(
+            f'{FLATPAK.digest(p)}  {p.name}\n' for p in [source, report_path]))
+        with patch.object(FLATPAK.PACKAGE, 'host_target', return_value='x86_64-unknown-linux-gnu'):
+            converter.write_bytes(b'tampered')
+            with self.assertRaisesRegex(ValueError, 'payload checksum'):
+                FLATPAK.add_converters(self.install, payload)
+            converter.write_bytes(b'converter fixture')
+            source.write_bytes(b'tampered')
+            with self.assertRaisesRegex(ValueError, 'sources/report checksum'):
+                FLATPAK.add_converters(self.install, payload)
+            source.write_bytes(b'corresponding source fixture')
+            target = self.install / 'bin/pdfinfo'
+            target.write_bytes(b'existing executable')
+            with self.assertRaisesRegex(ValueError, 'collides'):
+                FLATPAK.add_converters(self.install, payload)
+            self.assertEqual(target.read_bytes(), b'existing executable')
+            target.unlink()
+            result = FLATPAK.add_converters(self.install, payload)
+            self.assertEqual(target.read_bytes(), converter.read_bytes())
+            self.assertEqual(result['source_sha256'], FLATPAK.digest(self.install.parent / source.name))
+
+
+class ConverterInputTests(unittest.TestCase):
+    def test_corrupt_cache_is_rejected_without_network_or_overwrite(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            cache = Path(temporary)
+            path = cache / 'source.tar.xz'
+            path.write_bytes(b'corrupt archive')
+            with patch.object(CONVERTERS.urllib.request, 'urlopen') as network:
+                with self.assertRaisesRegex(ValueError, 'Cached checksum mismatch'):
+                    CONVERTERS.download({'filename': path.name, 'sha256': '0' * 64}, cache)
+                network.assert_not_called()
+            self.assertEqual(path.read_bytes(), b'corrupt archive')
+
+    def test_source_archives_cannot_escape_their_extraction_root(self):
+        for name, link in [('../outside', None), ('link', '/etc/passwd')]:
+            with self.subTest(name=name), tempfile.TemporaryDirectory() as temporary:
+                archive = Path(temporary) / 'source.tar'
+                with tarfile.open(archive, 'w') as output:
+                    member = tarfile.TarInfo(name)
+                    if link:
+                        member.type = tarfile.SYMTYPE
+                        member.linkname = link
+                    output.addfile(member, io.BytesIO())
+                with self.assertRaises(tarfile.FilterError):
+                    CONVERTERS.extract(archive, Path(temporary) / 'unpack')
+                self.assertFalse((Path(temporary) / 'outside').exists())
 
 
 if __name__ == '__main__':

@@ -11,7 +11,7 @@ Explorador de arquivos desktop para Linux, escrito em Rust e inspirado na organi
 
 Pré-release **v0.1.0-alpha.4**: pacotes Ubuntu 24.04+ x86_64, checksums e [instruções de instalação](docs/releases/v0.1.0-alpha.4.md). [Downloads no GitHub](https://github.com/janderpt/linux-system-explorer/releases/tag/v0.1.0-alpha.4).
 
-A release também oferece um **Flatpak experimental x86_64**, com [instalação e atualização próprias](docs/releases/v0.1.0-alpha.4-flatpak.md) e `FLATPAK-SHA256SUMS`. Consulte [Flatpak](docs/FLATPAK.md) para limitações e preparação para o Flathub; ele ainda tem diferenças de recursos em relação aos pacotes nativos.
+A release também oferece um **Flatpak experimental x86_64**, com [instalação e atualização próprias](docs/releases/v0.1.0-alpha.4-flatpak-preview.md) e `FLATPAK-PREVIEW-SHA256SUMS`. Consulte [Flatpak](docs/FLATPAK.md) para limitações e preparação para o Flathub; ele ainda tem diferenças de recursos em relação aos pacotes nativos.
 
 ## Edição de imagens e impressão
 
@@ -333,7 +333,7 @@ PDFs em montagens que oferecem somente leitura sequencial, como FTP pelo GVfs, u
 
 Arquivos sem preview geram apenas um toast de aviso, sem abrir um popup vazio. Falhas de leitura ou renderização usam toasts de erro e fecham o preview; falhas na apresentação de HTML ou Markdown preservam o acesso ao código-fonte e usam mensagens curtas, sem tracebacks. O carregamento ocorre em segundo plano, com limites de tamanho e cancelamento dos conversores, sem alterar o arquivo original. A conversão Office trabalha sobre uma cópia temporária e um perfil isolado, com macros e conteúdo ativo desativados; o perfil pessoal do LibreOffice é preservado. Arquivos Office de até 256 MiB são copiados em blocos para evitar alocar todo o documento na memória. A conversão tem prazo de dois minutos e pode ser cancelada fechando o preview. Fontes disponíveis no sistema podem influenciar a paginação.
 
-O preview não depende de um visualizador do KDE ou GNOME. As dependências de execução estão em [preview-runtime.json](packaging/preview-runtime.json); o DEB declara GStreamer, os plugins Base/Good/Libav, `poppler-utils`, LibreOffice Writer/Calc/Impress/Draw/Math, fontes Liberation, WeasyPrint, Python 3 e libarchive. Sem um conversor, apenas seu recurso fica indisponível e é informado por aviso; o explorador continua funcionando, e HTML e Markdown mantêm a opção Fonte. Compilações pelo código e arquivos tar precisam desses componentes instalados. A distribuição em outros formatos deve fornecer os mesmos recursos e ser validada em cada ambiente; os pacotes Flatpak e AppImage ainda estão em preparação.
+O preview não depende de um visualizador do KDE ou GNOME. As dependências de execução estão em [preview-runtime.json](packaging/preview-runtime.json); o DEB declara GStreamer, os plugins Base/Good/Libav, `poppler-utils`, LibreOffice Writer/Calc/Impress/Draw/Math, fontes Liberation, WeasyPrint, Python 3 e libarchive. Sem um conversor, apenas seu recurso fica indisponível e é informado por aviso; o explorador continua funcionando, e HTML e Markdown mantêm a opção Fonte. Compilações pelo código e arquivos tar precisam desses componentes instalados. O build Flatpak atual inclui esses conversores no sandbox, com [versões fixadas, fontes e testes próprios](docs/FLATPAK-PREVIEW.md); o primeiro bundle alpha.4 permanece como histórico sem eles, e a variante recomendada usa `flatpak-previews`. Outros formatos devem fornecer recursos equivalentes e ser validados; AppImage continua em preparação.
 
 ## Copiar, recortar e colar
 

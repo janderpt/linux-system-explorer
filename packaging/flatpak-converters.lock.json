@@ -1,0 +1,267 @@
+{
+  "schema": 1,
+  "architecture": "x86_64",
+  "python": "3.14",
+  "runtime_branch": "26.08",
+  "components": {
+    "libreoffice": {
+      "version": "26.8.3.1",
+      "method": "upstream-relocatable-binaries",
+      "binary": {
+        "filename": "LibreOffice_26.8.3_Linux_x86-64_deb.tar.gz",
+        "url": "https://download.documentfoundation.org/libreoffice/stable/26.8.3/deb/x86_64/LibreOffice_26.8.3_Linux_x86-64_deb.tar.gz",
+        "sha256": "e7cd3538e85818ff9dd9bb65386769fde927011242aace5a144989f4000dcabf"
+      },
+      "source": {
+        "filename": "libreoffice-26.8.3.1.tar.xz",
+        "url": "https://download.documentfoundation.org/libreoffice/src/26.8.3/libreoffice-26.8.3.1.tar.xz",
+        "sha256": "83006a81376988d04a73eaa4dcf44f6f12774a81fd763726406a831905a9de28"
+      },
+      "source_revision": "861effc5289d539f15c4c18d1ba8579ffd78728b"
+    },
+    "poppler": {
+      "version": "26.11.0",
+      "source": {
+        "filename": "poppler-26.11.0.tar.xz",
+        "url": "https://poppler.freedesktop.org/poppler-26.11.0.tar.xz",
+        "sha256": "41c32680160addf5a8dd7a830e4869c01e9f6bee1abb91e44fabd1ba9d7828fb"
+      }
+    },
+    "poppler-data": {
+      "version": "0.4.12",
+      "source": {
+        "filename": "poppler-data-0.4.12.tar.gz",
+        "url": "https://poppler.freedesktop.org/poppler-data-0.4.12.tar.gz",
+        "sha256": "c835b640a40ce357e1b83666aabd95edffa24ddddd49b8daff63adb851cdab74"
+      }
+    },
+    "krb5": {
+      "version": "1.22.2",
+      "source": {
+        "filename": "krb5-1.22.2.tar.gz",
+        "url": "https://kerberos.org/dist/krb5/1.22/krb5-1.22.2.tar.gz",
+        "sha256": "3243ffbc8ea4d4ac22ddc7dd2a1dc54c57874c40648b60ff97009763554eaf13"
+      }
+    }
+  },
+  "python_runtime": [
+    {
+      "name": "weasyprint",
+      "version": "70.0",
+      "source": {
+        "filename": "weasyprint-70.0.tar.gz",
+        "url": "https://files.pythonhosted.org/packages/8d/0e/461aeb736762862b511034933d5b98d68f812431b7393b026d9ace5f6b42/weasyprint-70.0.tar.gz",
+        "sha256": "c263abf0e86c747b12af678b67f85f4abbfb97d18a20503031e7ba94e4b8cf8c"
+      },
+      "wheel": {
+        "filename": "weasyprint-70.0-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/22/8b/0c53c869f29d3273536b896dd17f092549e34e35ffba4c7a60a6de1cb1c2/weasyprint-70.0-py3-none-any.whl",
+        "sha256": "5043e55e38d2a2af2b2b871e869697b1f65dad5f8b4a3677961d04ceacf9c5fe"
+      }
+    },
+    {
+      "name": "pydyf",
+      "version": "0.13.0",
+      "source": {
+        "filename": "pydyf-0.13.0.tar.gz",
+        "url": "https://files.pythonhosted.org/packages/67/1f/3a10f8d2d106bb68330c43a5cd0faf922d1816f65a1581f35015ac654a79/pydyf-0.13.0.tar.gz",
+        "sha256": "3c1bd536c7161d9f472b82a8aaa27d3359a9058ec12de15302d92b3690dae7f5"
+      },
+      "wheel": {
+        "filename": "pydyf-0.13.0-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/78/0a/091fdda21512cc4a149c5d43a3d29b8b336f4f04181f2553f43ed54f7490/pydyf-0.13.0-py3-none-any.whl",
+        "sha256": "85b28a3af8c35e6fe1415f2b3f1d6851cb3b52f53592c2cda4db9a00a8979677"
+      }
+    },
+    {
+      "name": "cffi",
+      "version": "2.1.1",
+      "source": {
+        "filename": "cffi-2.1.1.tar.gz",
+        "url": "https://files.pythonhosted.org/packages/9e/ef/008a1939e372c06329a3fce4279c02f328488f3526744906eeec3da7ad5f/cffi-2.1.1.tar.gz",
+        "sha256": "dd31f52ea1086513bb9df30f8fcee9b8918323ae067a3d5b78bc826a000712be"
+      }
+    },
+    {
+      "name": "tinyhtml5",
+      "version": "2.1.0",
+      "source": {
+        "filename": "tinyhtml5-2.1.0.tar.gz",
+        "url": "https://files.pythonhosted.org/packages/b1/1f/cfe2f6b30557c92b3f31d41707e09cef5c1efbd87392bc6c0430c46b0e4d/tinyhtml5-2.1.0.tar.gz",
+        "sha256": "60a50ec3d938a37e491efa01af895853060943dcebb5627de5b10d188b338a67"
+      },
+      "wheel": {
+        "filename": "tinyhtml5-2.1.0-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/52/48/01695a036b695f83fea7aef6955d735db0f517b1c8e25ddb399ac0bdbcbf/tinyhtml5-2.1.0-py3-none-any.whl",
+        "sha256": "6e11cfff38515834268daf89d5f85bbde0b6dd02e8d9e212d1385c2289b89f0a"
+      }
+    },
+    {
+      "name": "tinycss2",
+      "version": "1.5.1",
+      "source": {
+        "filename": "tinycss2-1.5.1.tar.gz",
+        "url": "https://files.pythonhosted.org/packages/a3/ae/2ca4913e5c0f09781d75482874c3a95db9105462a92ddd303c7d285d3df2/tinycss2-1.5.1.tar.gz",
+        "sha256": "d339d2b616ba90ccce58da8495a78f46e55d4d25f9fd71dfd526f07e7d53f957"
+      },
+      "wheel": {
+        "filename": "tinycss2-1.5.1-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/60/45/c7b5c3168458db837e8ceab06dc77824e18202679d0463f0e8f002143a97/tinycss2-1.5.1-py3-none-any.whl",
+        "sha256": "3415ba0f5839c062696996998176c4a3751d18b7edaaeeb658c9ce21ec150661"
+      }
+    },
+    {
+      "name": "cssselect2",
+      "version": "0.10.1",
+      "source": {
+        "filename": "cssselect2-0.10.1.tar.gz",
+        "url": "https://files.pythonhosted.org/packages/06/00/2456b6b664c7a770989cbe3c352aac4eb962c938486f03a2e1255ae963c6/cssselect2-0.10.1.tar.gz",
+        "sha256": "83b0d820ef589dabaf693289b647c2f5b410f76d285f56deba911ffa75a7b9d1"
+      },
+      "wheel": {
+        "filename": "cssselect2-0.10.1-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/bd/59/6b1daa3b94de8970e2a2787ba73616c2d0675d2f948ef4cad8bef7f21bc6/cssselect2-0.10.1-py3-none-any.whl",
+        "sha256": "25cc4494d55985d6a6da359be48da6ce98c28dcbafa2314c383ace3fc32ec868"
+      }
+    },
+    {
+      "name": "pyphen",
+      "version": "0.18.1",
+      "source": {
+        "filename": "pyphen-0.18.1.tar.gz",
+        "url": "https://files.pythonhosted.org/packages/94/47/8430452269cd28863d73b903d07d329d058cf762527ff211b3864ba61fc7/pyphen-0.18.1.tar.gz",
+        "sha256": "dbae6fbbe4f01cb206108b43573d857c67107be9d0e38eb1b08d6fa2210634a7"
+      },
+      "wheel": {
+        "filename": "pyphen-0.18.1-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/ec/1d/23801cf008f71575f0a4800463f349afa5f04b27fe783178a45cdc4d5edf/pyphen-0.18.1-py3-none-any.whl",
+        "sha256": "0aa9051e15928cecadd4c632cea0258ba57215b2a197a39baa46abcdb0f47e84"
+      }
+    },
+    {
+      "name": "pillow",
+      "version": "13.0.0",
+      "source": {
+        "filename": "pillow-13.0.0.tar.gz",
+        "url": "https://files.pythonhosted.org/packages/ce/a4/9cc30690a394a8305e8be4c9036aa16d0dfddadd09079860b582f562496d/pillow-13.0.0.tar.gz",
+        "sha256": "cdcd1ba258178f7356d74170c9a81ba4eab6a5d55748bc402a5a2a6fe6be3510"
+      }
+    },
+    {
+      "name": "fonttools",
+      "version": "4.68.0",
+      "source": {
+        "filename": "fonttools-4.68.0.tar.gz",
+        "url": "https://files.pythonhosted.org/packages/0c/b5/672312ae80ce8b8eb9779c56052a24c8f36652aa7293a1a420553bcf03e5/fonttools-4.68.0.tar.gz",
+        "sha256": "73294e233070f71e2b3653b6bd8564af676d57f26d075761fb06d1ab2e4a7a5d"
+      },
+      "wheel": {
+        "filename": "fonttools-4.68.0-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/35/74/4ea331ecc65ba05a58b1e4e8ccd604c8a15565f876dfbf93fc2a2ea2e22b/fonttools-4.68.0-py3-none-any.whl",
+        "sha256": "d76f8fdcb6936f5e1045a0c9dd721a4bf11112e60d1e243bfa1d39f06a8b3104"
+      }
+    },
+    {
+      "name": "pycparser",
+      "version": "3.12",
+      "source": {
+        "filename": "pycparser-3.12.tar.gz",
+        "url": "https://files.pythonhosted.org/packages/cb/27/eeb9f307bf07060f3d9f9aa0fb8c15b01bdfded0a941e4b2719c7f94cacd/pycparser-3.12.tar.gz",
+        "sha256": "f03387877eab82ce01bbdfd0ba7252ee55a90b1c708d5129e2ce915475cf1db6"
+      },
+      "wheel": {
+        "filename": "pycparser-3.12-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/b6/ae/315bbeee126a769cbde43cf4908acb4b40408d8bf8bbf334dd7368d8dadf/pycparser-3.12-py3-none-any.whl",
+        "sha256": "a076f3f489b39b43ed13563a1dafe42447445bec2e294154ec5c57fcdda4c85e"
+      }
+    },
+    {
+      "name": "webencodings",
+      "version": "0.6.1",
+      "source": {
+        "filename": "webencodings-0.6.1.tar.gz",
+        "url": "https://files.pythonhosted.org/packages/d5/a0/8fd707bcb776a7be556bad06a2ea5fb9bd519df78ef8e26f70ccf0f38bff/webencodings-0.6.1.tar.gz",
+        "sha256": "565f9ad031c702dae404e27a099e3e09186a3ab1b9520f06d215502b651fd910"
+      },
+      "wheel": {
+        "filename": "webencodings-0.6.1-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/77/c6/040cbc72480d789a5f40d63fb484d3106554c4dfa2d2b70ad5022057750f/webencodings-0.6.1-py3-none-any.whl",
+        "sha256": "7fab6269c8bf237c657876b52058ccb182e861518d1c695c1a9aaa8c1c105d5b"
+      }
+    },
+    {
+      "name": "brotli",
+      "version": "1.2.1",
+      "source": {
+        "filename": "brotli-1.2.1.tar.gz",
+        "url": "https://files.pythonhosted.org/packages/cf/81/1546c983678a9b4e77cb4718eaedd1b2caf24a6cdbf1eb8775938d22aff7/brotli-1.2.1.tar.gz",
+        "sha256": "02b2f7b5a83485efe448a44ddf7983def05c3bb1dcf917d4f7154070260e13de"
+      }
+    },
+    {
+      "name": "zopfli",
+      "version": "0.4.3",
+      "source": {
+        "filename": "zopfli-0.4.3.tar.gz",
+        "url": "https://files.pythonhosted.org/packages/74/21/3b6af43a663b22b00e738bb0642931a2579e15da6852613d56c6aa535d28/zopfli-0.4.3.tar.gz",
+        "sha256": "d3a50f91a13cea9bafe025de8fd87a005eb26de02a4f0c193127ddbf23ac8ebe"
+      }
+    }
+  ],
+  "python_build": [
+    {
+      "name": "pybind11",
+      "version": "3.1.0",
+      "wheel": {
+        "filename": "pybind11-3.1.0-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/33/fd/8762f7ee3e4e4be6d1d846cffb4916dd9bb02b2f800d3603718a0efe494c/pybind11-3.1.0-py3-none-any.whl",
+        "sha256": "b8488090f8acffbcb6b5d6a85571a6827a0a2981ffb75e5a0b27b87c4a6b7dd0"
+      }
+    },
+    {
+      "name": "pkgconfig",
+      "version": "1.6.0",
+      "wheel": {
+        "filename": "pkgconfig-1.6.0-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/75/6f/f7ec07fba48f07c555cc4099481df644fbbc12067879072c17ac229f6556/pkgconfig-1.6.0-py3-none-any.whl",
+        "sha256": "98e71754855e9563838d952a160eb577edabb57782e49853edb5381927e6bea1"
+      }
+    },
+    {
+      "name": "setuptools_scm",
+      "version": "10.3.4",
+      "wheel": {
+        "filename": "setuptools_scm-10.3.4-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/da/f5/54538a1f17ea753c42b0928dc2e62986d463f8c393340b9a1e602f2d4dd9/setuptools_scm-10.3.4-py3-none-any.whl",
+        "sha256": "82f34c3e3084fc2b57d397200637cc13f2338004052d2fee47baa5f0e902464e"
+      }
+    },
+    {
+      "name": "packaging",
+      "version": "26.3",
+      "wheel": {
+        "filename": "packaging-26.3-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/63/34/ba1c580383c9eada3711951fef0795c80b829a078d72188184bcab9dd527/packaging-26.3-py3-none-any.whl",
+        "sha256": "d7193f7c8e4e93f444fde0262bf90af30e16fa0ad0ad44cb553c87339b23cd1c"
+      }
+    },
+    {
+      "name": "vcs-versioning",
+      "version": "2.6.0",
+      "wheel": {
+        "filename": "vcs_versioning-2.6.0-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/73/1d/ad4064bf12f4503bf61e65d74c93c523672776d25ee0a06aaf42ae09ef3f/vcs_versioning-2.6.0-py3-none-any.whl",
+        "sha256": "f8bebd1302ebc12e67ceb30fc7dd698ec969414b6fa43b30c3f14ac9b1e72c41"
+      }
+    },
+    {
+      "name": "setuptools",
+      "version": "84.2.1",
+      "wheel": {
+        "filename": "setuptools-84.2.1-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/ef/55/6dc6d6bb953bdfc52519a0059592c52b6e3b8ad51cf8256dffceb55b0610/setuptools-84.2.1-py3-none-any.whl",
+        "sha256": "ca140b45d5325a9478f880e351484f62fef15f336462e449ca0c03c873d589c2"
+      }
+    }
+  ]
+}

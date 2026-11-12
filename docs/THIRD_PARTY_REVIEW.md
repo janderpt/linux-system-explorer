@@ -22,7 +22,15 @@ Reference: https://www.mozilla.org/en-US/MPL/2.0/FAQ/ and https://www.mozilla.or
 
 ## External runtime packages
 
-GStreamer/codecs, Poppler, LibreOffice, WeasyPrint, libarchive, GIO, UDisks2/Polkit and desktop portal services are system dependencies, not copied into these archives. Their packages supply their own notices/source mechanisms. The DEB declares them for installation through the distribution package manager; tar users install the equivalent runtime packages. Other packaging formats that bundle these components require a new review.
+In native DEB/tar packages, GStreamer/codecs, Poppler, LibreOffice, WeasyPrint, libarchive, GIO, UDisks2/Polkit and desktop portal services are system dependencies, not copied into those archives. Their packages supply their own notices/source mechanisms. The DEB declares them for installation through the distribution package manager; tar users install the equivalent runtime packages.
+
+## Experimental Flatpak preview payload
+
+The new experimental payload bundles Poppler 26.11.0, poppler-data 0.4.12, upstream LibreOffice 26.8.3.1 conversion resources, MIT Kerberos 1.22.2 and WeasyPrint 70.0 with its pinned Python dependencies. The original converter-less alpha.4 Flatpak remains unchanged; the converter-equipped variant uses distinct public asset names. Runtime-provided libraries remain part of the Freedesktop Platform; no host program/library is copied. The application's original MIT license does not relicense the bundled components.
+
+Poppler retains GPL notices; character data retain Adobe/GPL notices. Kerberos retains its complete NOTICE. LibreOffice is unmodified upstream binary content with LICENSE, LICENSE.html, NOTICE, credits, fonts and third-party notices preserved. Python distributions retain their installed license metadata; native Python extensions are built from the pinned published sources instead of repackaging wheels with hidden native dependencies. The precise versions, input URLs/hashes and SDK commit are recorded in the converter locks/report. This is a binary repackaging of LibreOffice, not a full source build or independent legal/security certification.
+
+The build produces **FLATPAK-PREVIEW-SOURCES.tar**, containing the exact LibreOffice core source plus its revision's external source archives, all bundled Python sources, Poppler/data, Kerberos and build instructions. Distribute that source archive alongside every bundle using this payload and retain its checksum. It is separate from the installed application to avoid installing a large source collection. See [FLATPAK-PREVIEW.md](FLATPAK-PREVIEW.md) for paths, reproduction, included components and validation. Future converter updates require a fresh notice/source check, sandbox tests and maintenance of the corresponding sources; the existing Rust-only audit does not audit these native engines.
 
 ## Security review
 
