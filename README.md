@@ -11,7 +11,7 @@ Explorador de arquivos desktop para Linux, escrito em Rust e inspirado na organi
 
 Pré-release **v0.1.0-alpha.4**: pacotes Ubuntu 24.04+ x86_64, checksums e [instruções de instalação](docs/releases/v0.1.0-alpha.4.md). [Downloads no GitHub](https://github.com/janderpt/linux-system-explorer/releases/tag/v0.1.0-alpha.4).
 
-Para o protótipo **Flatpak experimental** e a preparação para o Flathub, consulte [Flatpak](docs/FLATPAK.md). Ele ainda tem diferenças de recursos em relação aos pacotes nativos.
+A release também oferece um **Flatpak experimental x86_64**, com [instalação e atualização próprias](docs/releases/v0.1.0-alpha.4-flatpak.md) e `FLATPAK-SHA256SUMS`. Consulte [Flatpak](docs/FLATPAK.md) para limitações e preparação para o Flathub; ele ainda tem diferenças de recursos em relação aos pacotes nativos.
 
 ## Edição de imagens e impressão
 

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Publish the tested alpha.4 experimental Flatpak as separate GitHub release assets with explicit limitations, prefixed installation/checksum files and source provenance; preserve the existing native packages and immutable tag.
+
 - Refresh the separate experimental Flatpak bundle for alpha.4, document same-ref updates from the existing alpha.2 prototype and add a disposable-container smoke test for fresh installation, upgrade, private preference preservation, X11 startup and removal.
 
 ## 0.1.0-alpha.4 — 2026-11-12

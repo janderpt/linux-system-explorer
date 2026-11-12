@@ -8,7 +8,7 @@ desktop file explorers. **Source published on GitHub; version 0.1.0-alpha.4 rema
 
 **v0.1.0-alpha.4** prerelease: Ubuntu 24.04+ x86_64 packages, checksums and [installation notes](docs/releases/v0.1.0-alpha.4.md). [GitHub downloads](https://github.com/janderpt/linux-system-explorer/releases/tag/v0.1.0-alpha.4).
 
-A local **experimental Flatpak** and the remaining Flathub work are documented in [Flatpak](docs/FLATPAK.md). It does not yet provide all native-package integrations/renderers.
+This release also offers an **experimental x86_64 Flatpak**, with [separate installation/upgrade notes](docs/releases/v0.1.0-alpha.4-flatpak.md) and `FLATPAK-SHA256SUMS`. See [Flatpak](docs/FLATPAK.md) for limitations and remaining Flathub work; it does not yet provide all native-package integrations/renderers.
 
 ## Image operations and printing
 

@@ -34,7 +34,7 @@ The source repository already exists at `janderpt/linux-system-explorer`. Publis
 
 ## Experimental Flatpak
 
-See [FLATPAK.md](FLATPAK.md) for the local bundle builder, capability differences, installation/removal and remaining store gates. Do not attach this prototype to a native alpha tag as if its sandbox behavior were already certified. The local educational manifest is not a Flathub submission manifest and may not be used as its starting point. Keep experimental artifacts and their metadata/checksums separate. A human must independently author the eventual offline source-build manifest and handle Flathub submission/review interactions.
+See [FLATPAK.md](FLATPAK.md) for the local bundle builder, capability differences, installation/removal and remaining store gates. A tested experimental bundle may accompany a native alpha release when explicitly identified as experimental, with its own installation/limitation notes and prefixed metadata/checksums. Preserve existing native assets and their checksums; do not present sandbox behavior as certified or move the native tag. The local educational manifest is not a Flathub submission manifest and may not be used as its starting point. Keep experimental artifacts and their metadata/checksums separate. A human must independently author the eventual offline source-build manifest and handle Flathub submission/review interactions.
 
 ## Stable releases and stores
 
