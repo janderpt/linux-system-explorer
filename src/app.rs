@@ -458,10 +458,7 @@ impl Explorer {
         if self.terminal_focused(ctx) {
             return;
         }
-        if !ctx.wants_keyboard_input()
-            && !self.drag_blocks_tabs()
-            && ctx.input_mut(|i| i.consume_key(egui::Modifiers::NONE, Key::Space))
-        {
+        if !ctx.wants_keyboard_input() && !self.drag_blocks_tabs() && preview::consume_space(ctx) {
             self.preview_selected(ctx);
             return;
         }

@@ -8,6 +8,29 @@ pub(super) struct SplitView {
 }
 
 impl Workspace {
+    pub(super) fn split_state(&self) -> Option<crate::session::Split> {
+        let [left, right] = self.split_indices()?;
+        Some(crate::session::Split {
+            left,
+            right,
+            ratio: self.split.as_ref()?.ratio,
+        })
+    }
+
+    pub(super) fn restore_split(&mut self, state: &crate::session::State) {
+        self.split = state.normalized_split().and_then(|split| {
+            Some(SplitView {
+                left: self.tabs.get(split.left)?.tab_id,
+                right: self.tabs.get(split.right)?.tab_id,
+                ratio: split.ratio,
+                rects: None,
+            })
+        });
+        for tab in &mut self.tabs {
+            tab.split_view = self.split.is_some();
+        }
+    }
+
     pub(super) fn toggle_split(&mut self, ctx: &egui::Context) {
         if self.tabs[self.active].has_dialog() || self.tabs[self.active].drag_blocks_tabs() {
             return;

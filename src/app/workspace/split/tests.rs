@@ -54,6 +54,138 @@ fn settle(app: &mut Workspace) {
 }
 
 #[test]
+fn session_restores_pane_folders_active_side_and_resized_ratio_after_reordering() {
+    let root = tempfile::tempdir().unwrap();
+    let folders = ["Left", "Right", "Hidden"].map(|name| root.path().join(name));
+    for path in &folders {
+        std::fs::create_dir(path).unwrap();
+    }
+    let file = root.path().join("session.json");
+    let ctx = egui::Context::default();
+    let mut app = workspace(&ctx, folders[0].clone());
+    app.session = crate::session::Store::at(Some(file.clone()));
+    app.toggle_split(&ctx);
+    settle(&mut app);
+    let [left, right] = app.split_indices().unwrap();
+    app.tabs[right].navigate(folders[1].clone(), Navigation::Visit);
+    app.append_tab(folders[2].clone(), &ctx);
+    settle(&mut app);
+    let right_id = app.tabs[right].tab_id;
+    app.reorder_tab(right_id, 0);
+    app.activate(0, &ctx);
+    render(&mut app, &ctx, vec![], Modifiers::NONE);
+    let panes = app.split.as_ref().unwrap().rects.unwrap();
+    let start = egui::pos2(panes[0].right() + 4.0, panes[0].center().y);
+    render(
+        &mut app,
+        &ctx,
+        vec![
+            Event::PointerMoved(start),
+            Event::PointerButton {
+                pos: start,
+                button: PointerButton::Primary,
+                pressed: true,
+                modifiers: Modifiers::NONE,
+            },
+        ],
+        Modifiers::NONE,
+    );
+    let end = start + Vec2::new(90.0, 0.0);
+    render(
+        &mut app,
+        &ctx,
+        vec![Event::PointerMoved(end)],
+        Modifiers::NONE,
+    );
+    render(
+        &mut app,
+        &ctx,
+        vec![Event::PointerButton {
+            pos: end,
+            button: PointerButton::Primary,
+            pressed: false,
+            modifiers: Modifiers::NONE,
+        }],
+        Modifiers::NONE,
+    );
+    let original_ratio = app.split.as_ref().unwrap().ratio;
+    assert!(original_ratio > 0.55);
+    eframe::App::on_exit(&mut app, None);
+    drop(app);
+
+    let startup = crate::session::Startup::at(Some(file.clone()), true);
+    let saved = startup.saved.unwrap();
+    assert_eq!(
+        saved.paths().unwrap(),
+        vec![
+            folders[1].clone(),
+            folders[left].clone(),
+            folders[2].clone()
+        ]
+    );
+    assert_eq!(saved.split.unwrap().left, 1);
+    assert_eq!(saved.split.unwrap().right, 0);
+    let ctx = egui::Context::default();
+    let mut restored = workspace(&ctx, saved.paths().unwrap()[0].clone());
+    restored.session = startup.store;
+    restored.restore_tabs(&saved, &ctx);
+    assert_eq!(
+        restored.tabs.len(),
+        3,
+        "restoring must not create an extra pane tab"
+    );
+    settle(&mut restored);
+    render(&mut restored, &ctx, vec![], Modifiers::NONE);
+    let [left, right] = restored.split_indices().unwrap();
+    assert_eq!(restored.tabs[left].current, folders[0]);
+    assert_eq!(restored.tabs[right].current, folders[1]);
+    assert_eq!(restored.active, right);
+    let split = restored.split.as_ref().unwrap();
+    assert!((split.ratio - original_ratio).abs() < 0.0001);
+    let panes = split.rects.unwrap();
+    assert!(
+        (panes[0].width() / (panes[0].width() + panes[1].width()) - original_ratio).abs() < 0.001
+    );
+    assert_eq!(restored.session_state(), saved);
+}
+
+#[test]
+fn duplicate_pane_folders_restore_and_disabling_or_closing_a_pane_clears_saved_split() {
+    for close in [false, true] {
+        let root = tempfile::tempdir().unwrap();
+        let file = root.path().join("session.json");
+        let ctx = egui::Context::default();
+        let mut app = workspace(&ctx, root.path().into());
+        app.session = crate::session::Store::at(Some(file.clone()));
+        app.toggle_split(&ctx);
+        settle(&mut app);
+        render(&mut app, &ctx, vec![], Modifiers::NONE);
+        let saved = crate::session::State::load(&file).unwrap().unwrap();
+        let ctx = egui::Context::default();
+        let mut restored = workspace(&ctx, root.path().into());
+        restored.session = crate::session::Store::at(Some(file.clone()));
+        restored.restore_tabs(&saved, &ctx);
+        settle(&mut restored);
+        assert_eq!(restored.tabs.len(), 2);
+        assert!(restored.split.is_some());
+        assert_ne!(restored.tabs[0].tab_id, restored.tabs[1].tab_id);
+        if close {
+            restored.close_tab(1, &ctx);
+        } else {
+            restored.toggle_split(&ctx);
+        }
+        render(&mut restored, &ctx, vec![], Modifiers::NONE);
+        let saved = crate::session::State::load(&file).unwrap().unwrap();
+        assert!(saved.split.is_none());
+        assert_eq!(saved.tabs.len(), if close { 1 } else { 2 });
+        let ctx = egui::Context::default();
+        let mut reopened = workspace(&ctx, root.path().into());
+        reopened.restore_tabs(&saved, &ctx);
+        assert!(reopened.split.is_none());
+    }
+}
+
+#[test]
 fn toolbar_opens_two_equal_independent_panes_and_toggles_back_without_losing_folders() {
     let root = tempfile::tempdir().unwrap();
     let child = root.path().join("Child");

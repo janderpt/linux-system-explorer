@@ -206,7 +206,7 @@ impl Player {
                 api,
             };
             let mut error = std::ptr::null_mut();
-            let video = (api.parse_bin)(c"videoconvert ! videoscale add-borders=true ! video/x-raw,format=RGBA,width=960,height=540,pixel-aspect-ratio=1/1 ! appsink name=lse_preview sync=true max-buffers=1 drop=true".as_ptr(), 1, &mut error);
+            let video = (api.parse_bin)(c"videoconvert ! videoscale add-borders=false ! video/x-raw,format=RGBA,width=[1,960],height=[1,540],pixel-aspect-ratio=1/1 ! appsink name=lse_preview sync=true max-buffers=1 drop=true".as_ptr(), 1, &mut error);
             if !error.is_null() {
                 if !video.is_null() {
                     (api.unref)(video);
@@ -302,12 +302,12 @@ impl Player {
                 if structure.is_null()
                     || (api.get_int)(structure, c"width".as_ptr(), &mut width) == 0
                     || (api.get_int)(structure, c"height".as_ptr(), &mut height) == 0
-                    || width != 960
-                    || height != 540
+                    || !(1..=960).contains(&width)
+                    || !(1..=540).contains(&height)
                 {
                     return Err(io::Error::other("Invalid video frame dimensions"));
                 }
-                let mut rgba = vec![0; 960 * 540 * 4];
+                let mut rgba = vec![0; width as usize * height as usize * 4];
                 if (api.extract)(buffer, 0, rgba.as_mut_ptr().cast(), rgba.len()) != rgba.len() {
                     return Err(io::Error::other("Incomplete video frame"));
                 }
@@ -496,3 +496,8 @@ fn run(
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+pub(crate) fn runtime_available() -> bool {
+    Api::get().is_ok()
+}

@@ -2,6 +2,9 @@
 
 ## Unreleased — 0.1.0 experimental
 
+- Restore split sessions with each pane's folder, the active side and divider ratio, preserving pane identity after tab reordering and compatibility with older sessions.
+- Fit and center image/video previews; size video popups to the decoded aspect ratio with responsive controls instead of a fixed 16:9 canvas. A second Space press closes the preview; key repeat does not toggle it.
+
 - Internal Space/context-menu previews for images, SVG, paginated PDF, bounded text/code and audio/video, with zoom, playback controls, active-pane selection, cancellation and standard error toasts. Declare GStreamer/Poppler runtime dependencies in native packages and exercise real decoders in CI.
 
 - Dim pending cut items in every file view and allow Escape to cancel the pending cut across tabs/panes without altering files or cancelling an already started transfer.

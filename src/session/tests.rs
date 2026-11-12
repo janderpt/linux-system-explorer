@@ -13,6 +13,7 @@ fn session_round_trip_keeps_order_duplicates_active_tab_raw_paths_and_trash() {
     state.save(&path).unwrap();
     let loaded = State::load(&path).unwrap().unwrap();
     assert_eq!(loaded, state);
+    assert!(loaded.split.is_none());
     assert_eq!(loaded.paths().unwrap(), paths);
     assert_eq!(loaded.active_folder(), Some(paths[2].clone()));
     assert!(
@@ -81,10 +82,67 @@ fn autosave_skips_identical_snapshots_but_forced_close_can_record_last_window() 
 fn explicit_directory_launch_does_not_restore_saved_tabs() {
     let root = tempfile::tempdir().unwrap();
     let path = root.path().join("session.json");
-    let saved = State::from_paths(vec!["/tmp/a".into(), "/tmp/b".into()], 1);
+    let mut saved = State::from_paths(vec!["/tmp/a".into(), "/tmp/b".into()], 1);
+    saved.split = Some(Split {
+        left: 0,
+        right: 1,
+        ratio: 0.6,
+    });
     saved.save(&path).unwrap();
     assert!(Startup::at(Some(path.clone()), false).saved.is_none());
     assert_eq!(Startup::at(Some(path), true).saved, Some(saved));
+}
+
+#[test]
+fn split_round_trip_keeps_pane_order_ratio_and_byte_preserving_folder_paths() {
+    let root = tempfile::tempdir().unwrap();
+    let raw = root
+        .path()
+        .join(std::ffi::OsString::from_vec(b"pane-\xff".to_vec()));
+    let mut state = State::from_paths(vec![raw.clone(), root.path().into(), raw.clone()], 0);
+    state.split = Some(Split {
+        left: 2,
+        right: 0,
+        ratio: 0.63,
+    });
+    let path = root.path().join("session.json");
+    state.save(&path).unwrap();
+    let loaded = State::load(&path).unwrap().unwrap();
+    assert_eq!(loaded, state);
+    let split = loaded.split.unwrap();
+    let paths = loaded.paths().unwrap();
+    assert_eq!(paths[split.left], raw);
+    assert_eq!(paths[split.right], raw);
+    assert_eq!(loaded.active, split.right);
+}
+
+#[test]
+fn invalid_split_references_fall_back_to_tabs_and_ratios_are_normalized() {
+    let root = tempfile::tempdir().unwrap();
+    let file = root.path().join("session.json");
+    for (left, right, active) in [(0, 0, 0), (0, 3, 0), (3, 0, 0), (0, 1, 2)] {
+        let data = serde_json::json!({"tabs":["/tmp/a","/tmp/b","/tmp/c"],"active":active,
+            "split":{"left":left,"right":right,"ratio":0.6}});
+        std::fs::write(&file, data.to_string()).unwrap();
+        let startup = Startup::at(Some(file.clone()), true);
+        assert!(startup.error.is_none());
+        let state = startup.saved.unwrap();
+        assert_eq!(state.paths().unwrap().len(), 3);
+        assert!(state.split.is_none());
+    }
+    for (ratio, expected) in [(-1.0, 0.05), (10.0, 0.95), (f32::NAN, 0.5)] {
+        let mut state = State::from_paths(vec!["/tmp/a".into(), "/tmp/b".into()], 1);
+        state.split = Some(Split {
+            left: 0,
+            right: 1,
+            ratio,
+        });
+        state.save(&file).unwrap();
+        assert_eq!(
+            State::load(&file).unwrap().unwrap().split.unwrap().ratio,
+            expected
+        );
+    }
 }
 
 #[test]

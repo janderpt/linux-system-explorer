@@ -123,6 +123,7 @@ impl Workspace {
         self.activate(state.active.min(self.tabs.len() - 1), ctx);
         self.share();
         self.restore_closed_history(&state.closed_tabs, true);
+        self.restore_split(state);
     }
     fn session_state(&self) -> crate::session::State {
         let mut state = crate::session::State::from_paths(
@@ -135,6 +136,7 @@ impl Workspace {
             }),
             self.active,
         );
+        state.split = self.split_state();
         // Serialized open IDs are their indices. Canonicalizing keeps snapshots stable
         // after a restart and avoids restoring arbitrary counters from disk.
         let ids: BTreeMap<_, _> = self

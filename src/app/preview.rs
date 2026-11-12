@@ -1,8 +1,25 @@
 use super::*;
 use crate::preview::{
     Content, Job, Kind, Pixels,
-    media::{Control, Session},
+    media::{Control, Session, Snapshot},
 };
+
+pub(super) fn consume_space(ctx: &egui::Context) -> bool {
+    ctx.input_mut(|i| {
+        let pressed = i.events.iter().any(|event| {
+            matches!(
+                event,
+                egui::Event::Key {
+                    key: Key::Space,
+                    pressed: true,
+                    repeat: false,
+                    ..
+                }
+            )
+        });
+        pressed && i.consume_key(egui::Modifiers::NONE, Key::Space)
+    })
+}
 
 pub(super) struct Preview {
     path: PathBuf,
@@ -11,6 +28,7 @@ pub(super) struct Preview {
     content: Option<Content>,
     texture: Option<egui::TextureHandle>,
     media: Option<Session>,
+    playback: Snapshot,
     page: u32,
     pages: u32,
     zoom: f32,
@@ -30,6 +48,7 @@ impl Preview {
             kind,
             job,
             media,
+            playback: Snapshot::default(),
             content: None,
             texture: None,
             page: 1,
@@ -61,6 +80,16 @@ impl Preview {
         self.failed = false;
     }
     fn poll(&mut self, ctx: &egui::Context) -> Option<String> {
+        if let Some(mut state) = self.media.as_ref().map(Session::poll) {
+            if let Some(frame) = state.frame.take() {
+                self.image(frame, ctx);
+            }
+            if !self.seeking {
+                self.playhead = state.position;
+            }
+            self.failed |= state.error.is_some();
+            self.playback = state;
+        }
         if let Some(result) = self.job.as_ref().and_then(Job::poll) {
             self.job = None;
             match result {
@@ -85,35 +114,43 @@ impl Preview {
         }
         None
     }
+    fn popup_size(&self, ctx: &egui::Context) -> Vec2 {
+        let max_width = (ctx.content_rect().width() - 100.0).clamp(280.0, 1040.0);
+        let max_height = (ctx.content_rect().height() - 230.0).clamp(160.0, 600.0);
+        if self.kind != Kind::Video {
+            return Vec2::new(max_width, max_height);
+        }
+        let aspect = self.texture.as_ref().map_or(16.0 / 9.0, |t| {
+            let size = t.size_vec2();
+            size.x / size.y
+        });
+        let reserve = controls_height(((max_height - 58.0).max(80.0) * aspect).min(max_width));
+        let picture_height = (max_height - reserve).max(80.0).min(max_width / aspect);
+        let width = (picture_height * aspect).max(220.0).min(max_width);
+        Vec2::new(width, picture_height + controls_height(width))
+    }
     fn picture(&self, ui: &mut egui::Ui, height: f32) {
         let Some(texture) = &self.texture else { return };
         let size = texture.size_vec2();
-        let fit = (ui.available_width() / size.x)
-            .min(height / size.y)
-            .min(1.0);
+        let fit = (ui.available_width() / size.x).min(height / size.y);
         let shown = size * fit * self.zoom;
         egui::ScrollArea::both()
             .id_salt("preview_image_scroll")
             .auto_shrink([false, false])
             .max_height(height)
             .show(ui, |ui| {
-                ui.add(egui::Image::new((texture.id(), shown)));
+                let canvas = Vec2::new(ui.available_width().max(shown.x), height.max(shown.y));
+                let (rect, _) = ui.allocate_exact_size(canvas, Sense::hover());
+                egui::Image::new((texture.id(), shown))
+                    .paint_at(ui, egui::Rect::from_center_size(rect.center(), shown));
             });
     }
     fn body(&mut self, ui: &mut egui::Ui, height: f32, ctx: &egui::Context) -> Option<String> {
-        if self.media.is_some() {
-            let state = self.media.as_ref().unwrap().poll();
-            if let Some(frame) = state.frame {
-                self.image(frame, ctx);
-            }
-            let error = state.error;
-            if error.is_some() {
-                self.failed = true;
-            }
-            if !self.seeking {
-                self.playhead = state.position;
-            }
-            let picture_height = (height - 58.0).max(80.0);
+        if let Some(media) = &self.media {
+            let error = self.playback.error.take();
+            let (playing, duration) = (self.playback.playing, self.playback.duration);
+            let compact = ui.available_width() < 640.0;
+            let picture_height = (height - controls_height(ui.available_width())).max(80.0);
             if self.texture.is_some() {
                 self.picture(ui, picture_height);
             } else {
@@ -138,45 +175,42 @@ impl Preview {
                     },
                 );
             }
-            let media = self.media.as_ref().unwrap();
             ui.add_enabled_ui(!self.failed, |ui| {
                 ui.horizontal(|ui| {
                     if ui
-                        .button(if state.playing {
+                        .button(if playing {
                             crate::i18n::tr("Pausar")
                         } else {
                             crate::i18n::tr("Reproduzir")
                         })
                         .clicked()
                     {
-                        media.control(Control::Playing(!state.playing));
+                        media.control(Control::Playing(!playing));
                     }
-                    ui.label(format!(
-                        "{} / {}",
-                        clock(self.playhead),
-                        clock(state.duration)
-                    ));
-                    let width = (ui.available_width() - 180.0).max(80.0);
-                    let response = ui.add_sized(
-                        [width, 20.0],
-                        egui::Slider::new(&mut self.playhead, 0.0..=state.duration.max(0.01))
-                            .show_value(false),
-                    );
-                    self.seeking = response.dragged();
-                    if response.drag_stopped() || response.changed() && !response.dragged() {
-                        media.control(Control::Seek(self.playhead));
-                    }
-                    ui.label(crate::i18n::tr("Volume"));
-                    if ui
-                        .add_sized(
-                            [90.0, 20.0],
-                            egui::Slider::new(&mut self.volume, 0.0..=1.0).show_value(false),
-                        )
-                        .changed()
-                    {
-                        media.control(Control::Volume(self.volume));
+                    ui.label(format!("{} / {}", clock(self.playhead), clock(duration)));
+                    if !compact {
+                        seek_slider(
+                            ui,
+                            &mut self.playhead,
+                            &mut self.seeking,
+                            duration,
+                            media,
+                            (ui.available_width() - 180.0).max(80.0),
+                        );
+                        volume_slider(ui, &mut self.volume, media, Some(90.0));
                     }
                 });
+                if compact {
+                    seek_slider(
+                        ui,
+                        &mut self.playhead,
+                        &mut self.seeking,
+                        duration,
+                        media,
+                        ui.available_width(),
+                    );
+                    ui.horizontal(|ui| volume_slider(ui, &mut self.volume, media, None));
+                }
             });
             ctx.request_repaint_after(std::time::Duration::from_millis(100));
             return error;
@@ -248,6 +282,40 @@ impl Preview {
         None
     }
 }
+fn controls_height(width: f32) -> f32 {
+    if width < 640.0 { 112.0 } else { 58.0 }
+}
+fn seek_slider(
+    ui: &mut egui::Ui,
+    playhead: &mut f64,
+    seeking: &mut bool,
+    duration: f64,
+    media: &Session,
+    width: f32,
+) {
+    let response = ui
+        .scope(|ui| {
+            ui.spacing_mut().slider_width = width.max(40.0);
+            ui.add(egui::Slider::new(playhead, 0.0..=duration.max(0.01)).show_value(false))
+        })
+        .inner;
+    *seeking = response.dragged();
+    if response.drag_stopped() || response.changed() && !response.dragged() {
+        media.control(Control::Seek(*playhead));
+    }
+}
+fn volume_slider(ui: &mut egui::Ui, volume: &mut f64, media: &Session, width: Option<f32>) {
+    ui.label(crate::i18n::tr("Volume"));
+    let response = ui
+        .scope(|ui| {
+            ui.spacing_mut().slider_width = width.unwrap_or_else(|| ui.available_width()).max(40.0);
+            ui.add(egui::Slider::new(volume, 0.0..=1.0).show_value(false))
+        })
+        .inner;
+    if response.changed() {
+        media.control(Control::Volume(*volume));
+    }
+}
 fn clock(seconds: f64) -> String {
     let seconds = seconds.max(0.0) as u64;
     if seconds >= 3600 {
@@ -293,11 +361,14 @@ impl Explorer {
                 &[error],
             ));
         }
-        let mut close = ctx.input_mut(|i| i.consume_key(egui::Modifiers::NONE, Key::Escape));
+        let mut close = ctx.input_mut(|i| i.consume_key(egui::Modifiers::NONE, Key::Escape))
+            || consume_space(ctx);
         let mut open = false;
         let mut media_error = None;
-        let width = (ctx.content_rect().width() - 100.0).clamp(280.0, 1040.0);
-        let height = (ctx.content_rect().height() - 230.0).clamp(160.0, 600.0);
+        let Vec2 {
+            x: width,
+            y: height,
+        } = preview.popup_size(ctx);
         let response =
             egui::Modal::new(egui::Id::new(("file_preview", self.tab_id))).show(ctx, |ui| {
                 ui.set_width(width);
@@ -318,7 +389,7 @@ impl Explorer {
                     );
                     close |= ui
                         .button("×")
-                        .on_hover_text(crate::i18n::tr("Fechar pré-visualização · Esc"))
+                        .on_hover_text(crate::i18n::tr("Fechar pré-visualização · Espaço / Esc"))
                         .clicked();
                 });
                 ui.add(

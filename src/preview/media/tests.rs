@@ -118,9 +118,9 @@ fn video_frames_are_decoded_inside_the_application_and_corrupt_media_reports_an_
         if let Some(frame) = state.frame {
             assert_eq!(
                 (frame.width, frame.height, frame.rgba.len()),
-                (960, 540, 960 * 540 * 4)
+                (64, 48, 64 * 48 * 4)
             );
-            let center = (270 * 960 + 480) * 4;
+            let center = (24 * 64 + 32) * 4;
             assert!(frame.rgba[center] > 180 && frame.rgba[center + 1] < 80);
             break;
         }
@@ -205,5 +205,79 @@ fn mp4_h264_with_audio_plays_to_completion_when_the_declared_codec_is_installed(
         }
         assert!(Instant::now() < deadline, "MP4 did not finish");
         std::thread::sleep(Duration::from_millis(10));
+    }
+}
+
+#[test]
+fn video_preserves_landscape_portrait_and_square_aspects_without_added_borders() {
+    if runtime().is_none() {
+        return;
+    }
+    if std::process::Command::new("ffmpeg")
+        .arg("-version")
+        .output()
+        .is_err()
+    {
+        assert!(std::env::var_os("CI").is_none(), "ffmpeg is required in CI");
+        return;
+    }
+    for (width, height) in [(1920, 1080), (600, 1600), (600, 600), (136, 94)] {
+        let root = tempfile::tempdir().unwrap();
+        let path = root.path().join("aspect.webm");
+        assert!(
+            std::process::Command::new("ffmpeg")
+                .args(["-loglevel", "error", "-f", "lavfi", "-i"])
+                .arg(format!("color=c=red:s={width}x{height}:r=2"))
+                .args(["-t", "0.5", "-c:v", "libvpx", "-an", "-y"])
+                .arg(&path)
+                .status()
+                .unwrap()
+                .success()
+        );
+        let ctx = eframe::egui::Context::default();
+        let session = Session::start_with_audio(path, &ctx, true);
+        let deadline = Instant::now() + Duration::from_secs(5);
+        loop {
+            let state = session.poll();
+            assert!(state.error.is_none(), "{:?}", state.error);
+            if let Some(frame) = state.frame {
+                assert!(frame.width <= 960 && frame.height <= 540);
+                assert!(
+                    (frame.width as f64 / frame.height as f64 - width as f64 / height as f64).abs()
+                        < 0.01
+                );
+                assert!(
+                    frame
+                        .rgba
+                        .as_chunks::<4>()
+                        .0
+                        .iter()
+                        .enumerate()
+                        // Scaling fractional dimensions can round a one-pixel edge.
+                        .filter(|(index, _)| {
+                            let (x, y) =
+                                (*index % frame.width as usize, *index / frame.width as usize);
+                            x > 0
+                                && x + 1 < frame.width as usize
+                                && y > 0
+                                && y + 1 < frame.height as usize
+                        })
+                        .all(|(_, p)| p[0] > 180 && p[1] < 80 && p[2] < 80 && p[3] == 255),
+                    "no artificial black bands or row padding: source {width}x{height}, frame {}x{}, first bad pixel {:?}",
+                    frame.width,
+                    frame.height,
+                    frame
+                        .rgba
+                        .as_chunks::<4>()
+                        .0
+                        .iter()
+                        .enumerate()
+                        .find(|(_, p)| !(p[0] > 180 && p[1] < 80 && p[2] < 80 && p[3] == 255))
+                );
+                break;
+            }
+            assert!(Instant::now() < deadline, "no decoded frame");
+            std::thread::sleep(Duration::from_millis(10));
+        }
     }
 }

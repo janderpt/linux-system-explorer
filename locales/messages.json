@@ -2091,9 +2091,9 @@
     "pt": "Carregando pré-visualização…",
     "en": "Loading preview…"
   },
-  "Fechar pré-visualização · Esc": {
-    "pt": "Fechar pré-visualização · Esc",
-    "en": "Close preview · Esc"
+  "Fechar pré-visualização · Espaço / Esc": {
+    "pt": "Fechar pré-visualização · Espaço / Esc",
+    "en": "Close preview · Space / Esc"
   },
   "Abrir no aplicativo padrão": {
     "pt": "Abrir no aplicativo padrão",

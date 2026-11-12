@@ -11,12 +11,23 @@ use std::{
 };
 
 const MAX_BYTES: u64 = 4 * 1024 * 1024;
+
+/// Pane references are indices in the saved tab list, never runtime tab IDs.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+pub struct Split {
+    pub left: usize,
+    pub right: usize,
+    pub ratio: f32,
+}
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct State {
     pub version: u32,
     pub tabs: Vec<String>,
     pub active: usize,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub split: Option<Split>,
     #[serde(skip_serializing_if = "VecDeque::is_empty")]
     pub closed_tabs: VecDeque<closed::ClosedTab>,
 }
@@ -26,6 +37,7 @@ impl Default for State {
             version: 1,
             tabs: vec![],
             active: 0,
+            split: None,
             closed_tabs: Default::default(),
         }
     }
@@ -40,6 +52,7 @@ impl State {
             version: 1,
             active: active.min(tabs.len().saturating_sub(1)),
             tabs,
+            split: None,
             closed_tabs: Default::default(),
         }
     }
@@ -67,6 +80,23 @@ impl State {
             .get(self.active.min(paths.len().saturating_sub(1)))
             .cloned()
     }
+    pub fn normalized_split(&self) -> Option<Split> {
+        let mut split = self.split?;
+        let active = self.active.min(self.tabs.len().saturating_sub(1));
+        if split.left == split.right
+            || split.left >= self.tabs.len()
+            || split.right >= self.tabs.len()
+            || ![split.left, split.right].contains(&active)
+        {
+            return None;
+        }
+        split.ratio = if split.ratio.is_finite() {
+            split.ratio.clamp(0.05, 0.95)
+        } else {
+            0.5
+        };
+        Some(split)
+    }
     pub fn load(path: &Path) -> io::Result<Option<Self>> {
         let file = match fs::File::open(path) {
             Ok(file) => file,
@@ -88,11 +118,15 @@ impl State {
             closed.normalize();
         }
         state.active = state.active.min(state.tabs.len().saturating_sub(1));
+        // Invalid optional pane metadata must not discard otherwise valid tabs.
+        state.split = state.normalized_split();
         Ok(Some(state))
     }
     pub fn save(&self, path: &Path) -> io::Result<()> {
         self.paths()?;
-        let data = serde_json::to_vec_pretty(self).map_err(io::Error::other)?;
+        let mut state = self.clone();
+        state.split = state.normalized_split();
+        let data = serde_json::to_vec_pretty(&state).map_err(io::Error::other)?;
         if data.len() as u64 > MAX_BYTES {
             return Err(invalid("Window-session file is too large"));
         }

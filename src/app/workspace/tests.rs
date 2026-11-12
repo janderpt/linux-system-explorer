@@ -374,10 +374,17 @@ fn unavailable_restored_folders_remain_saved_and_can_be_retried() {
     let available = root.path().join("available");
     let unavailable = root.path().join("temporarily-unmounted");
     std::fs::create_dir(&available).unwrap();
-    let saved = crate::session::State::from_paths(vec![available.clone(), unavailable.clone()], 1);
+    let mut saved =
+        crate::session::State::from_paths(vec![available.clone(), unavailable.clone()], 1);
+    saved.split = Some(crate::session::Split {
+        left: 0,
+        right: 1,
+        ratio: 0.6,
+    });
     let ctx = egui::Context::default();
     let mut app = workspace(&ctx, available);
     app.restore_tabs(&saved, &ctx);
+    assert!(app.split.is_some());
     complete_navigation(&mut app.tabs[1]);
     assert_eq!(app.active, 1);
     assert_eq!(app.tabs[1].location(), unavailable);
