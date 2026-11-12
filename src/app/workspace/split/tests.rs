@@ -54,6 +54,62 @@ fn settle(app: &mut Workspace) {
 }
 
 #[test]
+fn each_pane_reveals_its_own_sidebar_ancestor_without_scrolling_the_other_pane() {
+    let root = tempfile::tempdir().unwrap();
+    let mount = root.path().join("mounted");
+    let child = mount.join("child");
+    std::fs::create_dir_all(&child).unwrap();
+    let ctx = egui::Context::default();
+    let mut app = workspace(&ctx, root.path().into());
+    app.tabs[0].places = vec![(locations::Item::Home, root.path().into())];
+    app.tabs[0].sidebar_options.show_volumes = false;
+    app.tabs[0].sidebar_options.show_local_shares = false;
+    app.tabs[0].sidebar_options.pinned = (0..24)
+        .map(|i| locations::Shortcut::new(root.path().join(format!("pin-{i:02}"))))
+        .collect();
+    app.tabs[0].sidebar_options.network = vec![locations::Shortcut {
+        path: mount,
+        label: "Test network ancestor".into(),
+    }];
+    app.toggle_split(&ctx);
+    settle(&mut app);
+    let [left, right] = app.split_indices().unwrap();
+    // Give the right pane the same deterministic Home location.
+    app.tabs[right].places = app.tabs[left].places.clone();
+    app.tabs[left].navigate(child.clone(), Navigation::Visit);
+    settle(&mut app);
+    let mut output = render(&mut app, &ctx, vec![], Modifiers::NONE);
+    for _ in 0..12 {
+        output = render(&mut app, &ctx, vec![], Modifiers::NONE);
+    }
+    let panes = app.split.as_ref().unwrap().rects.unwrap();
+    let visible_label = |output: &FullOutput, label: &str, pane: egui::Rect| {
+        output.shapes.iter().any(|shape| match &shape.shape {
+            egui::Shape::Text(text) if text.galley.text() == label => {
+                let center = text.pos + text.galley.size() * 0.5;
+                pane.contains(center) && shape.clip_rect.contains(center)
+            }
+            _ => false,
+        })
+    };
+    assert!(visible_label(&output, "Test network ancestor", panes[0]));
+    assert!(!visible_label(&output, "Test network ancestor", panes[1]));
+    let home = locations::Item::Home.label();
+    assert!(visible_label(&output, home, panes[1]));
+    assert!(!visible_label(&output, home, panes[0]));
+    app.tabs[right].navigate(child.clone(), Navigation::Visit);
+    app.tabs[left].navigate(root.path().into(), Navigation::Visit);
+    settle(&mut app);
+    for _ in 0..12 {
+        output = render(&mut app, &ctx, vec![], Modifiers::NONE);
+    }
+    assert!(visible_label(&output, "Test network ancestor", panes[1]));
+    assert!(visible_label(&output, home, panes[0]));
+    assert_eq!(app.tabs[left].current, root.path());
+    assert_eq!(app.tabs[right].current, child);
+}
+
+#[test]
 fn filter_arrows_enter_only_the_active_panes_results_and_keep_navigating() {
     let root = tempfile::tempdir().unwrap();
     for name in ["match-a.txt", "match-b.txt", "unrelated.txt"] {

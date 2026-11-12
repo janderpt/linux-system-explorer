@@ -19,6 +19,25 @@ pub(super) struct SidebarEntry {
     icon: Icon,
 }
 
+#[derive(PartialEq)]
+struct ScrollLocation {
+    folder: PathBuf,
+    target: Option<(Location, PathBuf)>,
+    area: egui::Id,
+}
+
+#[derive(Default)]
+pub(super) struct ScrollState {
+    location: Option<ScrollLocation>,
+    target_rect: Option<egui::Rect>,
+}
+
+impl ScrollState {
+    pub(super) fn record(&mut self, rect: egui::Rect) {
+        self.target_rect = Some(rect);
+    }
+}
+
 pub(super) fn closest(current: &Path, entries: &[SidebarEntry]) -> Option<Location> {
     let mut active = None;
     let mut depth = 0;
@@ -171,9 +190,21 @@ impl Explorer {
         }
         let entries = self.sidebar_entries();
         let active = closest(&self.current, &entries);
+        let location = ScrollLocation {
+            folder: self.current.clone(),
+            target: entries
+                .iter()
+                .find(|entry| active == Some(entry.id))
+                .map(|entry| (entry.id, entry.path.clone())),
+            area: ui.make_persistent_id(("sidebar_scroll", self.tab_id)),
+        };
+        // Reveal on navigation or when a newly discovered/visible shortcut
+        // becomes the closest ancestor, without undoing manual scrolling.
+        let reveal = !self.loading && self.sidebar_scroll.location.as_ref() != Some(&location);
+        self.sidebar_scroll.target_rect = None;
         let mut remove_remote = None;
         let height = (ui.available_height() - 30.0).max(0.0);
-        egui::ScrollArea::vertical().id_salt("sidebar_scroll").max_height(height).auto_shrink([false,false]).show(ui,|ui| {
+        egui::ScrollArea::vertical().id_salt(("sidebar_scroll",self.tab_id)).max_height(height).auto_shrink([false,false]).show(ui,|ui| {
                 self.drag_hover_scroll(ui);
                 ui.add_space(10.0);
                 for entry in entries.iter().filter(|e|e.id==Location::Applications) { self.sidebar_place(ui,entry,active==Some(entry.id)); }
@@ -218,7 +249,13 @@ impl Explorer {
                     }
                     if self.menu_item(ui,Icon::AddNetwork,crate::i18n::tr("Adicionar compartilhamento de rede"),"",!self.loading,false).on_hover_text(crate::i18n::tr("Adicionar compartilhamento de rede")).clicked(){self.request_network(None,ui.ctx());}
                 }
+                if reveal && let Some(rect) = self.sidebar_scroll.target_rect {
+                    ui.scroll_to_rect(rect, None);
+                }
             });
+        if !self.loading {
+            self.sidebar_scroll.location = Some(location);
+        }
         ui.add_space(5.0);
         ui.label(
             RichText::new(concat!(
@@ -346,6 +383,9 @@ impl Explorer {
             } else {
                 entry.path.display().to_string()
             });
+        if selected {
+            self.sidebar_scroll.record(response.rect);
+        }
         if response.clicked() {
             if let Location::Remote(i) = entry.id {
                 self.request_network(Some(self.sidebar_options.remote[i].clone()), ui.ctx());
@@ -529,3 +569,6 @@ fn sidebar_heading(ui: &mut egui::Ui, label: &str) {
     ui.label(RichText::new(label).small().weak().strong());
     ui.add_space(6.0);
 }
+
+#[cfg(test)]
+mod tests;

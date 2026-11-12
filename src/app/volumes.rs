@@ -332,6 +332,9 @@ impl Explorer {
                 let selected = active == Some(entry.id);
                 let (rect, response) =
                     ui.allocate_exact_size(Vec2::new(ui.available_width(), 54.0), Sense::click());
+                if selected {
+                    self.sidebar_scroll.record(rect);
+                }
                 if selected || response.hovered() {
                     ui.painter().rect_filled(
                         rect,

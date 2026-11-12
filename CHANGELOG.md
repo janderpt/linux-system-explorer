@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Reveal the closest sidebar ancestor when opening or navigating folders, including remote shares, pins and volumes; react to newly available shortcuts, keep pane/tab scrolling independent and preserve subsequent manual scrolling.
+
 - Let notification toasts grow with their content up to the available window height, removing the fixed/percentage height cap; scroll overflowing stacks and keep dismissal controls accessible.
 - Move from the focused filter to the last visible result with Up or the first with Down, preserve recursive search text/results and continue arrow navigation in the active pane; retain text focus for empty results and modified arrows.
 
