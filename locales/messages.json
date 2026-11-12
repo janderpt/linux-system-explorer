@@ -2127,6 +2127,18 @@
     "pt": "Mover",
     "en": "Move"
   },
+  "Copiar ou mover?": {
+    "pt": "Copiar ou mover?",
+    "en": "Copy or move?"
+  },
+  "Origem: várias pastas": {
+    "pt": "Origem: várias pastas",
+    "en": "Source: multiple folders"
+  },
+  "O aplicativo de origem não permite esta operação neste arraste.": {
+    "pt": "O aplicativo de origem não permite esta operação neste arraste.",
+    "en": "The source application does not allow this operation for this drag."
+  },
   "FTP não oferece lixeira. Confirme a exclusão permanente.": {
     "pt": "FTP não oferece lixeira. Confirme a exclusão permanente.",
     "en": "FTP has no trash. Confirm permanent deletion."

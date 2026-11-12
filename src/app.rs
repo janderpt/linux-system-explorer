@@ -42,6 +42,7 @@ mod toolbar;
 mod transfers;
 mod trash;
 mod type_actions;
+mod type_ahead;
 mod volumes;
 mod workspace;
 pub use workspace::Workspace;
@@ -131,6 +132,7 @@ pub struct Explorer {
     selected: BTreeSet<PathBuf>,
     selection_anchor: Option<PathBuf>,
     selection_cursor: Option<PathBuf>,
+    type_ahead: type_ahead::State,
     reveal_selection: bool,
     pending_external: Option<(Vec<PathBuf>, bool)>,
     reveal_hidden: bool,
@@ -297,6 +299,7 @@ impl Explorer {
             selected: BTreeSet::new(),
             selection_anchor: None,
             selection_cursor: None,
+            type_ahead: Default::default(),
             reveal_selection: false,
             pending_external: None,
             reveal_hidden: false,
@@ -344,6 +347,7 @@ impl Explorer {
         if self.loading {
             return;
         }
+        self.type_ahead = Default::default();
         self.recursive_search.cancel();
         let loading_path = if crate::trashbin::is_location(&path)
             || crate::applications::menu::is_location(&path)
@@ -546,7 +550,9 @@ impl Explorer {
             || self.local_shares.is_some()
             || self.preview.is_some()
             || self.image_editor.is_some()
+            || self.has_drop_choice()
         {
+            self.type_ahead = Default::default();
             return;
         }
         if self.print_cancel.is_some()
@@ -567,10 +573,13 @@ impl Explorer {
             return;
         }
         if self.terminal_focused(ctx) {
+            self.type_ahead = Default::default();
             return;
         }
         if self.is_applications() {
             self.application_shortcuts(ctx);
+        } else {
+            self.type_ahead_shortcuts(ctx);
         }
         if !self.is_applications()
             && !ctx.wants_keyboard_input()
@@ -1765,6 +1774,7 @@ impl Explorer {
         self.dialogs(ctx);
         self.settings_dialog(ctx);
         self.transfer_dialog(ctx);
+        self.drop_choice_dialog(ctx);
         self.deletion_dialog(ctx);
         self.empty_trash_dialog(ctx);
         self.folder_picker_dialog(ctx);

@@ -2,9 +2,12 @@
 
 ## Unreleased
 
+- Add name-prefix keyboard selection in Details/List/Icons, including remote folders, with displayed-order matching, selection reveal, a one-second reset, repeated-initial cycling, Backspace/Escape and independent pane/tab behavior; preserve text fields, dialogs, terminal input and the immediate Space preview shortcut.
+- Require an explicit Copy/Move choice for drops into explorer folders, showing source items and destination before any file transfer; modifiers only suggest an action, cancellation preserves files, and native Ask negotiation/source capability limits protect cross-application completion.
+
 - Make Del and Shift+Del on FTP require confirmed permanent server-side deletion, hide the unsupported Trash action, explain the lack of Trash in the dialog and protect mixed FTP/local selections from automatic promotion; recognize saved and unbookmarked GVfs/KIO mounts and guard the Trash backend. Cover cancellation, selected-only deletion, menu/keyboard/drop routes and disposable real FTP deletion.
 
-- Default internal file drags to Copy across volumes/network/virtual mounts (including FTP), retaining Move for local folders on the same volume and Ctrl/Shift overrides; keep native protocol actions authoritative. Add a theme-aware pointer-following card with a file icon/name or selection count, operation feedback, a bounded native Wayland drag image and an input-transparent X11 badge with rounded shape and cleanup on release/cancellation.
+- Add a theme-aware pointer-following drag card with a file icon/name or selection count, suggested-operation feedback, a bounded native Wayland drag image and an input-transparent X11 badge with rounded shape and cleanup on release/cancellation.
 
 - Fix FTP uploads failing on unsupported timestamp/Unix-permission preservation, closing the write stream before metadata and treating only unsupported attribute operations as optional; retain write/sync errors, no-replace publication, conflict handling and source verification before moves. Verify uploads, downloads, folder transfers, conflicts and cancellation against a real local FTP/GVfs fixture.
 - Show `(space)` in file and archive preview context-menu labels in Portuguese and English.

@@ -100,6 +100,7 @@ impl Explorer {
         visible: &[usize],
         modifiers: egui::Modifiers,
     ) {
+        self.type_ahead = Default::default();
         self.selection_cursor = Some(path.to_path_buf());
         self.reveal_selection = false;
         let additive = modifiers.ctrl || modifiers.command;
@@ -131,6 +132,7 @@ impl Explorer {
     }
 
     pub(super) fn clear_selection(&mut self) {
+        self.type_ahead = Default::default();
         self.selected.clear();
         self.selection_anchor = None;
         self.selection_cursor = None;

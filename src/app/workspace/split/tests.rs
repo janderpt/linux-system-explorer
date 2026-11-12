@@ -427,6 +427,9 @@ fn keyboard_copy_paste_and_file_drag_work_between_the_two_visible_panes() {
                 }],
                 Modifiers::NONE,
             );
+            assert!(app.tabs[app.active].has_drop_choice());
+            let output = render(&mut app, &ctx, vec![], Modifiers::NONE);
+            click(&mut app, &ctx, points(&output, "Mover")[0]);
         } else {
             click(&mut app, &ctx, from);
             let command = Modifiers {
@@ -729,4 +732,61 @@ fn space_previews_the_selected_file_from_the_active_pane() {
         Modifiers::NONE,
     );
     assert!(app.tabs[right].preview.is_none());
+}
+
+#[test]
+fn typing_selects_names_only_in_the_active_pane_and_resets_when_switching_panes() {
+    let root = tempfile::tempdir().unwrap();
+    for name in ["Alpha", "Beta"] {
+        std::fs::create_dir(root.path().join(name)).unwrap();
+    }
+    let ctx = egui::Context::default();
+    let mut app = workspace(&ctx, root.path().into());
+    app.toggle_split(&ctx);
+    settle(&mut app);
+    let [left, right] = app.split_indices().unwrap();
+    render(&mut app, &ctx, vec![], Modifiers::NONE);
+    app.activate(right, &ctx);
+    render(
+        &mut app,
+        &ctx,
+        vec![Event::Text("b".into())],
+        Modifiers::NONE,
+    );
+    assert_eq!(
+        app.tabs[right].selection_cursor,
+        Some(root.path().join("Beta"))
+    );
+    assert!(app.tabs[left].selected.is_empty());
+    app.activate(left, &ctx);
+    render(
+        &mut app,
+        &ctx,
+        vec![Event::Text("a".into())],
+        Modifiers::NONE,
+    );
+    assert_eq!(
+        app.tabs[left].selection_cursor,
+        Some(root.path().join("Alpha"))
+    );
+    assert_eq!(
+        app.tabs[right].selection_cursor,
+        Some(root.path().join("Beta"))
+    );
+    app.activate(right, &ctx);
+    render(
+        &mut app,
+        &ctx,
+        vec![Event::Text("a".into())],
+        Modifiers::NONE,
+    );
+    assert_eq!(
+        app.tabs[right].selection_cursor,
+        Some(root.path().join("Alpha"))
+    );
+    assert!(
+        app.tabs
+            .iter()
+            .all(|tab| tab.current == root.path() && tab.query.is_empty())
+    );
 }

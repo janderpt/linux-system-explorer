@@ -1,12 +1,16 @@
 use super::*;
-use crate::native_dnd::{Action, Completion, Event as NativeEvent, Native, modifier_action};
+use crate::native_dnd::{
+    Action, Actions, Completion, Event as NativeEvent, Native, modifier_action,
+};
 use std::sync::Arc;
+mod choice;
 
 struct PendingDrop {
     position: egui::Pos2,
     paths: Vec<PathBuf>,
     internal: bool,
     action: Option<Action>,
+    allowed: Actions,
     completion: Option<Completion>,
 }
 enum DropJob {
@@ -31,6 +35,7 @@ pub(super) struct DragDrop {
     refresh_native: bool,
     hover: Option<egui::Pos2>,
     pending: Option<PendingDrop>,
+    choice: Option<choice::Choice>,
     completion: Option<PendingCompletion>,
     feedback: Option<Option<Action>>,
     targets: Vec<(egui::Rect, PathBuf)>,
@@ -52,6 +57,7 @@ impl Explorer {
     pub(super) fn drag_blocks_tabs(&self) -> bool {
         self.dnd.native_active
             || self.dnd.pending.is_some()
+            || self.has_drop_choice()
             || self.dnd.completion.is_some()
             || self.dnd.trash_prepare.is_some()
     }
@@ -82,6 +88,7 @@ impl Explorer {
     }
     pub(super) fn file_drop_available(&self) -> bool {
         !self.is_applications()
+            && !self.has_drop_choice()
             && !self.loading
             && !self.close_after_transfer
             && self.dnd.trash_prepare.is_none()
@@ -145,9 +152,10 @@ impl Explorer {
                         paths,
                         internal,
                         action,
+                        allowed,
                         completion,
                     } => {
-                        if self.dnd.pending.is_some() {
+                        if self.dnd.pending.is_some() || self.dnd.choice.is_some() {
                             if let Some(token) = completion {
                                 native.complete(token, None);
                             }
@@ -157,6 +165,7 @@ impl Explorer {
                                 paths,
                                 internal,
                                 action: Some(action),
+                                allowed,
                                 completion,
                             });
                         }
@@ -206,6 +215,7 @@ impl Explorer {
                 paths: files,
                 internal: false,
                 action: None,
+                allowed: Actions::BOTH,
                 completion: None,
             });
         }
@@ -352,6 +362,7 @@ impl Explorer {
         let escape =
             ctx.input(|input| input.key_pressed(Key::Escape) || input.viewport().close_requested());
         if escape {
+            self.cancel_drop_choice();
             if let Some(native) = &self.dnd.native {
                 native.cancel();
             }
@@ -374,6 +385,7 @@ impl Explorer {
                     paths: std::mem::take(&mut self.dnd.paths),
                     internal: true,
                     action: None,
+                    allowed: Actions::BOTH,
                     completion: None,
                 });
             }
@@ -401,9 +413,6 @@ impl Explorer {
             );
         }
         if let Some(pending) = self.dnd.pending.take() {
-            let mut started = false;
-            let expected = pending.paths.len();
-            let mut action = Action::Copy;
             if let Some((_, destination)) = self
                 .dnd
                 .targets
@@ -412,9 +421,7 @@ impl Explorer {
                 .find(|(rect, _)| rect.contains(pending.position))
                 .cloned()
             {
-                // A native drop must keep its negotiated action, even if this
-                // app was also its source (e.g. leaving and re-entering a window).
-                action = if pending.internal && pending.completion.is_none() {
+                let preferred = if pending.internal {
                     self.dnd
                         .mounts
                         .as_deref()
@@ -425,38 +432,17 @@ impl Explorer {
                                 ctx.input(|input| input.modifiers),
                             )
                         })
-                        .unwrap_or_else(|| {
-                            modifier_action(ctx.input(|input| input.modifiers))
-                                .unwrap_or(Action::Copy)
-                        })
+                        .unwrap_or(Action::Copy)
                 } else {
-                    pending.action.unwrap_or_else(|| {
-                        modifier_action(ctx.input(|input| input.modifiers)).unwrap_or(Action::Copy)
-                    })
+                    pending.action.unwrap_or(Action::Copy)
                 };
-                let mode = if action == Action::Move {
-                    file_ops::Mode::Cut
+                if crate::trashbin::is_location(&destination) {
+                    self.perform_drop(pending, destination, preferred, ctx);
                 } else {
-                    file_ops::Mode::Copy
-                };
-                started = self.drop_files(pending.paths, destination, mode, ctx);
-            }
-            if let Some(token) = pending.completion {
-                if started {
-                    let job = if self.dnd.trash_prepare.is_some() {
-                        DropJob::Trash
-                    } else {
-                        DropJob::Transfer(self.clipboard_serial)
-                    };
-                    self.dnd.completion = Some(PendingCompletion {
-                        token,
-                        action,
-                        job,
-                        expected,
-                    });
-                } else if let Some(native) = &self.dnd.native {
-                    native.complete(token, None);
+                    self.offer_drop(pending, destination, preferred);
                 }
+            } else {
+                self.reject_drop(pending.completion);
             }
             self.dnd.paths.clear();
             self.dnd.hover = None;

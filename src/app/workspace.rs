@@ -78,6 +78,8 @@ impl Workspace {
             return;
         }
         self.capture(ctx);
+        self.tabs[self.active].type_ahead = Default::default();
+        self.tabs[index].type_ahead = Default::default();
         self.assign_split_tab(index);
         let native = self.tabs[self.active].dnd.native.take();
         if let Some(native) = &native {
@@ -385,6 +387,7 @@ impl Explorer {
             || self.local_shares.is_some()
             || self.image_editor.is_some()
             || self.preview.is_some()
+            || self.has_drop_choice()
     }
 }
 #[cfg(test)]

@@ -38,6 +38,7 @@ fn render(
             );
             app.contents(ctx, &visible);
             app.finish_drag_drop(ctx);
+            app.drop_choice_dialog(ctx);
         },
     )
 }
@@ -70,6 +71,22 @@ fn finish(app: &mut Explorer) {
     app.process_transfer_refresh();
     complete_navigation(app);
     assert!(app.error.is_none(), "{:?}", app.error);
+}
+
+fn choose(app: &mut Explorer, ctx: &egui::Context, action: Action) {
+    assert!(app.has_drop_choice() && app.active_transfer.is_none());
+    let output = render(app, ctx, vec![], vec![], Modifiers::NONE);
+    let point = text_center(
+        &output,
+        if action == Action::Copy {
+            "Copiar"
+        } else {
+            "Mover"
+        },
+    )
+    .unwrap();
+    pointer(app, ctx, point, Some(true), Modifiers::NONE);
+    pointer(app, ctx, point, Some(false), Modifiers::NONE);
 }
 
 #[test]
@@ -110,6 +127,7 @@ fn dragging_a_selection_copies_to_rows_and_moves_to_sidebar_in_every_view() {
         assert_eq!(app.dnd.paths.len(), 2, "view drag selection");
         pointer(&mut app, &ctx, destination, None, Modifiers::CTRL);
         pointer(&mut app, &ctx, destination, Some(false), Modifiers::CTRL);
+        choose(&mut app, &ctx, Action::Copy);
         assert!(app.active_transfer.is_some());
         finish(&mut app);
         assert!(first.exists() && second.exists());
@@ -130,6 +148,7 @@ fn dragging_a_selection_copies_to_rows_and_moves_to_sidebar_in_every_view() {
         );
         pointer(&mut app, &ctx, destination, None, Modifiers::NONE);
         pointer(&mut app, &ctx, destination, Some(false), Modifiers::NONE);
+        choose(&mut app, &ctx, Action::Move);
         assert!(app.active_transfer.is_some());
         finish(&mut app);
         assert!(!first.exists() && !second.exists());
@@ -160,6 +179,7 @@ fn external_files_use_the_pointed_folder_and_esc_and_invalid_targets_change_noth
         }],
         Modifiers::NONE,
     );
+    choose(&mut app, &ctx, Action::Copy);
     assert!(app.active_transfer.is_some());
     finish(&mut app);
     assert!(file.exists());
@@ -234,6 +254,11 @@ fn shift_moves_external_files_and_ctrl_copies_and_drag_cursors_match_the_operati
                 ..Default::default()
             }],
             modifiers,
+        );
+        choose(
+            &mut app,
+            &ctx,
+            if moved { Action::Move } else { Action::Copy },
         );
         finish(&mut app);
         assert_eq!(file.exists(), !moved);
@@ -315,6 +340,11 @@ fn dragging_to_a_network_mount_copies_by_default_and_shift_moves_with_matching_f
         assert!(text_center(&output, if moved { "Mover" } else { "Copiar" }).is_some());
         assert_eq!(app.dnd.preview.as_ref().unwrap().1, "upload.txt");
         pointer(&mut app, &ctx, target, Some(false), modifiers);
+        choose(
+            &mut app,
+            &ctx,
+            if moved { Action::Move } else { Action::Copy },
+        );
         assert_eq!(
             app.active_transfer.as_ref().unwrap().mode,
             if moved {
@@ -412,9 +442,11 @@ fn returning_native_drag_keeps_its_negotiated_copy_instead_of_promoting_it_to_mo
         paths: vec![file.clone()],
         internal: true,
         action: Some(Action::Copy),
+        allowed: Actions::only(Action::Copy),
         completion: Some(Completion::Wayland(1)),
     });
     render(&mut app, &ctx, vec![], vec![], Modifiers::NONE);
+    choose(&mut app, &ctx, Action::Copy);
     assert_eq!(
         app.active_transfer.as_ref().unwrap().mode,
         file_ops::Mode::Copy
@@ -424,5 +456,108 @@ fn returning_native_drag_keeps_its_negotiated_copy_instead_of_promoting_it_to_mo
     assert_eq!(
         fs::read_to_string(target.join("source.txt")).unwrap(),
         "original"
+    );
+}
+
+#[test]
+fn dropping_waits_for_a_click_and_the_chosen_operation_overrides_ctrl_or_shift() {
+    for (modifiers, operation) in [
+        (Modifiers::SHIFT, Some(Action::Copy)),
+        (Modifiers::CTRL, Some(Action::Move)),
+        (Modifiers::NONE, None),
+    ] {
+        let root = tempfile::tempdir().unwrap();
+        let target = root.path().join("Destination");
+        fs::create_dir(&target).unwrap();
+        let file = root.path().join("chosen.txt");
+        fs::write(&file, "preserve until explicit choice").unwrap();
+        let ctx = egui::Context::default();
+        let mut app = Explorer::with_context(&ctx, root.path().into());
+        complete_navigation(&mut app);
+        render(&mut app, &ctx, vec![], vec![], Modifiers::NONE);
+        let output = render(&mut app, &ctx, vec![], vec![], Modifiers::NONE);
+        let from = text_center(&output, "chosen.txt").unwrap();
+        let to = text_center(&output, "Destination").unwrap();
+        pointer(&mut app, &ctx, from, Some(true), modifiers);
+        pointer(&mut app, &ctx, from + Vec2::new(12.0, 0.0), None, modifiers);
+        pointer(&mut app, &ctx, to, None, modifiers);
+        pointer(&mut app, &ctx, to, Some(false), modifiers);
+        assert!(app.has_drop_choice() && app.has_dialog() && app.active_transfer.is_none());
+        assert!(!app.file_drop_available());
+        assert_eq!(app.dnd.choice.as_ref().unwrap().destination, target);
+        assert!(file.exists() && !target.join("chosen.txt").exists());
+        let output = render(&mut app, &ctx, vec![], vec![], Modifiers::NONE);
+        assert!(text_center(&output, "Copiar ou mover?").is_some());
+        assert!(
+            text_center(
+                &output,
+                &crate::i18n::message("Destino: {}", &[target.display().to_string()])
+            )
+            .is_some()
+        );
+        if let Some(action) = operation {
+            choose(&mut app, &ctx, action);
+            finish(&mut app);
+            assert_eq!(file.exists(), action == Action::Copy);
+            assert_eq!(
+                fs::read_to_string(target.join("chosen.txt")).unwrap(),
+                "preserve until explicit choice"
+            );
+        } else {
+            let point = text_center(&output, "Cancelar").unwrap();
+            pointer(&mut app, &ctx, point, Some(true), Modifiers::NONE);
+            pointer(&mut app, &ctx, point, Some(false), Modifiers::NONE);
+            assert!(!app.has_drop_choice() && app.active_transfer.is_none());
+            assert!(file.exists() && !target.join("chosen.txt").exists());
+        }
+    }
+}
+
+#[test]
+fn native_copy_only_drop_cannot_be_changed_into_a_move_and_escape_dismisses_the_choice() {
+    let root = tempfile::tempdir().unwrap();
+    let target = root.path().join("Destination");
+    fs::create_dir(&target).unwrap();
+    let file = root.path().join("source.txt");
+    fs::write(&file, "keep").unwrap();
+    let ctx = egui::Context::default();
+    let mut app = Explorer::with_context(&ctx, root.path().into());
+    complete_navigation(&mut app);
+    let pending = || PendingDrop {
+        position: Pos2::ZERO,
+        paths: vec![file.clone()],
+        internal: false,
+        action: Some(Action::Copy),
+        allowed: Actions::only(Action::Copy),
+        completion: Some(Completion::Wayland(42)),
+    };
+    app.offer_drop(pending(), target.clone(), Action::Copy);
+    render(&mut app, &ctx, vec![], vec![], Modifiers::NONE);
+    let output = render(&mut app, &ctx, vec![], vec![], Modifiers::NONE);
+    let point = text_center(&output, "Mover").unwrap();
+    pointer(&mut app, &ctx, point, Some(true), Modifiers::NONE);
+    pointer(&mut app, &ctx, point, Some(false), Modifiers::NONE);
+    assert!(app.has_drop_choice() && app.active_transfer.is_none());
+    render(
+        &mut app,
+        &ctx,
+        vec![InputEvent::Key {
+            key: Key::Escape,
+            physical_key: None,
+            pressed: true,
+            repeat: false,
+            modifiers: Modifiers::NONE,
+        }],
+        vec![],
+        Modifiers::NONE,
+    );
+    assert!(!app.has_drop_choice() && file.exists() && !target.join("source.txt").exists());
+    app.offer_drop(pending(), target.clone(), Action::Copy);
+    choose(&mut app, &ctx, Action::Copy);
+    finish(&mut app);
+    assert!(file.exists());
+    assert_eq!(
+        fs::read_to_string(target.join("source.txt")).unwrap(),
+        "keep"
     );
 }

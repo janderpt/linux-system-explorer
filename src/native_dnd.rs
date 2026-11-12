@@ -12,6 +12,29 @@ pub enum Action {
     Copy,
     Move,
 }
+#[derive(Clone, Copy, Debug)]
+pub struct Actions {
+    pub copy: bool,
+    pub move_: bool,
+}
+impl Actions {
+    pub const BOTH: Self = Self {
+        copy: true,
+        move_: true,
+    };
+    pub fn only(action: Action) -> Self {
+        Self {
+            copy: action == Action::Copy,
+            move_: action == Action::Move,
+        }
+    }
+    pub fn allows(self, action: Action) -> bool {
+        match action {
+            Action::Copy => self.copy,
+            Action::Move => self.move_,
+        }
+    }
+}
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Completion {
     Wayland(u64),
@@ -35,6 +58,7 @@ pub enum Event {
         paths: Vec<PathBuf>,
         internal: bool,
         action: Action,
+        allowed: Actions,
         completion: Option<Completion>,
     },
     Started,
@@ -59,7 +83,7 @@ impl Native {
         let backend = if let Some(bridge) =
             guth_wayland_dnd::FileDnd::attach(cc, move || context.request_repaint())
         {
-            bridge.set_incoming_drop_policy(true, guth_wayland_dnd::DropAction::Copy);
+            bridge.set_incoming_drop_policy(true, guth_wayland_dnd::DropAction::Ask);
             // Both actions stay available throughout the native gesture. The
             // compositor/target can then honor modifier changes outside our window.
             bridge.set_outgoing_drag_action(None);
@@ -114,18 +138,13 @@ impl Native {
         &self,
         accepted: bool,
         move_available: bool,
-        modifiers: egui::Modifiers,
+        _modifiers: egui::Modifiers,
     ) {
         self.accept(accepted);
         if let Backend::Wayland(bridge) = &self.backend {
-            let preferred = if modifier_action(modifiers) == Some(Action::Move) {
-                guth_wayland_dnd::DropAction::Move
-            } else {
-                guth_wayland_dnd::DropAction::Copy
-            };
-            // Make Move available before the first hover callback reaches egui,
-            // so a quick Shift-drop is not silently negotiated as Copy.
-            bridge.set_incoming_drop_policy(move_available, preferred);
+            // Negotiate Ask before the drop when the source supports it, so the
+            // final action can follow the user's explicit choice afterward.
+            bridge.set_incoming_drop_policy(move_available, guth_wayland_dnd::DropAction::Ask);
         }
     }
     pub fn complete(&self, completion: Completion, action: Option<Action>) {
@@ -155,15 +174,16 @@ impl Native {
                 bridge.poll().into_iter().filter_map(|event| match event {
                     DndEvent::Hovered { x,y } => Some(Event::Hover(egui::pos2(x,y))),
                     DndEvent::Left => Some(Event::Left),
-                    DndEvent::IncomingAction {action}=>Some(Event::Action(action.and_then(|action|match action {DropAction::Copy=>Some(Action::Copy),DropAction::Move=>Some(Action::Move),DropAction::Ask=>None}))),
+                    DndEvent::IncomingAction {action}=>Some(Event::Action(action.map(|action|match action {DropAction::Copy=>Action::Copy,DropAction::Move=>Action::Move,DropAction::Ask=>modifier_action(modifiers).unwrap_or(Action::Copy)}))),
                     DndEvent::Dropped { x,y,paths,action,completion_id,actions } => {
-                        let chosen=match action {DropAction::Copy=>Action::Copy,DropAction::Move=>Action::Move,DropAction::Ask=>modifier_action(modifiers).unwrap_or(Action::Copy)};
+                        let chosen=match action {DropAction::Copy=>Action::Copy,DropAction::Move=>Action::Move,DropAction::Ask=>modifier_action(modifiers).filter(|action| if *action==Action::Copy { actions.allow_copy } else { actions.allow_move }).unwrap_or(if actions.allow_copy {Action::Copy} else {Action::Move})};
                         if (chosen==Action::Move && !actions.allow_move) || (chosen==Action::Copy && !actions.allow_copy) {
                             if let Some(id) = completion_id { bridge.complete_drop(id,false); }
                             return Some(Event::Error(crate::i18n::tr("O aplicativo de origem não permite a operação solicitada para os arquivos arrastados.").into()));
                         }
                         let internal = self.outgoing_active && paths == self.outgoing;
-                        Some(Event::Dropped { position:egui::pos2(x,y),paths,internal,action:chosen,completion:completion_id.map(Completion::Wayland) })
+                        let allowed = if action == DropAction::Ask { Actions { copy: actions.allow_copy, move_: actions.allow_move } } else { Actions::only(chosen) };
+                        Some(Event::Dropped { position:egui::pos2(x,y),paths,internal,action:chosen,allowed,completion:completion_id.map(Completion::Wayland) })
                     }
                     DndEvent::DragStarted => { self.outgoing_active=true; Some(Event::Started) },
                     DndEvent::DragEnded { .. } => { self.outgoing_active=false; self.outgoing.clear(); Some(Event::Ended) },

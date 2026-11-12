@@ -1,6 +1,6 @@
 //! XDND v5 on a separate connection. A validated XdndProxy receives precise
 //! native positions without competing with winit's X11 event reader.
-use super::{Action, Completion, Event as AppEvent, MAX_BYTES, parse_uris, uri_list};
+use super::{Action, Actions, Completion, Event as AppEvent, MAX_BYTES, parse_uris, uri_list};
 use eframe::egui;
 use std::{
     collections::BTreeMap,
@@ -20,7 +20,7 @@ mod drag_window;
 x11rb::atom_manager! {
     Atoms: AtomsCookie {
         XdndAware, XdndProxy, XdndEnter, XdndLeave, XdndPosition, XdndStatus,
-        XdndDrop, XdndFinished, XdndSelection, XdndActionCopy, XdndActionMove, XdndActionList, XdndTypeList,
+        XdndDrop, XdndFinished, XdndSelection, XdndActionCopy, XdndActionMove, XdndActionAsk, XdndActionList, XdndTypeList,
         TARGETS, INCR, URI: b"text/uri-list", TRANSFER: b"_LSE_DND_TRANSFER",
     }
 }
@@ -102,6 +102,8 @@ struct Incoming {
     version: u32,
     action: Option<Action>,
     allow_move: bool,
+    allow_copy: bool,
+    allow_ask: bool,
     supported: bool,
     position: egui::Pos2,
     data: Vec<u8>,
@@ -110,7 +112,7 @@ struct Incoming {
 }
 struct PendingFinish {
     source: Window,
-    action: Action,
+    allowed: Actions,
     deadline: Instant,
 }
 struct Chunk {
@@ -150,7 +152,7 @@ impl Worker {
     }
     fn complete(&mut self, id: u64, action: Option<Action>) {
         if let Some(pending) = self.finishes.remove(&id) {
-            let success = action == Some(pending.action);
+            let success = action.is_some_and(|action| pending.allowed.allows(action));
             self.message(
                 pending.source,
                 self.atoms.XdndFinished,
@@ -158,7 +160,7 @@ impl Worker {
                     self.window,
                     u32::from(success),
                     if success {
-                        self.action_atom(pending.action)
+                        self.action_atom(action.unwrap())
                     } else {
                         0
                     },
@@ -210,7 +212,11 @@ impl Worker {
                     0,
                     0,
                     if yes {
-                        self.action_atom(self.incoming_action().unwrap_or(Action::Copy))
+                        if input.allow_ask {
+                            self.atoms.XdndActionAsk
+                        } else {
+                            self.action_atom(self.incoming_action().unwrap_or(Action::Copy))
+                        }
                     } else {
                         0
                     },
@@ -251,13 +257,21 @@ impl Worker {
             return;
         };
         if let Some(input) = self.incoming.take() {
+            let allowed = if input.allow_ask {
+                Actions {
+                    copy: input.allow_copy,
+                    move_: input.allow_move,
+                }
+            } else {
+                Actions::only(action)
+            };
             self.next_finish = self.next_finish.wrapping_add(1);
             let id = self.next_finish;
             self.finishes.insert(
                 id,
                 PendingFinish {
                     source: input.source,
-                    action,
+                    allowed,
                     deadline: Instant::now() + Duration::from_secs(300),
                 },
             );
@@ -266,6 +280,7 @@ impl Worker {
                 paths,
                 internal: input.source == self.proxy,
                 action,
+                allowed,
                 completion: Some(Completion::X11(id)),
             });
             self.emit(AppEvent::Left);
@@ -544,6 +559,8 @@ impl Worker {
             Event::ClientMessage(message) => {
                 let data = message.data.as_data32();
                 if message.type_ == self.atoms.XdndEnter {
+                    let actions =
+                        self.property(data[0], self.atoms.XdndActionList, AtomEnum::ATOM.into());
                     let types = if data[1] & 1 != 0 {
                         self.property(data[0], self.atoms.XdndTypeList, AtomEnum::ATOM.into())
                     } else {
@@ -553,9 +570,12 @@ impl Worker {
                         source: data[0],
                         version: (data[1] >> 24).min(5),
                         action: Some(Action::Copy),
-                        allow_move: self
-                            .property(data[0], self.atoms.XdndActionList, AtomEnum::ATOM.into())
-                            .contains(&self.atoms.XdndActionMove),
+                        allow_move: actions.contains(&self.atoms.XdndActionMove),
+                        allow_copy: actions.is_empty()
+                            || actions.contains(&self.atoms.XdndActionCopy),
+                        allow_ask: actions.contains(&self.atoms.XdndActionAsk)
+                            && (actions.contains(&self.atoms.XdndActionCopy)
+                                || actions.contains(&self.atoms.XdndActionMove)),
                         supported: types.contains(&self.atoms.URI),
                         position: egui::Pos2::ZERO,
                         data: Vec::new(),
@@ -576,7 +596,10 @@ impl Worker {
                         input.action = if data[4] == self.atoms.XdndActionMove {
                             input.allow_move = true;
                             Some(Action::Move)
-                        } else if data[4] == 0 || data[4] == self.atoms.XdndActionCopy {
+                        } else if data[4] == 0
+                            || data[4] == self.atoms.XdndActionCopy
+                            || (data[4] == self.atoms.XdndActionAsk && input.allow_ask)
+                        {
                             Some(Action::Copy)
                         } else {
                             None
@@ -624,10 +647,13 @@ impl Worker {
                         } else {
                             None
                         };
-                        let accepted = data[1] & 1 != 0 && action == Some(output.requested);
+                        let ask = data[4] == self.atoms.XdndActionAsk;
+                        let feedback = if ask { Some(output.requested) } else { action };
+                        let accepted =
+                            data[1] & 1 != 0 && (ask || action == Some(output.requested));
                         if output.accepted != accepted {
                             output.accepted = accepted;
-                            self.emit(AppEvent::Action(if accepted { action } else { None }));
+                            self.emit(AppEvent::Action(if accepted { feedback } else { None }));
                         }
                     }
                 } else if message.type_ == self.atoms.XdndFinished
@@ -780,7 +806,11 @@ fn run(
         proxy,
         atoms.XdndActionList,
         AtomEnum::ATOM,
-        &[atoms.XdndActionCopy, atoms.XdndActionMove],
+        &[
+            atoms.XdndActionCopy,
+            atoms.XdndActionMove,
+            atoms.XdndActionAsk,
+        ],
     )?;
     conn.flush()?;
     let mut worker = Worker {
@@ -898,10 +928,20 @@ mod tests {
             (Action::Move, true),
             (Action::Move, false),
         ] {
-            incoming_protocol(action, success);
+            incoming_protocol(action, success, false);
         }
     }
-    fn incoming_protocol(action: Action, success: bool) {
+    #[test]
+    fn native_ask_drop_waits_for_the_final_copy_or_move_and_preserves_cancelled_sources() {
+        for (action, success) in [
+            (Action::Copy, true),
+            (Action::Move, true),
+            (Action::Move, false),
+        ] {
+            incoming_protocol(action, success, true);
+        }
+    }
+    fn incoming_protocol(action: Action, success: bool, ask: bool) {
         let Ok((conn, screen)) = x11rb::connect(None) else {
             return;
         };
@@ -966,6 +1006,22 @@ mod tests {
             .unwrap();
             conn.flush().unwrap();
         };
+        if ask {
+            conn.change_property32(
+                PropMode::REPLACE,
+                source,
+                atoms.XdndActionList,
+                AtomEnum::ATOM,
+                &[
+                    atoms.XdndActionCopy,
+                    atoms.XdndActionMove,
+                    atoms.XdndActionAsk,
+                ],
+            )
+            .unwrap()
+            .check()
+            .unwrap();
+        }
         send(atoms.XdndEnter, [source, 5 << 24, atoms.URI, 0, 0]);
         send(
             atoms.XdndPosition,
@@ -974,7 +1030,9 @@ mod tests {
                 0,
                 (180 << 16) | 210,
                 0,
-                if action == Action::Move {
+                if ask {
+                    atoms.XdndActionAsk
+                } else if action == Action::Move {
                     atoms.XdndActionMove
                 } else {
                     atoms.XdndActionCopy
@@ -1037,6 +1095,7 @@ mod tests {
                         internal: false,
                         action,
                         completion,
+                        ..
                     } = event
                     {
                         Some((paths, position, action, completion))
@@ -1047,7 +1106,7 @@ mod tests {
             {
                 assert_eq!(received, paths);
                 assert_eq!(point, position);
-                assert_eq!(chosen, action);
+                assert_eq!(chosen, if ask { Action::Copy } else { action });
                 assert!(source_file.exists());
                 break match completion.unwrap() {
                     Completion::X11(id) => id,
