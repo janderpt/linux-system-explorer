@@ -2,14 +2,14 @@
 
 [English](README.en.md)
 
-**Código-fonte publicado no GitHub — versão 0.1.0-alpha.3 em desenvolvimento.** O plano por formato e loja está
+**Código-fonte publicado no GitHub — versão 0.1.0-alpha.4 em desenvolvimento.** O plano por formato e loja está
 em [Distribuição](docs/DISTRIBUTION.md), com os passos de revisão em
 [Release](docs/RELEASING.md). Ainda não há aprovação em lojas.
 
 Explorador de arquivos desktop para Linux, escrito em Rust e inspirado na organização e na experiência do Windows Explorer. A primeira versão usa [egui/eframe](https://github.com/emilk/egui) com renderização OpenGL e suporte a Wayland e X11.
 
 
-Pré-release **v0.1.0-alpha.3**: pacotes Ubuntu 24.04+ x86_64, checksums e [instruções de instalação](docs/releases/v0.1.0-alpha.3.md). [Downloads no GitHub](https://github.com/janderpt/linux-system-explorer/releases/tag/v0.1.0-alpha.3).
+Pré-release **v0.1.0-alpha.4**: pacotes Ubuntu 24.04+ x86_64, checksums e [instruções de instalação](docs/releases/v0.1.0-alpha.4.md). [Downloads no GitHub](https://github.com/janderpt/linux-system-explorer/releases/tag/v0.1.0-alpha.4).
 
 Para o protótipo **Flatpak experimental** e a preparação para o Flathub, consulte [Flatpak](docs/FLATPAK.md). Ele ainda tem diferenças de recursos em relação aos pacotes nativos.
 
@@ -21,7 +21,7 @@ A rotação permite 90° para a direita/esquerda ou 180°. O redimensionamento m
 
 **Imprimir…** aparece para imagens estáticas, PDF, documentos Office/LibreOffice, HTML, Markdown e texto/código reconhecidos. Uma seleção totalmente imprimível oferece **Imprimir seleção…**, reunindo os arquivos em um único documento na ordem exibida. Cada solicitação abre primeiro o diálogo do sistema para escolher impressora, cópias e páginas (`PreparePrint`); somente após a confirmação, o envio (`Print`) usa o token recebido nessa mesma solicitação. Configurações de trabalhos anteriores nunca autorizam um novo envio. O explorador prepara PDFs temporários e abre os originais somente para leitura. Cancelar o diálogo não gera erro; Escape pode cancelar a preparação. O aviso de sucesso significa envio ao sistema de impressão, não comprovação de saída física.
 
-A impressão requer `xdg-desktop-portal` e um backend com suporte a Print (KDE/GNOME/GTK conforme o desktop). PDF individual vai diretamente ao portal. Imagens e texto usam WeasyPrint para a paginação; HTML/Markdown usam o mesmo renderizador estático do preview, e Office usa LibreOffice. Vários documentos usam `pdfunite` (Poppler). Imagens são preparadas em A4, encaixadas na área útil; impressão não altera a imagem original. Limites: até 100 arquivos, 256 MiB por arquivo e 512 MiB de PDFs preparados; texto UTF-8 de até 1 MiB. Os ícones de edição e impressão são configuráveis em **Aparência e ícones**.
+A impressão requer `xdg-desktop-portal` e um backend com suporte a Print (KDE/GNOME/GTK conforme o desktop). PDF individual vai ao portal; em montagens com leitura apenas sequencial, usa a mesma cópia temporária do preview. Imagens e texto usam WeasyPrint para a paginação; HTML/Markdown usam o mesmo renderizador estático do preview, e Office usa LibreOffice. Vários documentos usam `pdfunite` (Poppler). Imagens são preparadas em A4, encaixadas na área útil; impressão não altera a imagem original. Limites: até 100 arquivos, 256 MiB por arquivo e 512 MiB de PDFs preparados; texto UTF-8 de até 1 MiB. Os ícones de edição e impressão são configuráveis em **Aparência e ícones**.
 
 ## Ações por tipo de arquivo
 

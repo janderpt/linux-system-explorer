@@ -1,4 +1,4 @@
-# Third-party distribution record — 0.1.0-alpha.3
+# Third-party distribution record — 0.1.0-alpha.4
 
 Technical review date: 2026-11-12. This records the packaging work for the Linux x86_64 alpha, not a legal certification or a claim of independent human review. The package inventory is generated from the exact Cargo.lock and active normal/build dependency graph; its lock hash is recorded in THIRD_PARTY.json and BUILD-INFO.json. It deliberately retains `review_required: true` for ongoing maintainer review.
 

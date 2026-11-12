@@ -3,10 +3,10 @@
 [Português](README.md)
 
 A Linux desktop file manager written in Rust with egui/eframe, inspired by familiar
-desktop file explorers. **Source published on GitHub; version 0.1.0-alpha.3 remains a development build, without a stable release or store approval.**
+desktop file explorers. **Source published on GitHub; version 0.1.0-alpha.4 remains a development build, without a stable release or store approval.**
 
 
-**v0.1.0-alpha.3** prerelease: Ubuntu 24.04+ x86_64 packages, checksums and [installation notes](docs/releases/v0.1.0-alpha.3.md). [GitHub downloads](https://github.com/janderpt/linux-system-explorer/releases/tag/v0.1.0-alpha.3).
+**v0.1.0-alpha.4** prerelease: Ubuntu 24.04+ x86_64 packages, checksums and [installation notes](docs/releases/v0.1.0-alpha.4.md). [GitHub downloads](https://github.com/janderpt/linux-system-explorer/releases/tag/v0.1.0-alpha.4).
 
 A local **experimental Flatpak** and the remaining Flathub work are documented in [Flatpak](docs/FLATPAK.md). It does not yet provide all native-package integrations/renderers.
 
@@ -18,7 +18,7 @@ Rotation supports clockwise/counterclockwise 90° and 180°. Resize preserves as
 
 **Print…** is available for supported static images, PDF, Office/LibreOffice, HTML, Markdown and text/code. Fully printable selections offer **Print selection…**, combining documents in display order. Each job first opens the system printer/page/copy dialog (`PreparePrint`); only after confirmation does `Print` use that same job’s returned token. Previous jobs never authorize a new submission. Preparation uses temporary PDFs and read-only originals. Dialog cancellation is normal, Escape can cancel preparation, and success means submission to the printing system rather than confirmation of physical output.
 
-Printing requires `xdg-desktop-portal` with a Print-capable desktop backend. Single PDFs go directly to the portal. Images/text need WeasyPrint pagination, HTML/Markdown use the existing static renderer, Office uses LibreOffice, and multiple documents need Poppler's `pdfunite`. Images fit an A4 printable area without changing the source. Limits are 100 files, 256 MiB per source and 512 MiB of prepared PDFs; UTF-8 text is limited to 1 MiB. Operation/print icons are customizable.
+Printing requires `xdg-desktop-portal` with a Print-capable desktop backend. Single PDFs go to the portal; sequential-only mounted files use the same temporary snapshot mechanism as previews. Images/text need WeasyPrint pagination, HTML/Markdown use the existing static renderer, Office uses LibreOffice, and multiple documents need Poppler's `pdfunite`. Images fit an A4 printable area without changing the source. Limits are 100 files, 256 MiB per source and 512 MiB of prepared PDFs; UTF-8 text is limited to 1 MiB. Operation/print icons are customizable.
 
 ## File type actions
 
