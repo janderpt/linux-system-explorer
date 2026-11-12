@@ -19,6 +19,7 @@ fn frame(app: &mut Explorer, ctx: &egui::Context, events: Vec<egui::Event>) -> e
                 Vec2::new(1180.0, 760.0),
             )),
             events,
+            time: Some(ctx.input(|input| input.time) + 0.2),
             ..Default::default()
         },
         |ctx| {
@@ -148,4 +149,150 @@ fn escape_in_filter_restores_direct_listing_and_new_folder_cancels_a_pending_sea
     finish(&mut app);
     assert!(app.query.is_empty());
     assert_eq!(app.entries[0].name, "result.txt");
+}
+
+fn click(
+    app: &mut Explorer,
+    ctx: &egui::Context,
+    pos: egui::Pos2,
+    button: egui::PointerButton,
+) -> egui::FullOutput {
+    for pressed in [true, false] {
+        frame(
+            app,
+            ctx,
+            vec![
+                egui::Event::PointerMoved(pos),
+                egui::Event::PointerButton {
+                    pos,
+                    button,
+                    pressed,
+                    modifiers: egui::Modifiers::NONE,
+                },
+            ],
+        );
+    }
+    frame(app, ctx, vec![])
+}
+
+#[test]
+fn result_context_menu_opens_parent_selects_only_clicked_item_and_scrolls_to_it_in_every_view() {
+    for view in [View::Details, View::List, View::Icons] {
+        let root = tempfile::tempdir().unwrap();
+        for name in ["A", "B"] {
+            fs::create_dir(root.path().join(name)).unwrap();
+            fs::write(root.path().join(name).join("zzz-hit"), name).unwrap();
+        }
+        for i in 0..75 {
+            fs::write(root.path().join("A").join(format!("item-{i:03}")), "keep").unwrap();
+        }
+        let target = root.path().join("A/zzz-hit");
+        let other = root.path().join("B/zzz-hit");
+        let ctx = egui::Context::default();
+        let mut app = Explorer::with_context(&ctx, root.path().into());
+        complete_navigation(&mut app);
+        app.view = view;
+        let parent_layout = FolderLayout {
+            view,
+            ..Default::default()
+        };
+        app.folder_layouts.insert(
+            settings::folder_key(&root.path().join("A")),
+            parent_layout.clone(),
+        );
+        app.query = "hit".into();
+        finish(&mut app);
+        app.selected = BTreeSet::from([target.clone(), other.clone()]);
+        frame(&mut app, &ctx, vec![]);
+        let output = frame(&mut app, &ctx, vec![]);
+        let point = text_center(&output, "A/zzz-hit").unwrap();
+        let output = click(&mut app, &ctx, point, egui::PointerButton::Secondary);
+        let point = text_center(&output, "Abrir local do arquivo")
+            .expect("search results offer their containing folder");
+        click(&mut app, &ctx, point, egui::PointerButton::Primary);
+        complete_navigation(&mut app);
+        assert_eq!(app.current, root.path().join("A"));
+        assert!(app.query.is_empty());
+        assert!(!app.recursive_search.active());
+        assert_eq!(app.selected, BTreeSet::from([target.clone()]));
+        assert_eq!(app.selection_cursor, Some(target.clone()));
+        assert!(app.current_layout() == parent_layout);
+        assert!(app.reveal_selection);
+        for _ in 0..3 {
+            frame(&mut app, &ctx, vec![]);
+        }
+        let output = frame(&mut app, &ctx, vec![]);
+        assert!(output.shapes.iter().any(|shape|matches!(&shape.shape,egui::Shape::Text(text) if text.galley.text()=="zzz-hit" && shape.clip_rect.contains(text.pos+text.galley.size()*0.5))),"selected item must scroll into view");
+        let point = text_center(&output, "zzz-hit").unwrap();
+        let output = click(&mut app, &ctx, point, egui::PointerButton::Secondary);
+        assert!(
+            text_center(&output, "Abrir local do arquivo").is_none(),
+            "ordinary folder menus keep their existing actions"
+        );
+        assert_eq!(fs::read_to_string(target).unwrap(), "A");
+        assert_eq!(fs::read_to_string(other).unwrap(), "B");
+    }
+}
+
+#[test]
+fn result_location_handles_same_folder_directories_hidden_raw_names_and_failed_navigation() {
+    use std::{ffi::OsString, os::unix::ffi::OsStringExt};
+    let root = tempfile::tempdir().unwrap();
+    let parent = root.path().join("parent");
+    fs::create_dir_all(parent.join("hit-folder")).unwrap();
+    fs::write(root.path().join("hit-root"), "root").unwrap();
+    let raw = parent.join(OsString::from_vec(b".hit-\xff".to_vec()));
+    fs::write(&raw, "raw").unwrap();
+    let ctx = egui::Context::default();
+    let mut app = Explorer::with_context(&ctx, root.path().into());
+    complete_navigation(&mut app);
+    app.query = "hit".into();
+    finish(&mut app);
+    let entry = app
+        .entries
+        .iter()
+        .find(|e| e.path == root.path().join("hit-root"))
+        .unwrap()
+        .clone();
+    app.open_result_location(&entry, &ctx);
+    complete_navigation(&mut app);
+    assert_eq!(app.current, root.path());
+    assert!(app.query.is_empty());
+    assert_eq!(app.selected, BTreeSet::from([entry.path]));
+    app.query = "hit-folder".into();
+    finish(&mut app);
+    let directory = app.entries.iter().find(|e| e.is_dir).unwrap().clone();
+    app.open_result_location(&directory, &ctx);
+    complete_navigation(&mut app);
+    assert_eq!(app.current, parent);
+    assert_eq!(app.selected, BTreeSet::from([directory.path]));
+    app.show_hidden = true;
+    app.query = "hit".into();
+    finish(&mut app);
+    let entry = app.entries.iter().find(|e| e.path == raw).unwrap().clone();
+    app.open_result_location(&entry, &ctx);
+    app.show_hidden = false;
+    complete_navigation(&mut app);
+    assert_eq!(app.selected, BTreeSet::from([raw.clone()]));
+    assert!(app.reveal_hidden && app.hidden_visible() && !app.show_hidden);
+    assert!(app.query.is_empty());
+    app.navigate(root.path().into(), Navigation::Visit);
+    complete_navigation(&mut app);
+    let missing_dir = root.path().join("missing");
+    fs::create_dir(&missing_dir).unwrap();
+    fs::write(missing_dir.join("hit-lost"), "lost").unwrap();
+    app.refresh();
+    complete_navigation(&mut app);
+    app.query = "lost".into();
+    finish(&mut app);
+    let entry = app.entries[0].clone();
+    fs::remove_file(&entry.path).unwrap();
+    fs::remove_dir(&missing_dir).unwrap();
+    app.open_result_location(&entry, &ctx);
+    complete_navigation(&mut app);
+    assert_eq!(app.current, root.path());
+    assert_eq!(app.query, "lost");
+    assert!(app.pending_external.is_none());
+    assert!(!app.notice_toasts.is_empty());
+    assert_eq!(fs::read_to_string(raw).unwrap(), "raw");
 }

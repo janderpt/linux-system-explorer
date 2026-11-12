@@ -28,7 +28,7 @@ Multi-selection gets extraction actions only if every selected item is an archiv
 
 ## Recursive search
 
-The folder search field (**Ctrl+F**) matches file and folder names throughout the current directory and its descendants, ignoring case. Results arrive progressively in Details, List and Icons, with relative paths to distinguish duplicate names. File operations and preview retain the actual paths. Opening a matching folder navigates into it and ends the previous search.
+The folder search field (**Ctrl+F**) matches file and folder names throughout the current directory and its descendants, ignoring case. Results arrive progressively in Details, List and Icons, with relative paths to distinguish duplicate names. File operations and preview retain the actual paths. Opening a matching folder navigates into it and ends the previous search. Result context menus also offer **Open file location**, which opens the containing folder in the same pane, clears the search and selects/scrolls to the clicked item. Folder results reveal the folder in its parent. Destination view preferences are preserved, symbolic links reveal their own location, and the action icon is configurable.
 
 Search starts after a 250 ms typing pause using one worker per tab and bounded result batches. New text, hidden-item changes and navigation cancel obsolete work. Clearing the field, **Escape** while the field is focused, or **Clear search** restores the direct listing; **F5** refreshes and reruns the search. Tabs and panes search independently. Applications and Trash keep their existing filters.
 

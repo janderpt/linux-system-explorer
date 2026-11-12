@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add Open file location to search-result context menus, with a configurable icon; refresh/navigate to the containing folder in the same pane, clear the search and select/reveal the clicked file or folder, including same-folder hits, hidden/raw-byte names and normal navigation error handling.
+
 - Make folder filtering recursively search descendant names with debounced, cancellable background workers, bounded streaming results, relative-path labels in every view, hidden-directory controls and no-follow traversal; preserve real paths for file operations, restore the direct listing on clear/Escape, rerun on refresh and report partial searches through toasts.
 
 - Add a configurable Drives sidebar with background UDisks2 volume discovery, capacity/free-space usage, revalidated mount/open, no-force unmount and safe eject/power-off through desktop Polkit; share inventory across tabs/panes, refresh after changes, protect system volumes, and handle busy/denied/cancelled operations without leaving stale directory views.

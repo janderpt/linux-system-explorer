@@ -1509,6 +1509,7 @@ impl Explorer {
                 self.open(entry, ui.ctx());
                 ui.close();
             }
+            self.result_location_menu(ui, entry);
             if !entry.is_dir
                 && !archive_actions
                 && self

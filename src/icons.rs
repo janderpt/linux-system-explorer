@@ -60,6 +60,7 @@ pub enum Icon {
     ReopenTab,
     Terminal,
     OpenWith,
+    OpenLocation,
     Rename,
     CopyPath,
     Properties,
@@ -104,7 +105,7 @@ pub enum Icon {
 }
 
 impl Icon {
-    pub const ALL: [Self; 93] = [
+    pub const ALL: [Self; 94] = [
         Self::Applications,
         Self::SoftwareManager,
         Self::Print,
@@ -157,6 +158,7 @@ impl Icon {
         Self::ReopenTab,
         Self::Terminal,
         Self::OpenWith,
+        Self::OpenLocation,
         Self::Rename,
         Self::CopyPath,
         Self::Properties,
@@ -203,6 +205,7 @@ impl Icon {
     pub fn label(self) -> &'static str {
         match self {
             Self::CustomizeFolder => crate::i18n::tr("Personalizar pasta…"),
+            Self::OpenLocation => crate::i18n::tr("Abrir local do arquivo"),
             Self::MountVolume => crate::i18n::tr("Montar e abrir"),
             Self::UnmountVolume => crate::i18n::tr("Desmontar"),
             Self::EjectVolume => crate::i18n::tr("Ejetar com segurança"),
@@ -333,6 +336,7 @@ impl Icon {
             Self::Moon => "moon",
             Self::Folder => "folder",
             Self::CustomizeFolder => "palette",
+            Self::OpenLocation => "folder-tree",
             Self::MountVolume => "hard-drive",
             Self::UnmountVolume => "arrow-up-from-bracket",
             Self::EjectVolume => "eject",

@@ -2778,5 +2778,9 @@
   "A pesquisa considera os nomes dos itens nesta pasta e nas subpastas.": {
     "pt": "A pesquisa considera os nomes dos itens nesta pasta e nas subpastas.",
     "en": "Search matches item names in this folder and its subfolders."
+  },
+  "Abrir local do arquivo": {
+    "pt": "Abrir local do arquivo",
+    "en": "Open file location"
   }
 }

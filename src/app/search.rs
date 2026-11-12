@@ -45,6 +45,46 @@ impl Search {
     }
 }
 impl Explorer {
+    pub(super) fn open_result_location(&mut self, entry: &Entry, ctx: &egui::Context) {
+        if self.loading || !self.recursive_search.active() || self.query.is_empty() {
+            return;
+        }
+        let Some(parent) = entry.path.parent().filter(|path| path.is_absolute()) else {
+            return;
+        };
+        self.editing_address = false;
+        self.focus_address = false;
+        self.focus_search = false;
+        if let Some(id) = ctx.memory(|memory| memory.focused()) {
+            ctx.memory_mut(|memory| memory.surrender_focus(id));
+        }
+        // Always reread, including a match in the current folder. Do not replace
+        // the search entries while their context menu is being rendered.
+        self.navigate(parent.to_owned(), Navigation::Visit);
+        if self.loading {
+            self.reveal_external(vec![entry.path.clone()], false);
+        }
+    }
+
+    pub(super) fn result_location_menu(&mut self, ui: &mut egui::Ui, entry: &Entry) {
+        if self.recursive_search.active()
+            && !self.query.is_empty()
+            && self
+                .menu_item(
+                    ui,
+                    Icon::OpenLocation,
+                    crate::i18n::tr("Abrir local do arquivo"),
+                    "",
+                    !self.loading,
+                    false,
+                )
+                .clicked()
+        {
+            self.open_result_location(entry, ui.ctx());
+            ui.close();
+        }
+    }
+
     pub(super) fn directory_entries(&self) -> &[Entry] {
         self.recursive_search
             .base
