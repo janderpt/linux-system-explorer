@@ -240,6 +240,55 @@ impl Explorer {
         }
     }
 
+    pub(super) fn open_selected_shortcut(&mut self, ctx: &egui::Context) -> bool {
+        if self.loading
+            || self.is_trash()
+            || ctx.wants_keyboard_input()
+            || self.drag_blocks_tabs()
+            || egui::Popup::is_any_open(ctx)
+        {
+            return false;
+        }
+        let enter = ctx.input(|input| input.events.iter().any(|event| matches!(event,
+            egui::Event::Key { key: Key::Enter, pressed: true, repeat: false, modifiers, .. } if *modifiers == egui::Modifiers::NONE
+        )));
+        if !enter {
+            return false;
+        }
+        let visible = filesystem::visible_entries(
+            &self.entries,
+            &self.query,
+            self.hidden_visible(),
+            self.sort,
+            self.descending,
+        );
+        let entry = self
+            .selection_cursor
+            .as_ref()
+            .filter(|path| self.selected.contains(*path))
+            .and_then(|path| {
+                visible
+                    .iter()
+                    .map(|&i| &self.entries[i])
+                    .find(|entry| &entry.path == path)
+            })
+            .or_else(|| {
+                visible
+                    .iter()
+                    .map(|&i| &self.entries[i])
+                    .find(|entry| self.selected.contains(&entry.path))
+            })
+            .cloned();
+        let Some(entry) = entry else {
+            return false;
+        };
+        ctx.input_mut(|input| {
+            input.consume_key(egui::Modifiers::NONE, Key::Enter);
+        });
+        self.open(&entry, ctx);
+        true
+    }
+
     pub(super) fn reveal_selected_row(
         &mut self,
         ui: &mut egui::Ui,

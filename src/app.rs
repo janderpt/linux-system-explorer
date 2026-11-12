@@ -580,6 +580,9 @@ impl Explorer {
             self.application_shortcuts(ctx);
         } else {
             self.type_ahead_shortcuts(ctx);
+            if self.open_selected_shortcut(ctx) {
+                return;
+            }
         }
         if !self.is_applications()
             && !ctx.wants_keyboard_input()

@@ -243,6 +243,7 @@ A sessão fica em `$XDG_STATE_HOME/linux-system-explorer/session.json` (por padr
 | `Espaço` | Abrir/fechar o preview do arquivo selecionado no painel ativo |
 | `↑` / `↓` no preview | Arquivo anterior/seguinte na ordem visível |
 | `←` / `→` no preview | Página ou slide anterior/seguinte |
+| `Enter` | Abrir o item selecionado no painel ativo; entra na pasta ou abre o arquivo no aplicativo padrão |
 | `F2` | Renomear o único item selecionado |
 | `F5` | Atualizar |
 | `Esc` | Sair da edição do caminho, limpar a pesquisa ou cancelar a criação |

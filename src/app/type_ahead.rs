@@ -49,7 +49,12 @@ impl Explorer {
                 || input.pointer.any_down()
                 || input.viewport().focused == Some(false)
         });
-        if self.loading || ctx.wants_keyboard_input() || self.drag_blocks_tabs() || blocked {
+        if self.loading
+            || ctx.wants_keyboard_input()
+            || self.drag_blocks_tabs()
+            || blocked
+            || egui::Popup::is_any_open(ctx)
+        {
             self.type_ahead = State::default();
             return;
         }

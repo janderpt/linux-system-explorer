@@ -790,3 +790,39 @@ fn typing_selects_names_only_in_the_active_pane_and_resets_when_switching_panes(
             .all(|tab| tab.current == root.path() && tab.query.is_empty())
     );
 }
+
+#[test]
+fn enter_opens_the_selected_folder_only_in_the_active_pane() {
+    let root = tempfile::tempdir().unwrap();
+    let folder = root.path().join("Jander");
+    std::fs::create_dir(&folder).unwrap();
+    let ctx = egui::Context::default();
+    let mut app = workspace(&ctx, root.path().into());
+    app.toggle_split(&ctx);
+    settle(&mut app);
+    let [left, right] = app.split_indices().unwrap();
+    app.activate(left, &ctx);
+    render(&mut app, &ctx, vec![], Modifiers::NONE);
+    render(
+        &mut app,
+        &ctx,
+        vec![Event::Text("jand".into())],
+        Modifiers::NONE,
+    );
+    assert_eq!(app.tabs[left].selection_cursor, Some(folder.clone()));
+    render(
+        &mut app,
+        &ctx,
+        vec![Event::Key {
+            key: Key::Enter,
+            physical_key: None,
+            pressed: true,
+            repeat: false,
+            modifiers: Modifiers::NONE,
+        }],
+        Modifiers::NONE,
+    );
+    settle(&mut app);
+    assert_eq!(app.tabs[left].current, folder);
+    assert_eq!(app.tabs[right].current, root.path());
+}

@@ -137,3 +137,94 @@ fn focused_text_fields_keep_their_text_and_do_not_trigger_type_selection() {
     assert_eq!(app.query, "alpha");
     assert!(app.type_ahead.prefix.is_empty());
 }
+
+#[test]
+fn enter_opens_the_folder_selected_by_typing_in_every_view_in_local_and_ftp_locations() {
+    for view in [View::Details, View::List, View::Icons] {
+        for ftp in [false, true] {
+            let root = tempfile::tempdir().unwrap();
+            let folder = root.path().join("Jander");
+            std::fs::create_dir(&folder).unwrap();
+            std::fs::write(folder.join("inside.txt"), "fixture").unwrap();
+            let ctx = egui::Context::default();
+            let mut app = Explorer::with_context(&ctx, root.path().into());
+            complete_navigation(&mut app);
+            app.view = view;
+            if ftp {
+                app.sidebar_options.remote.push(crate::network::Connection {
+                    url: "ftp://example.test/usuarios/".into(),
+                    label: "FTP fixture".into(),
+                    mount: Some(root.path().into()),
+                });
+            }
+            render(&mut app, &ctx, &[], 0.05);
+            render(&mut app, &ctx, &[text("jand")], 0.05);
+            assert_eq!(app.selection_cursor, Some(folder.clone()));
+            render(&mut app, &ctx, &[key(Key::Enter)], 0.05);
+            complete_navigation(&mut app);
+            assert_eq!(app.current, folder);
+            assert!(app.entries.iter().any(|entry| entry.name == "inside.txt"));
+            assert!(app.query.is_empty());
+            if ftp {
+                assert_eq!(app.address, "ftp://example.test/usuarios/Jander");
+            }
+        }
+    }
+}
+
+#[test]
+fn enter_ignores_repeats_modifiers_text_fields_and_dialogs_and_uses_the_focused_selected_folder() {
+    let root = tempfile::tempdir().unwrap();
+    let first = root.path().join("First");
+    let second = root.path().join("Second");
+    for folder in [&first, &second] {
+        std::fs::create_dir(folder).unwrap();
+    }
+    let ctx = egui::Context::default();
+    let mut app = Explorer::with_context(&ctx, root.path().into());
+    complete_navigation(&mut app);
+    app.selected = BTreeSet::from([first.clone(), second.clone()]);
+    app.selection_cursor = Some(second.clone());
+    render(&mut app, &ctx, &[], 0.05);
+    for modifiers in [Modifiers::CTRL, Modifiers::SHIFT, Modifiers::ALT] {
+        let mut event = key(Key::Enter);
+        if let Input::Key {
+            modifiers: value, ..
+        } = &mut event
+        {
+            *value = modifiers;
+        }
+        render(&mut app, &ctx, &[event], 0.05);
+        assert_eq!(app.current, root.path());
+    }
+    let mut event = key(Key::Enter);
+    if let Input::Key { repeat, .. } = &mut event {
+        *repeat = true;
+    }
+    render(&mut app, &ctx, &[event], 0.05);
+    assert_eq!(app.current, root.path());
+    egui::Popup::open_id(&ctx, egui::Id::new("enter_popup_guard"));
+    render(&mut app, &ctx, &[key(Key::Enter)], 0.05);
+    assert_eq!(app.current, root.path());
+    egui::Popup::close_all(&ctx);
+    app.focus_search = true;
+    render(&mut app, &ctx, &[], 0.05);
+    render(&mut app, &ctx, &[key(Key::Enter)], 0.05);
+    assert_eq!(app.current, root.path());
+    if let Some(id) = ctx.memory(|memory| memory.focused()) {
+        ctx.memory_mut(|memory| memory.surrender_focus(id));
+    }
+    app.properties = Some(filesystem::read_entry(&second).unwrap());
+    render(&mut app, &ctx, &[key(Key::Enter)], 0.05);
+    assert_eq!(app.current, root.path());
+    app.properties = None;
+    render(&mut app, &ctx, &[], 0.05);
+    let mut release = key(Key::Enter);
+    if let Input::Key { pressed, .. } = &mut release {
+        *pressed = false;
+    }
+    render(&mut app, &ctx, &[release], 0.05);
+    render(&mut app, &ctx, &[key(Key::Enter)], 0.05);
+    complete_navigation(&mut app);
+    assert_eq!(app.current, second);
+}

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Open the focused selected visible item with Enter in the active pane, including folders selected by typing on local and FTP mounts; reuse standard folder navigation/default file opening, ignore key repeat/modifiers and retain text-field, dialog and terminal Enter behavior.
+
 - Add name-prefix keyboard selection in Details/List/Icons, including remote folders, with displayed-order matching, selection reveal, a one-second reset, repeated-initial cycling, Backspace/Escape and independent pane/tab behavior; preserve text fields, dialogs, terminal input and the immediate Space preview shortcut.
 - Require an explicit Copy/Move choice for drops into explorer folders, showing source items and destination before any file transfer; modifiers only suggest an action, cancellation preserves files, and native Ask negotiation/source capability limits protect cross-application completion.
 

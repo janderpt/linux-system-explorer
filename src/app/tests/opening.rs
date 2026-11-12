@@ -13,6 +13,7 @@ fn render(app: &mut Explorer, ctx: &egui::Context, events: Vec<Event>) -> FullOu
             ..Default::default()
         },
         |ctx| {
+            app.shortcuts(ctx);
             app.top_toolbar(ctx);
             let visible = filesystem::visible_entries(
                 &app.entries,
@@ -54,14 +55,14 @@ fn captures(path: &Path) -> Vec<Vec<u8>> {
 }
 
 #[test]
-fn double_click_and_context_open_use_the_system_launcher() {
+fn double_click_context_and_enter_use_the_system_launcher() {
     let Some(root) = std::env::var_os("EXPLORER_OPENER_TEST_ROOT") else {
         for case in ["success", "failure", "missing", "fallback"] {
             let root = tempfile::tempdir().unwrap();
             let output = Command::new(std::env::current_exe().unwrap())
                 .args([
                     "--exact",
-                    "app::tests::opening::double_click_and_context_open_use_the_system_launcher",
+                    "app::tests::opening::double_click_context_and_enter_use_the_system_launcher",
                     "--nocapture",
                 ])
                 .env("EXPLORER_OPENER_TEST_ROOT", root.path())
@@ -96,7 +97,7 @@ fn double_click_and_context_open_use_the_system_launcher() {
         let output = Command::new(std::env::current_exe().unwrap())
             .args([
                 "--exact",
-                "app::tests::opening::double_click_and_context_open_use_the_system_launcher",
+                "app::tests::opening::double_click_context_and_enter_use_the_system_launcher",
                 "--nocapture",
             ])
             .env("EXPLORER_OPENER_ISOLATED", "1")
@@ -130,13 +131,19 @@ fn double_click_and_context_open_use_the_system_launcher() {
     let mut app = Explorer::with_context(&ctx, source.clone());
     complete_navigation(&mut app);
     if case == "failure" || case == "missing" {
-        let entry = app
-            .entries
-            .iter()
-            .find(|entry| entry.path == plain)
-            .unwrap()
-            .clone();
-        app.open(&entry, &ctx);
+        app.selected = BTreeSet::from([plain.clone()]);
+        app.selection_cursor = Some(plain.clone());
+        render(
+            &mut app,
+            &ctx,
+            vec![Event::Key {
+                key: Key::Enter,
+                physical_key: None,
+                pressed: true,
+                repeat: false,
+                modifiers: Modifiers::NONE,
+            }],
+        );
         let deadline = std::time::Instant::now() + std::time::Duration::from_secs(3);
         while app.error.is_none() && std::time::Instant::now() < deadline {
             app.poll();
@@ -194,6 +201,54 @@ fn double_click_and_context_open_use_the_system_launcher() {
     for path in [&plain, &quoted, &raw] {
         assert!(captured.contains(&path.as_os_str().as_bytes().to_vec()));
     }
+    let html = source.join("web page.html");
+    let docx = source.join("document.docx");
+    std::fs::write(&html, "<p>fixture</p>").unwrap();
+    std::fs::write(&docx, "fixture").unwrap();
+    app.refresh();
+    complete_navigation(&mut app);
+    let enter_paths = [&plain, &quoted, &raw, &html, &docx];
+    for path in enter_paths {
+        if let Some(id) = ctx.memory(|memory| memory.focused()) {
+            ctx.memory_mut(|memory| memory.surrender_focus(id));
+        }
+        app.selected = BTreeSet::from([path.clone()]);
+        app.selection_cursor = Some(path.clone());
+        let before = captures(&capture).len();
+        render(
+            &mut app,
+            &ctx,
+            vec![Event::Key {
+                key: Key::Enter,
+                physical_key: None,
+                pressed: true,
+                repeat: false,
+                modifiers: Modifiers::NONE,
+            }],
+        );
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(3);
+        while captures(&capture).len() == before && std::time::Instant::now() < deadline {
+            std::thread::sleep(std::time::Duration::from_millis(1));
+        }
+        let captured = captures(&capture);
+        assert_eq!(captured.len(), before + 1);
+        assert_eq!(
+            captured.last().unwrap(),
+            &path.as_os_str().as_bytes().to_vec()
+        );
+        assert_eq!(app.current, source);
+        render(
+            &mut app,
+            &ctx,
+            vec![Event::Key {
+                key: Key::Enter,
+                physical_key: None,
+                pressed: false,
+                repeat: false,
+                modifiers: Modifiers::NONE,
+            }],
+        );
+    }
     // Separate this double-click from the preceding popup gesture and its click count.
     for _ in 0..20 {
         render(&mut app, &ctx, vec![]);
@@ -206,7 +261,7 @@ fn double_click_and_context_open_use_the_system_launcher() {
     complete_navigation(&mut app);
     app.poll();
     assert_eq!(app.current, folder);
-    assert_eq!(captures(&capture).len(), 3);
+    assert_eq!(captures(&capture).len(), 3 + enter_paths.len());
     assert!(app.error.is_none());
 }
 
