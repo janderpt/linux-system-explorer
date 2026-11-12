@@ -88,9 +88,9 @@ fn type_specific_archive_section_respects_selection_in_every_view_and_invokes_on
         assert!(text_center(&output, "Arquivos compactados").is_some());
         assert!(text_center(&output, "Extrair aqui").is_some());
         assert!(text_center(&output, "Extrair em…").is_some());
-        assert!(text_center(&output, "Ver conteúdo deste arquivo").is_some());
+        assert!(text_center(&output, "Ver conteúdo deste arquivo (space)").is_some());
         assert!(
-            text_center(&output, "Pré-visualizar").is_none(),
+            text_center(&output, "Pré-visualizar (space)").is_none(),
             "sem preview duplicado"
         );
         assert!(text_center(&output, "Copiar").is_some());

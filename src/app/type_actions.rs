@@ -84,11 +84,11 @@ impl Explorer {
                 ui,
                 Icon::Preview,
                 crate::i18n::tr(if paths.len() == 1 {
-                    "Ver conteúdo"
+                    "Ver conteúdo (space)"
                 } else {
-                    "Ver conteúdo deste arquivo"
+                    "Ver conteúdo deste arquivo (space)"
                 }),
-                crate::i18n::tr("Espaço"),
+                "",
                 true,
                 false,
             )

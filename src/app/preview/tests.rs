@@ -95,7 +95,7 @@ fn context_menu_opens_an_image_with_zoom_and_folders_do_not_start_preview() {
         );
     }
     let output = render(&mut app, &ctx, vec![]);
-    let position = text_center(&output, "Pré-visualizar").unwrap();
+    let position = text_center(&output, "Pré-visualizar (space)").unwrap();
     for pressed in [true, false] {
         render(
             &mut app,

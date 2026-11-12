@@ -2103,6 +2103,18 @@
     "pt": "Pré-visualizar",
     "en": "Preview"
   },
+  "Pré-visualizar (space)": {
+    "pt": "Pré-visualizar (space)",
+    "en": "Preview (space)"
+  },
+  "Ver conteúdo (space)": {
+    "pt": "Ver conteúdo (space)",
+    "en": "View contents (space)"
+  },
+  "Ver conteúdo deste arquivo (space)": {
+    "pt": "Ver conteúdo deste arquivo (space)",
+    "en": "View this archive’s contents (space)"
+  },
   "Espaço": {
     "pt": "Espaço",
     "en": "Space"

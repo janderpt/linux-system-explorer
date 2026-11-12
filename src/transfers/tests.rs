@@ -290,3 +290,105 @@ fn cut_between_distinct_linux_filesystems_uses_copy_fallback() {
         Path::new("file")
     );
 }
+
+#[test]
+fn unsupported_attributes_are_optional_but_permission_and_storage_errors_are_preserved() {
+    assert!(optional_metadata(Ok(())).is_ok());
+    assert!(optional_metadata(Err(io::Error::from_raw_os_error(95))).is_ok());
+    for errno in [1, 5, 13, 28, 30] {
+        let error = optional_metadata(Err(io::Error::from_raw_os_error(errno))).unwrap_err();
+        assert_eq!(error.raw_os_error(), Some(errno));
+    }
+}
+
+#[test]
+#[ignore = "Explicit FTP transfer integration; requires LSE_TEST_FTP_MOUNT (a writable test mount)"]
+fn mounted_ftp_uploads_downloads_moves_and_conflicts_preserve_contents_and_sources() {
+    let mount = PathBuf::from(
+        std::env::var_os("LSE_TEST_FTP_MOUNT")
+            .expect("Set LSE_TEST_FTP_MOUNT to a writable FTP mount"),
+    );
+    let remote = tempfile::Builder::new()
+        .prefix("lse-transfer-test-")
+        .tempdir_in(mount)
+        .unwrap();
+    let local = tempfile::tempdir().unwrap();
+    let source = local.path().join("upload.bin");
+    let data: Vec<u8> = (0..600_000).map(|i| (i % 251) as u8).collect();
+    fs::write(&source, &data).unwrap();
+    let tree = local.path().join("folder");
+    fs::create_dir_all(tree.join("nested")).unwrap();
+    fs::write(tree.join("nested/file.txt"), "nested FTP upload").unwrap();
+    let report = execute(
+        vec![source.clone(), tree.clone()],
+        remote.path(),
+        Mode::Copy,
+        Choice::Cancel,
+    );
+    assert!(report.errors.is_empty(), "{:?}", report.errors);
+    assert_eq!(report.completed, [source.clone(), tree.clone()]);
+    assert_eq!(fs::read(remote.path().join("upload.bin")).unwrap(), data);
+    assert_eq!(fs::read(&source).unwrap(), data);
+    assert_eq!(
+        fs::read_to_string(remote.path().join("folder/nested/file.txt")).unwrap(),
+        "nested FTP upload"
+    );
+    let report = execute(
+        vec![source.clone()],
+        remote.path(),
+        Mode::Copy,
+        Choice::Skip,
+    );
+    assert_eq!(report.skipped, 1);
+    let report = execute(
+        vec![source.clone()],
+        remote.path(),
+        Mode::Copy,
+        Choice::KeepBoth,
+    );
+    assert!(report.errors.is_empty(), "{:?}", report.errors);
+    assert_eq!(
+        fs::read(remote.path().join("upload (cópia).bin")).unwrap(),
+        data
+    );
+    let download = local.path().join("download");
+    fs::create_dir(&download).unwrap();
+    let report = execute(
+        vec![remote.path().join("upload.bin")],
+        &download,
+        Mode::Copy,
+        Choice::Cancel,
+    );
+    assert!(report.errors.is_empty(), "{:?}", report.errors);
+    assert_eq!(fs::read(download.join("upload.bin")).unwrap(), data);
+    assert!(remote.path().join("upload.bin").exists());
+    let moved = local.path().join("move.bin");
+    fs::write(&moved, &data).unwrap();
+    let report = execute(
+        vec![moved.clone()],
+        remote.path(),
+        Mode::Cut,
+        Choice::Cancel,
+    );
+    assert!(report.errors.is_empty(), "{:?}", report.errors);
+    assert!(!moved.exists());
+    assert_eq!(fs::read(remote.path().join("move.bin")).unwrap(), data);
+    let cancelled_source = local.path().join("cancel.bin");
+    fs::write(&cancelled_source, &data).unwrap();
+    let cancel = Arc::new(AtomicBool::new(false));
+    let trigger = cancel.clone();
+    let report = run(
+        request(vec![cancelled_source.clone()], remote.path(), Mode::Cut),
+        cancel,
+        |_| panic!("no conflict"),
+        |progress| {
+            if progress.bytes > 0 {
+                trigger.store(true, Ordering::Relaxed);
+            }
+        },
+    );
+    assert!(report.cancelled && report.completed.is_empty());
+    assert_eq!(fs::read(&cancelled_source).unwrap(), data);
+    assert!(!remote.path().join("cancel.bin").exists());
+    assert_eq!(fs::read_dir(remote.path()).unwrap().count(), 4);
+}

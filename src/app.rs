@@ -1516,8 +1516,8 @@ impl Explorer {
                     .menu_item(
                         ui,
                         Icon::Preview,
-                        crate::i18n::tr("Pré-visualizar"),
-                        crate::i18n::tr("Espaço"),
+                        crate::i18n::tr("Pré-visualizar (space)"),
+                        "",
                         true,
                         false,
                     )

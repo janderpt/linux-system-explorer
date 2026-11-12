@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Fix FTP uploads failing on unsupported timestamp/Unix-permission preservation, closing the write stream before metadata and treating only unsupported attribute operations as optional; retain write/sync errors, no-replace publication, conflict handling and source verification before moves. Verify uploads, downloads, folder transfers, conflicts and cancellation against a real local FTP/GVfs fixture.
+- Show `(space)` in file and archive preview context-menu labels in Portuguese and English.
+
 - Prefer native GIO/GVfs authentication for FTP when available, including on KDE, avoiding a KIO cancellation before the credential dialog appears; preserve other protocol routing and do not retry FTP authentication after cancellation or failure.
 
 ## 0.1.0-alpha.3 — 2026-11-12

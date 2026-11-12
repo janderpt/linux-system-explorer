@@ -462,6 +462,8 @@ fn copy_node(
             (work.notify)(work.progress.clone());
         }
         output.sync_all()?;
+        // Finish the remote write before reopening the file for metadata.
+        drop(output);
         apply_metadata(destination, &metadata)?;
     } else {
         return Err(io::Error::new(
@@ -483,6 +485,16 @@ fn apply_metadata(path: &Path, metadata: &Metadata) -> io::Result<()> {
     if let Ok(time) = metadata.accessed() {
         times = times.set_accessed(time);
     }
-    file.set_times(times)?;
-    file.set_permissions(metadata.permissions())
+    optional_metadata(file.set_times(times))?;
+    optional_metadata(file.set_permissions(metadata.permissions()))
+}
+
+fn optional_metadata(result: io::Result<()>) -> io::Result<()> {
+    // FTP and other virtual filesystems may accept file contents without
+    // supporting Unix permissions or timestamps. Only those unsupported
+    // attribute operations are optional; I/O and permission failures still fail.
+    match result {
+        Err(error) if error.kind() == io::ErrorKind::Unsupported => Ok(()),
+        result => result,
+    }
 }
