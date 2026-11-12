@@ -2,6 +2,8 @@
 
 ## Unreleased — 0.1.0 experimental
 
+- Left-align archive preview names beside their icons and align the Name header with the same column.
+
 - Anchor preview footers independently of loading/content size and center viewer controls. Add Up/Down file navigation in display order and Left/Right page/slide navigation.
 - Add read-only archive content previews via an isolated libarchive worker, including ZIP, compressed TAR, 7z and RAR; bound listings, declare runtimes and never extract entries.
 

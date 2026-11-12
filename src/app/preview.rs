@@ -379,11 +379,11 @@ impl Preview {
                     "Listagem parcial: o limite de itens, tamanho ou tempo foi atingido.",
                 ));
             }
+            let name_width =
+                (ui.available_width() - 20.0 - 2.0 * ui.spacing().item_spacing.x - 130.0).max(1.0);
             ui.horizontal(|ui| {
-                ui.add_sized(
-                    [ui.available_width() - 130.0, 22.0],
-                    egui::Label::new(crate::i18n::tr("Nome")).halign(Align::Min),
-                );
+                ui.allocate_exact_size(Vec2::splat(20.0), Sense::hover());
+                archive_label(ui, crate::i18n::tr("Nome"), Vec2::new(name_width, 22.0));
                 ui.label(crate::i18n::tr("Tamanho"));
             });
             ui.separator();
@@ -409,11 +409,8 @@ impl Preview {
                                 ui.visuals().text_color(),
                                 appearance,
                             );
-                            ui.add_sized(
-                                [ui.available_width() - 130.0, 24.0],
-                                egui::Label::new(&entry.path).truncate().halign(Align::Min),
-                            )
-                            .on_hover_text(&entry.path);
+                            archive_label(ui, &entry.path, Vec2::new(name_width, 24.0))
+                                .on_hover_text(&entry.path);
                             ui.label(if entry.directory {
                                 "—".into()
                             } else {
@@ -454,6 +451,14 @@ impl Preview {
         }
         None
     }
+}
+fn archive_label(ui: &mut egui::Ui, text: &str, size: Vec2) -> egui::Response {
+    // add_sized centers the widget even when the label itself uses left alignment.
+    ui.allocate_ui_with_layout(size, Layout::left_to_right(Align::Center), |ui| {
+        ui.set_min_size(size);
+        ui.add(egui::Label::new(text).truncate())
+    })
+    .inner
 }
 // Retain the measured group width, including translated labels, so controls
 // remain centered without giving individual widgets artificial extra width.

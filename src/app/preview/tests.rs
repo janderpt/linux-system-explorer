@@ -751,6 +751,39 @@ fn archive_preview_lists_contents_inside_the_popup_and_closes_with_space() {
     app.request_preview(file, &ctx);
     wait(&mut app, &ctx);
     let output = render(&mut app, &ctx, vec![]);
+    let text_left = |label: &str| {
+        output
+            .shapes
+            .iter()
+            .rev()
+            .find_map(|shape| {
+                if let egui::Shape::Text(text) = &shape.shape
+                    && text.galley.text() == label
+                {
+                    Some(text.pos.x)
+                } else {
+                    None
+                }
+            })
+            .unwrap()
+    };
+    let name_left = text_left("word/document.xml");
+    let header_left = text_left("Nome");
+    assert!(
+        (name_left - text_left("[Content_Types].xml")).abs() < 1.0,
+        "short and long archive paths must share the same left edge"
+    );
+    assert!(
+        (name_left - header_left).abs() < 1.0,
+        "the header must align with the entry names"
+    );
+    let popup = ctx
+        .memory(|memory| memory.area_rect(egui::Id::new(("file_preview", app.tab_id))))
+        .unwrap();
+    assert!(
+        name_left < popup.left() + 45.0,
+        "archive names must start beside the icons"
+    );
     assert!(text_center(&output, "word/document.xml").is_some());
     assert!(text_center(&output, "Abrir no aplicativo padrão").is_some());
     assert!(app.notice_toasts.is_empty());
