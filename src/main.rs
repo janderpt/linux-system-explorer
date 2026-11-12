@@ -21,6 +21,7 @@ mod preview;
 mod printing;
 mod renames;
 mod sandbox;
+mod search;
 mod session;
 mod settings;
 mod sidebar;

@@ -29,6 +29,7 @@ mod open_with;
 mod preview;
 mod properties;
 mod rename;
+mod search;
 mod selection;
 mod sidebar;
 mod table;
@@ -106,6 +107,7 @@ pub struct Explorer {
     dnd: drag_drop::DragDrop,
     focus_address: bool,
     query: String,
+    recursive_search: search::Search,
     focus_search: bool,
     show_hidden: bool,
     confirm_trash: bool,
@@ -271,6 +273,7 @@ impl Explorer {
             dnd: drag_drop::DragDrop::default(),
             focus_address: false,
             query: String::new(),
+            recursive_search: search::Search::new(ctx),
             focus_search: false,
             show_hidden: false,
             confirm_trash: true,
@@ -341,6 +344,7 @@ impl Explorer {
         if self.loading {
             return;
         }
+        self.recursive_search.cancel();
         let loading_path = if crate::trashbin::is_location(&path)
             || crate::applications::menu::is_location(&path)
         {
@@ -474,6 +478,7 @@ impl Explorer {
     }
 
     fn accept_listing(&mut self, listing: Listing, navigation: Navigation) {
+        self.recursive_search.reset();
         if !crate::applications::menu::is_location(&listing.path) {
             self.applications = Default::default();
         }
@@ -778,6 +783,7 @@ impl Explorer {
             Vec2::new(ui.available_width(), 32.0),
             Layout::right_to_left(Align::Center),
             |ui| {
+                let escape = ui.input(|i| i.key_pressed(Key::Escape));
                 let response = ui.add_sized(
                     [search_width, 32.0],
                     egui::TextEdit::singleline(&mut self.query)
@@ -788,12 +794,16 @@ impl Explorer {
                             "Pesquisar nesta pasta · Ctrl+F"
                         })),
                 );
+                if response.changed() {
+                    ui.ctx().request_repaint();
+                }
                 if self.focus_search {
                     response.request_focus();
                     self.focus_search = false;
                 }
-                if response.has_focus() && ui.input(|i| i.key_pressed(Key::Escape)) {
+                if escape && (response.has_focus() || response.lost_focus()) {
                     self.query.clear();
+                    ui.ctx().request_repaint();
                 }
                 response
             },
@@ -1191,7 +1201,9 @@ impl Explorer {
                 ui.add_space(80.0);
                 ui.vertical_centered(|ui| {
                     ui.label(
-                        RichText::new(if self.query.is_empty() {
+                        RichText::new(if self.recursive_search.running() {
+                            crate::i18n::tr("Buscando nas subpastas…")
+                        } else if self.query.is_empty() {
                             if self.is_trash() {
                                 crate::i18n::tr("A lixeira está vazia")
                             } else {
@@ -1203,9 +1215,11 @@ impl Explorer {
                         .size(20.0),
                     );
                     if !self.query.is_empty() {
-                        ui.label(crate::i18n::tr(
-                            "A pesquisa considera os nomes dos itens nesta pasta.",
-                        ));
+                        ui.label(crate::i18n::tr(if self.is_trash() {
+                            "A pesquisa considera os nomes dos itens nesta pasta."
+                        } else {
+                            "A pesquisa considera os nomes dos itens nesta pasta e nas subpastas."
+                        }));
                         if ui.button(crate::i18n::tr("Limpar pesquisa")).clicked() {
                             self.query.clear();
                         }
@@ -1347,7 +1361,7 @@ impl Explorer {
                                                 self.file_icon(ui, &entry, 22.0 * scale);
                                                 ui.add(
                                                     egui::Label::new(
-                                                        RichText::new(&entry.name)
+                                                        RichText::new(self.result_name(&entry))
                                                             .size(13.0 * scale)
                                                             .color(if selected {
                                                                 ui.visuals().selection.stroke.color
@@ -1421,9 +1435,11 @@ impl Explorer {
                             child.multiply_opacity(self.cut_opacity(&entry.path));
                             self.grid_picture(&mut child, &entry, scale);
                             child.add(
-                                egui::Label::new(RichText::new(&entry.name).size(13.0 * scale))
-                                    .truncate()
-                                    .selectable(false),
+                                egui::Label::new(
+                                    RichText::new(self.result_name(&entry)).size(13.0 * scale),
+                                )
+                                .truncate()
+                                .selectable(false),
                             );
                             self.entry_response(ui, response, &entry, visible);
                         }
@@ -1657,9 +1673,11 @@ impl Explorer {
         self.begin_drag_drop(ctx);
         self.handle_transfer_close(ctx);
         self.process_transfer_refresh();
+        self.update_search();
     }
 
     fn visible_for_display(&mut self) -> Vec<usize> {
+        self.update_search();
         let visible = filesystem::visible_entries(
             &self.entries,
             &self.query,
@@ -1690,7 +1708,7 @@ impl Explorer {
                     return;
                 }
                 ui.label(crate::i18n::plural("{} item", "{} itens", visible.len()));
-                if visible.len() != self.entries.len() {
+                if visible.len() != self.entries.len() && !self.recursive_search.active() {
                     ui.weak(crate::i18n::message(
                         "de {}",
                         &[(self.entries.len()).to_string()],
@@ -1716,10 +1734,19 @@ impl Explorer {
                         ));
                     }
                 }
-                if self.skipped > 0 {
+                if self.recursive_search.running() {
+                    ui.spinner();
+                    ui.weak(crate::i18n::tr("Buscando nas subpastas…"));
+                }
+                let skipped = if self.recursive_search.active() {
+                    self.recursive_search.progress.skipped
+                } else {
+                    self.skipped
+                };
+                if skipped > 0 {
                     ui.weak(crate::i18n::message(
                         "{} itens não puderam ser lidos",
-                        &[(self.skipped).to_string()],
+                        &[skipped.to_string()],
                     ));
                 }
                 ui.with_layout(Layout::right_to_left(Align::Center), |ui| {

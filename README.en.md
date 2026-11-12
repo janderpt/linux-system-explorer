@@ -26,6 +26,14 @@ Context menus separate common commands from type-specific actions. Recognized ar
 
 Multi-selection gets extraction actions only if every selected item is an archive file. Mixed selections and directories named with archive suffixes do not receive partial extraction. Work runs in the background, and the folder refreshes when the invoked process finishes; **F5** refreshes after work completed in another window if needed. Errors and missing tools use toasts, without claiming successful extraction merely because it was delegated. Extraction icons are customizable. Host archive-manager extraction is unavailable in the experimental Flatpak; internal preview remains available.
 
+## Recursive search
+
+The folder search field (**Ctrl+F**) matches file and folder names throughout the current directory and its descendants, ignoring case. Results arrive progressively in Details, List and Icons, with relative paths to distinguish duplicate names. File operations and preview retain the actual paths. Opening a matching folder navigates into it and ends the previous search.
+
+Search starts after a 250 ms typing pause using one worker per tab and bounded result batches. New text, hidden-item changes and navigation cancel obsolete work. Clearing the field, **Escape** while the field is focused, or **Clear search** restores the direct listing; **F5** refreshes and reruns the search. Tabs and panes search independently. Applications and Trash keep their existing filters.
+
+Hidden directories are excluded unless hidden items are enabled. Descendant directory symlinks are not followed, preventing cycles; an explicitly opened root may itself be a symlink. Search reads names and metadata. Unreadable/changed entries yield partial results with a toast. Limits are 20,000 matches, one million examined entries and 128 levels; reaching a limit reports partial results and asks for a narrower query.
+
 ## Drives
 
 The sidebar's **Drives** section lists mountable SSD/HDD/removable volumes recognized by **UDisks2**, with capacity, user-available free space and a usage bar. Unmounted volumes show capacity and their state; free space is read after mounting. Toggle the section in **Settings → Sidebar → Show Drives section**. Existing preferences enable it by default.

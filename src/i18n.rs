@@ -260,6 +260,8 @@ mod tests {
             include_str!("settings.rs"),
             include_str!("columns.rs"),
             include_str!("filesystem.rs"),
+            include_str!("search.rs"),
+            include_str!("app/search.rs"),
             include_str!("icons.rs"),
             include_str!("sidebar.rs"),
             include_str!("volumes.rs"),

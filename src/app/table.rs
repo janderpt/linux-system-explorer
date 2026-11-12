@@ -185,7 +185,7 @@ impl Explorer {
                         painter.with_clip_rect(text_rect).text(
                             text_rect.left_center(),
                             egui::Align2::LEFT_CENTER,
-                            &entry.name,
+                            self.result_name(&entry),
                             FontId::proportional(13.0 * scale),
                             if selected {
                                 ui.visuals().selection.stroke.color

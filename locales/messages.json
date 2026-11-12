@@ -2754,5 +2754,29 @@
   "Aguardando operação da unidade…": {
     "pt": "Aguardando operação da unidade…",
     "en": "Waiting for the drive operation…"
+  },
+  "O serviço de pesquisa foi interrompido.": {
+    "pt": "O serviço de pesquisa foi interrompido.",
+    "en": "The search service was interrupted."
+  },
+  "Pesquisa parcial: limite de resultados ou de percurso atingido. Refine a pesquisa.": {
+    "pt": "Pesquisa parcial: limite de resultados ou de percurso atingido. Refine a pesquisa.",
+    "en": "Partial search: a result or traversal limit was reached. Refine your search."
+  },
+  "Pesquisa parcial: {} itens ou pastas não puderam ser lidos.": {
+    "pt": "Pesquisa parcial: {0} itens ou pastas não puderam ser lidos.",
+    "en": "Partial search: {0} items or folders could not be read."
+  },
+  "Não foi possível concluir a pesquisa: {}": {
+    "pt": "Não foi possível concluir a pesquisa: {0}",
+    "en": "Could not complete the search: {0}"
+  },
+  "Buscando nas subpastas…": {
+    "pt": "Buscando nas subpastas…",
+    "en": "Searching subfolders…"
+  },
+  "A pesquisa considera os nomes dos itens nesta pasta e nas subpastas.": {
+    "pt": "A pesquisa considera os nomes dos itens nesta pasta e nas subpastas.",
+    "en": "Search matches item names in this folder and its subfolders."
   }
 }

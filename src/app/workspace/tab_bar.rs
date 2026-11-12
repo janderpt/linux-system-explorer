@@ -33,7 +33,7 @@ impl Workspace {
                 // Transfers and terminal processes continue to belong only to the original.
                 if source.location() == source.current && !source.current.as_os_str().is_empty() {
                     copy.current = source.current.clone();
-                    copy.entries = source.entries.clone();
+                    copy.entries = source.directory_entries().to_vec();
                     copy.skipped = source.skipped;
                     copy.history = source.history.clone();
                     copy.query = source.query.clone();

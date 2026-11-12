@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Make folder filtering recursively search descendant names with debounced, cancellable background workers, bounded streaming results, relative-path labels in every view, hidden-directory controls and no-follow traversal; preserve real paths for file operations, restore the direct listing on clear/Escape, rerun on refresh and report partial searches through toasts.
+
 - Add a configurable Drives sidebar with background UDisks2 volume discovery, capacity/free-space usage, revalidated mount/open, no-force unmount and safe eject/power-off through desktop Polkit; share inventory across tabs/panes, refresh after changes, protect system volumes, and handle busy/denied/cancelled operations without leaving stale directory views.
 
 - Add per-folder Font Awesome icons and exact colors through Properties → Appearance and a Customize folder context shortcut; save atomically, share across tabs/panes, preserve overrides across theme/icon-mode changes and folder renames, and restore only the chosen folder with Apply/Cancel support.

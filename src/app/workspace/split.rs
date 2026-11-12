@@ -46,7 +46,7 @@ impl Workspace {
             copy.apply_layout(left.current_layout());
             if left.location() == left.current {
                 copy.current = left.current.clone();
-                copy.entries = left.entries.clone();
+                copy.entries = left.directory_entries().to_vec();
                 copy.history = left.history.clone();
             }
             self.split = Some(SplitView {

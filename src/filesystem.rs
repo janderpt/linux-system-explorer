@@ -167,7 +167,7 @@ pub fn read_entry(path: &Path) -> io::Result<Entry> {
     entry_with_identities(path, &UsersCache::new())
 }
 
-fn entry_with_identities(path: &Path, identities: &UsersCache) -> io::Result<Entry> {
+pub(crate) fn entry_with_identities(path: &Path, identities: &UsersCache) -> io::Result<Entry> {
     let metadata = path.symlink_metadata()?;
     let is_symlink = metadata.is_symlink();
     let target = if is_symlink {
