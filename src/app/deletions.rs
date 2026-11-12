@@ -55,15 +55,7 @@ impl Explorer {
                 })
                 .collect(),
         );
-        if self.confirm_trash {
-            self.delete_confirmation = Some(Confirmation {
-                targets,
-                mode: removal::Mode::Trash,
-                focus_cancel: true,
-            });
-        } else {
-            self.start_deletion(targets, removal::Mode::Trash, ctx);
-        }
+        self.prepare_deletion(targets, removal::Mode::Trash, ctx);
     }
 
     fn can_delete(&self) -> bool {
@@ -85,17 +77,7 @@ impl Explorer {
         if !self.can_delete() {
             return;
         }
-        let entries: Vec<_> = filesystem::visible_entries(
-            &self.entries,
-            &self.query,
-            self.hidden_visible(),
-            self.sort,
-            self.descending,
-        )
-        .into_iter()
-        .map(|i| &self.entries[i])
-        .filter(|entry| self.selected.contains(&entry.path))
-        .collect();
+        let entries = self.selected_deletion_entries();
         if entries.is_empty() {
             return;
         }
@@ -119,6 +101,27 @@ impl Explorer {
                 ),
             )
         };
+        self.prepare_deletion(targets, mode, ctx);
+    }
+
+    fn prepare_deletion(&mut self, targets: Targets, mut mode: removal::Mode, ctx: &egui::Context) {
+        if mode == removal::Mode::Trash
+            && let Targets::Files(items) = &targets
+        {
+            let ftp = items
+                .iter()
+                .filter(|item| self.is_ftp_item(&item.path))
+                .count();
+            if ftp > 0 {
+                // Never silently promote local items in a mixed selection to
+                // permanent deletion just because another item is on FTP.
+                if ftp != items.len() {
+                    self.post_typed_notice(super::toast::NoticeKind::Warning, crate::i18n::tr("Selecione os itens FTP separadamente para excluir. Eles não podem ser enviados à lixeira.").into());
+                    return;
+                }
+                mode = removal::Mode::Permanent;
+            }
+        }
         if mode == removal::Mode::Trash && !self.confirm_trash {
             self.start_deletion(targets, mode, ctx);
         } else {
@@ -128,6 +131,33 @@ impl Explorer {
                 focus_cancel: true,
             });
         }
+    }
+
+    fn is_ftp_item(&self, path: &Path) -> bool {
+        crate::network::location::requires_permanent_deletion(path, &self.sidebar_options.remote)
+    }
+
+    fn selected_ftp(&self) -> (bool, bool) {
+        let entries = self.selected_deletion_entries();
+        let any = entries.iter().any(|entry| self.is_ftp_item(&entry.path));
+        (
+            any,
+            any && entries.iter().all(|entry| self.is_ftp_item(&entry.path)),
+        )
+    }
+
+    fn selected_deletion_entries(&self) -> Vec<&Entry> {
+        filesystem::visible_entries(
+            &self.entries,
+            &self.query,
+            self.hidden_visible(),
+            self.sort,
+            self.descending,
+        )
+        .into_iter()
+        .map(|i| &self.entries[i])
+        .filter(|entry| self.selected.contains(&entry.path))
+        .collect()
     }
 
     pub(super) fn deletion_shortcuts(&mut self, ctx: &egui::Context) {
@@ -302,6 +332,7 @@ impl Explorer {
 
     pub(super) fn deletion_menu(&mut self, ui: &mut egui::Ui) {
         ui.separator();
+        let (any_ftp, all_ftp) = self.selected_ftp();
         for (mode, icon, label, shortcut) in [
             (
                 removal::Mode::Trash,
@@ -316,10 +347,16 @@ impl Explorer {
                 "Shift+Del",
             ),
         ] {
-            if self.is_trash() && mode == removal::Mode::Trash {
+            if (self.is_trash() || any_ftp) && mode == removal::Mode::Trash {
                 continue;
             }
-            let shortcut = if self.is_trash() { "Del" } else { shortcut };
+            let shortcut = if self.is_trash() {
+                "Del"
+            } else if all_ftp {
+                "Del / Shift+Del"
+            } else {
+                shortcut
+            };
             if self
                 .menu_item(ui, icon, label, shortcut, self.can_delete(), false)
                 .clicked()
@@ -383,6 +420,9 @@ impl Explorer {
                         crate::i18n::tr("Os itens poderão ser restaurados pela lixeira do sistema.")
                     }
                 ));
+                if let Targets::Files(items) = &confirmation.targets && items.iter().any(|item| self.is_ftp_item(&item.path)) {
+                    ui.label(crate::i18n::tr("Os itens FTP serão excluídos diretamente do servidor, sem passar pela lixeira."));
+                }
                 egui::Frame::new()
                     .fill(ui.visuals().extreme_bg_color)
                     .stroke(ui.visuals().widgets.noninteractive.bg_stroke)
@@ -461,3 +501,6 @@ impl Explorer {
         }
     }
 }
+
+#[cfg(test)]
+mod tests;

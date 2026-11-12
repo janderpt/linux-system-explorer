@@ -18,13 +18,14 @@ restoration, associations or clipboard integration. Never exercise destructive t
 against personal files or the user's real Trash.
 
 An opt-in FTP integration test uploads, downloads and moves temporary files/folders,
-checks conflicts and cancels a transfer. Run it only against a writable disposable
-FTP mount (for example, a loopback FTP server mounted through GVfs). Its files stay
+checks conflicts and cancels a transfer. A second test permanently deletes only
+selected disposable FTP files/folders and preserves an unselected fixture file.
+Run them only against a writable disposable FTP mount (for example, a loopback
+FTP server mounted through GVfs). Their files stay
 inside a uniquely named temporary directory, which is removed after the test:
 
 ```sh
-LSE_TEST_FTP_MOUNT=/path/to/disposable/ftp/mount cargo test --locked \
-  transfers::tests::mounted_ftp_uploads_downloads_moves_and_conflicts_preserve_contents_and_sources \
+LSE_TEST_FTP_MOUNT=/path/to/disposable/ftp/mount cargo test --locked mounted_ftp \
   -- --ignored --nocapture
 ```
 

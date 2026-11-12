@@ -77,6 +77,32 @@ fn trash_failure_never_falls_back_to_permanent_deletion() {
 }
 
 #[test]
+fn gvfs_ftp_trash_requests_are_rejected_before_calling_the_trash_backend() {
+    let runtime = std::env::var_os("XDG_RUNTIME_DIR")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| {
+            PathBuf::from(format!("/run/user/{}", rustix::process::getuid().as_raw()))
+        });
+    let path = runtime.join("gvfs/ftp:host=lse-disposable-test.invalid/file.txt");
+    let report = run_with(
+        vec![Target {
+            path,
+            device: 0,
+            inode: 0,
+        }],
+        Mode::Trash,
+        &AtomicBool::new(false),
+        &mut |_| {},
+        |_| panic!("FTP must never reach the local Trash backend"),
+    );
+    assert!(report.completed.is_empty());
+    assert_eq!(report.errors.len(), 1);
+    assert!(report.errors[0].contains(crate::i18n::tr(
+        "FTP não oferece lixeira. Confirme a exclusão permanente."
+    )));
+}
+
+#[test]
 fn cancellation_stops_between_items_and_root_is_rejected() {
     let root = tempfile::tempdir().unwrap();
     let a = root.path().join("a");
@@ -169,4 +195,34 @@ fn isolated_trash_child() {
     assert!(report.errors.is_empty(), "{:?}", report.errors);
     assert_eq!(report.completed.len(), 3);
     assert!(!file.exists() && !folder.exists() && fs::symlink_metadata(link).is_err());
+}
+
+#[test]
+#[ignore = "Explicit FTP deletion integration; requires LSE_TEST_FTP_MOUNT (a disposable writable test mount)"]
+fn mounted_ftp_permanent_deletion_removes_only_disposable_selected_files_and_folders() {
+    let mount = PathBuf::from(
+        std::env::var_os("LSE_TEST_FTP_MOUNT")
+            .expect("Set LSE_TEST_FTP_MOUNT to a disposable writable FTP mount"),
+    );
+    let root = tempfile::Builder::new()
+        .prefix("lse-delete-test-")
+        .tempdir_in(mount)
+        .unwrap();
+    let file = root.path().join("selected.txt");
+    let folder = root.path().join("selected-folder");
+    let keep = root.path().join("keep.txt");
+    fs::write(&file, "delete fixture").unwrap();
+    fs::create_dir(&folder).unwrap();
+    fs::write(folder.join("nested.txt"), "delete fixture").unwrap();
+    fs::write(&keep, "preserve fixture").unwrap();
+    let report = run(
+        vec![target(&file), target(&folder)],
+        Mode::Permanent,
+        &AtomicBool::new(false),
+        |_| {},
+    );
+    assert!(report.errors.is_empty(), "{:?}", report.errors);
+    assert_eq!(report.completed, [file.clone(), folder.clone()]);
+    assert!(!file.exists() && !folder.exists());
+    assert_eq!(fs::read_to_string(keep).unwrap(), "preserve fixture");
 }

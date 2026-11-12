@@ -80,6 +80,14 @@ fn run_with(
                     "Caminho inválido para exclusão",
                 )));
             }
+            if mode == Mode::Trash
+                && crate::network::location::requires_permanent_deletion(&target.path, &[])
+            {
+                return Err(io::Error::new(
+                    io::ErrorKind::Unsupported,
+                    crate::i18n::tr("FTP não oferece lixeira. Confirme a exclusão permanente."),
+                ));
+            }
             let metadata = fs::symlink_metadata(&target.path)?;
             if metadata.dev() != target.device || metadata.ino() != target.inode {
                 return Err(io::Error::other(crate::i18n::tr(

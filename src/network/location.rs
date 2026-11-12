@@ -24,6 +24,39 @@ pub struct Location {
     pub crumbs: Vec<Crumb>,
 }
 
+/// FTP has no trash operation. Recognize saved and native GVfs/KIO mounts even
+/// after their sidebar shortcut is removed, without performing remote I/O.
+pub fn requires_permanent_deletion(path: &Path, connections: &[Connection]) -> bool {
+    if let Some(connection) = connections
+        .iter()
+        .filter(|connection| {
+            connection
+                .mount
+                .as_ref()
+                .is_some_and(|mount| mount.is_absolute() && path.starts_with(mount))
+        })
+        .max_by_key(|connection| connection.mount.as_ref().unwrap().components().count())
+    {
+        return remote_url(&connection.url).is_ok_and(|url| url.starts_with("ftp://"));
+    }
+    let runtime = std::env::var_os("XDG_RUNTIME_DIR")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| {
+            PathBuf::from(format!("/run/user/{}", rustix::process::getuid().as_raw()))
+        });
+    let gvfs = path.strip_prefix(runtime.join("gvfs")).ok().and_then(|relative| relative.components().next()).is_some_and(|component| {
+        matches!(component, Component::Normal(spec) if spec.as_encoded_bytes().starts_with(b"ftp:"))
+    });
+    if gvfs {
+        return true;
+    }
+    let Ok(relative) = path.strip_prefix(&runtime) else {
+        return false;
+    };
+    let mut components = relative.components();
+    matches!((components.next(), components.next()), (Some(Component::Normal(mount)), Some(Component::Normal(scheme))) if mount.as_encoded_bytes().starts_with(b"kio-fuse-") && scheme == "ftp")
+}
+
 pub fn resolve(path: &Path, connections: &[Connection]) -> Option<Location> {
     let saved = connections
         .iter()
@@ -146,6 +179,61 @@ fn from_mount(path: &Path, mount: &Path, address: &str) -> Option<Location> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn ftp_deletion_capability_recognizes_saved_and_unbookmarked_gvfs_mounts_with_path_boundaries()
+    {
+        let connection = Connection {
+            url: "ftp://user@server/".into(),
+            label: "FTP".into(),
+            mount: Some("/mount/ftp".into()),
+        };
+        assert!(requires_permanent_deletion(
+            Path::new("/mount/ftp/nested/file.txt"),
+            std::slice::from_ref(&connection)
+        ));
+        assert!(!requires_permanent_deletion(
+            Path::new("/mount/ftp-other/file.txt"),
+            std::slice::from_ref(&connection)
+        ));
+        let smb = Connection {
+            url: "smb://server/share/".into(),
+            label: "SMB".into(),
+            mount: Some("/mount/ftp/nested".into()),
+        };
+        assert!(!requires_permanent_deletion(
+            Path::new("/mount/ftp/nested/file.txt"),
+            &[connection, smb]
+        ));
+        let runtime = std::env::var_os("XDG_RUNTIME_DIR")
+            .map(PathBuf::from)
+            .unwrap_or_else(|| {
+                PathBuf::from(format!("/run/user/{}", rustix::process::getuid().as_raw()))
+            });
+        assert!(requires_permanent_deletion(
+            &runtime.join("gvfs/ftp:host=server,user=user/folder/file.txt"),
+            &[]
+        ));
+        assert!(!requires_permanent_deletion(
+            &runtime.join("gvfs/smb-share:server=server,share=D/file.txt"),
+            &[]
+        ));
+        assert!(!requires_permanent_deletion(
+            Path::new("/tmp/ftp:host=server/file.txt"),
+            &[]
+        ));
+        assert!(!requires_permanent_deletion(
+            Path::new("/home/user/file.txt"),
+            &[]
+        ));
+        assert!(requires_permanent_deletion(
+            &runtime.join("kio-fuse-ABC/ftp/user@server/folder/file.txt"),
+            &[]
+        ));
+        assert!(!requires_permanent_deletion(
+            &runtime.join("kio-fuse-ABC/sftp/user@server/file.txt"),
+            &[]
+        ));
+    }
     #[test]
     fn saved_mounts_keep_share_case_and_map_descendants_without_prefix_collisions() {
         let remote = Connection {

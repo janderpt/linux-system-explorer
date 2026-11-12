@@ -2127,6 +2127,18 @@
     "pt": "Mover",
     "en": "Move"
   },
+  "FTP não oferece lixeira. Confirme a exclusão permanente.": {
+    "pt": "FTP não oferece lixeira. Confirme a exclusão permanente.",
+    "en": "FTP has no trash. Confirm permanent deletion."
+  },
+  "Os itens FTP serão excluídos diretamente do servidor, sem passar pela lixeira.": {
+    "pt": "Os itens FTP serão excluídos diretamente do servidor, sem passar pela lixeira.",
+    "en": "FTP items will be deleted directly from the server without going through Trash."
+  },
+  "Selecione os itens FTP separadamente para excluir. Eles não podem ser enviados à lixeira.": {
+    "pt": "Selecione os itens FTP separadamente para excluir. Eles não podem ser enviados à lixeira.",
+    "en": "Select FTP items separately to delete them. They cannot be sent to Trash."
+  },
   "Não foi possível pré-visualizar o arquivo: {}": {
     "pt": "Não foi possível pré-visualizar o arquivo: {0}",
     "en": "Could not preview the file: {0}"
