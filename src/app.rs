@@ -23,6 +23,7 @@ mod folder_picker;
 mod local_shares;
 mod network;
 mod open_with;
+mod preview;
 mod rename;
 mod selection;
 mod sidebar;
@@ -74,6 +75,7 @@ pub struct Explorer {
     editing_address: bool,
     folder_picker: Option<folder_picker::FolderPicker>,
     open_with: Option<open_with::Chooser>,
+    preview: Option<preview::Preview>,
     rename: Option<rename::RenameDialog>,
     network_dialog: Option<network::ConnectDialog>,
     local_shares: Option<local_shares::Manager>,
@@ -214,6 +216,7 @@ impl Explorer {
             editing_address: false,
             folder_picker: None,
             open_with: None,
+            preview: None,
             rename: None,
             network_dialog: None,
             local_shares: None,
@@ -440,6 +443,7 @@ impl Explorer {
             || self.rename.is_some()
             || self.network_dialog.is_some()
             || self.local_shares.is_some()
+            || self.preview.is_some()
         {
             return;
         }
@@ -452,6 +456,13 @@ impl Explorer {
             return;
         }
         if self.terminal_focused(ctx) {
+            return;
+        }
+        if !ctx.wants_keyboard_input()
+            && !self.drag_blocks_tabs()
+            && ctx.input_mut(|i| i.consume_key(egui::Modifiers::NONE, Key::Space))
+        {
+            self.preview_selected(ctx);
             return;
         }
         self.transfer_shortcuts(ctx);
@@ -1334,6 +1345,21 @@ impl Explorer {
                 && self
                     .menu_item(
                         ui,
+                        Icon::Preview,
+                        crate::i18n::tr("Pré-visualizar"),
+                        crate::i18n::tr("Espaço"),
+                        true,
+                        false,
+                    )
+                    .clicked()
+            {
+                self.request_preview(entry.path.clone(), ui.ctx());
+                ui.close();
+            }
+            if !entry.is_dir
+                && self
+                    .menu_item(
+                        ui,
                         Icon::OpenWith,
                         if multiple {
                             crate::i18n::tr("Abrir este item com…")
@@ -1627,6 +1653,7 @@ impl Explorer {
         self.rename_dialog(ctx);
         self.network_dialog(ctx);
         self.local_shares_dialog(ctx);
+        self.preview_dialog(ctx);
         self.show_notice_toast(ctx);
     }
 

@@ -2006,5 +2006,113 @@
   "Exibir um painel": {
     "pt": "Exibir um painel",
     "en": "Show one pane"
+  },
+  "A pré-visualização foi interrompida.": {
+    "pt": "A pré-visualização foi interrompida.",
+    "en": "The preview was interrupted."
+  },
+  "Selecione um arquivo regular para pré-visualizar.": {
+    "pt": "Selecione um arquivo regular para pré-visualizar.",
+    "en": "Select a regular file to preview."
+  },
+  "A imagem excede o limite de tamanho da pré-visualização.": {
+    "pt": "A imagem excede o limite de tamanho da pré-visualização.",
+    "en": "The image exceeds the preview size limit."
+  },
+  "O preview de PDF requer Poppler (poppler-utils).": {
+    "pt": "O preview de PDF requer Poppler (poppler-utils).",
+    "en": "PDF preview requires Poppler (poppler-utils)."
+  },
+  "A pré-visualização excedeu o tempo limite.": {
+    "pt": "A pré-visualização excedeu o tempo limite.",
+    "en": "The preview timed out."
+  },
+  "Não foi possível determinar as páginas do PDF.": {
+    "pt": "Não foi possível determinar as páginas do PDF.",
+    "en": "Could not determine the PDF page count."
+  },
+  "O preview de mídia requer GStreamer e seus plugins de reprodução.": {
+    "pt": "O preview de mídia requer GStreamer e seus plugins de reprodução.",
+    "en": "Media preview requires GStreamer and its playback plugins."
+  },
+  "O GStreamer não encontrou o plugin de reprodução.": {
+    "pt": "O GStreamer não encontrou o plugin de reprodução.",
+    "en": "GStreamer could not find its playback plugin."
+  },
+  "Não foi possível iniciar a reprodução deste arquivo.": {
+    "pt": "Não foi possível iniciar a reprodução deste arquivo.",
+    "en": "Could not start playback of this file."
+  },
+  "Áudio": {
+    "pt": "Áudio",
+    "en": "Audio"
+  },
+  "Vídeo": {
+    "pt": "Vídeo",
+    "en": "Video"
+  },
+  "Não há pré-visualização disponível.": {
+    "pt": "Não há pré-visualização disponível.",
+    "en": "No preview is available."
+  },
+  "Pausar": {
+    "pt": "Pausar",
+    "en": "Pause"
+  },
+  "Reproduzir": {
+    "pt": "Reproduzir",
+    "en": "Play"
+  },
+  "Volume": {
+    "pt": "Volume",
+    "en": "Volume"
+  },
+  "Página anterior": {
+    "pt": "Página anterior",
+    "en": "Previous page"
+  },
+  "Próxima página": {
+    "pt": "Próxima página",
+    "en": "Next page"
+  },
+  "Página {} de {}": {
+    "pt": "Página {0} de {1}",
+    "en": "Page {0} of {1}"
+  },
+  "Ajustar à janela": {
+    "pt": "Ajustar à janela",
+    "en": "Fit to window"
+  },
+  "Exibindo apenas o início do arquivo.": {
+    "pt": "Exibindo apenas o início do arquivo.",
+    "en": "Showing only the beginning of the file."
+  },
+  "Carregando pré-visualização…": {
+    "pt": "Carregando pré-visualização…",
+    "en": "Loading preview…"
+  },
+  "Fechar pré-visualização · Esc": {
+    "pt": "Fechar pré-visualização · Esc",
+    "en": "Close preview · Esc"
+  },
+  "Abrir no aplicativo padrão": {
+    "pt": "Abrir no aplicativo padrão",
+    "en": "Open in default application"
+  },
+  "Pré-visualizar": {
+    "pt": "Pré-visualizar",
+    "en": "Preview"
+  },
+  "Espaço": {
+    "pt": "Espaço",
+    "en": "Space"
+  },
+  "Não foi possível pré-visualizar o arquivo: {}": {
+    "pt": "Não foi possível pré-visualizar o arquivo: {0}",
+    "en": "Could not preview the file: {0}"
+  },
+  "Não foi possível reproduzir este arquivo: {}": {
+    "pt": "Não foi possível reproduzir este arquivo: {0}",
+    "en": "Could not play this file: {0}"
   }
 }

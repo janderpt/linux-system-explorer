@@ -368,6 +368,7 @@ impl Explorer {
             || self.rename.is_some()
             || self.network_dialog.is_some()
             || self.local_shares.is_some()
+            || self.preview.is_some()
     }
 }
 #[cfg(test)]

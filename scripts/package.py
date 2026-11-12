@@ -163,6 +163,7 @@ def stage(destination, prefix, binary):
     doc.mkdir(parents=True, exist_ok=True)
     for source in ["LICENSE", "README.md", "CHANGELOG.md", "docs/RELEASING.md", "docs/DISTRIBUTION.md"]:
         shutil.copyfile(ROOT / source, doc / Path(source).name)
+    shutil.copyfile(ROOT / "packaging/preview-runtime.json", doc / "preview-runtime.json")
     notices = install / "share/licenses" / APP_ID
     notices.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(ROOT / "LICENSE", notices / "LICENSE")
@@ -181,7 +182,9 @@ def debian_dependencies(binary, work):
     result = run(["dpkg-shlibdeps", "-O", "-e", binary], cwd=work, capture_output=True, text=True)
     depends = next(line.removeprefix("shlibs:Depends=") for line in result.stdout.splitlines() if line.startswith("shlibs:Depends="))
     # These libraries are opened dynamically; GIO and xdg-utils provide desktop integration.
-    return depends + ", libx11-6, libxi6, libxcursor1, libxrandr2, libxkbcommon0, libwayland-client0, libegl1, libgl1, libglib2.0-bin, xdg-utils, shared-mime-info, hicolor-icon-theme"
+    preview = json.loads((ROOT / "packaging/preview-runtime.json").read_text())
+    engines = preview["media"]["debian"] + preview["pdf"]["debian"]
+    return depends + ", libx11-6, libxi6, libxcursor1, libxrandr2, libxkbcommon0, libwayland-client0, libegl1, libgl1, libglib2.0-bin, xdg-utils, shared-mime-info, hicolor-icon-theme, " + ", ".join(engines)
 
 
 def build(output, binary, formats):

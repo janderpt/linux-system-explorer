@@ -27,6 +27,16 @@ automatically give admission to distribution repositories or graphical software 
 Each channel needs maintenance, updates and its own approval; support for every channel
 cannot be guaranteed in advance.
 
+## Preview runtimes
+
+The preview UI belongs to the explorer and does not embed a KDE/GNOME viewer or launch a default player. Raster decoding, SVG rendering and fallback fonts are compiled into Rust. Text previews are bounded to 128 KiB, images have input/allocation/dimension limits and SVG external image references are disabled. Source files remain unchanged.
+
+PDF rendering uses `pdfinfo` and `pdftoppm` from Poppler, invoked through argument arrays without a shell. Temporary output is private and cleaned up; cancellation and a 25-second converter deadline terminate/reap child processes. Media uses the GStreamer 1.x C ABI with process-lifetime library handles, worker-owned pipelines, synchronized audio and a bounded appsink delivering only the latest 960×540 RGBA frame. Closing the popup stops playback and releases the pipeline. GTK/Qt video windows are not used.
+
+[preview-runtime.json](../packaging/preview-runtime.json) records required libraries, executables and Debian package mappings. DEB dependencies include GStreamer Base/Good/Libav and Poppler because dynamically loaded libraries and subprocesses are invisible to `dpkg-shlibdeps`. The manifest is also included in staged documentation. Source/tar users must install these runtimes; RPM, Arch, Nix, Flatpak and AppImage packaging must supply equivalent components. Codec availability and packaging policy vary; this is not certification for every distribution. Sandboxed runtime integration still requires channel-specific work.
+
+CI installs these runtimes plus FFmpeg for synthetic test fixtures. Integration tests exercise image/SVG rendering, real PDF pages, audio/video decoding, playback lifecycle and headless popup interactions. Missing media runtime/codecs are failures in CI; developer environments without the runtime may skip media integration tests.
+
 ## Native build and staging
 
 Python 3.11+, a Rust toolchain, `desktop-file-utils`, `appstream` and, for DEB packages,

@@ -88,6 +88,7 @@ impl Explorer {
             && self.rename.is_none()
             && self.open_with.is_none()
             && self.folder_picker.is_none()
+            && self.preview.is_none()
             && self.new_folder.is_none()
             && self.properties.is_none()
             && self.settings_editor.is_none()

@@ -5,6 +5,14 @@
 A Linux desktop file manager written in Rust with egui/eframe, inspired by familiar
 desktop file explorers. **Currently experimental; no stable release or store approval.**
 
+## File previews with Space
+
+Select a file and press **Space**, or choose **Preview** from its context menu. The explorer's popup uses the active pane's selection. Escape, Close or clicking outside stops playback and closes it. Opening the system default application is a separate explicit action. Space still types normally in text fields and the terminal.
+
+Supported previews include PNG/JPEG/WebP/BMP/TIFF/ICO/GIF (first frame), SVG, paginated PDF, bounded plain text/code and internal audio/video playback with pause, seek and volume. Images support fit, zoom and scrolling. HTML, Markdown and CSV are shown as text; external SVG image references are disabled. Office rendering is a later stage. Unsupported files have a neutral fallback; failures use error toasts. Loading runs in background workers and leaves source files unchanged.
+
+Image decoders, SVG rendering and fallback fonts are compiled into the application. PDF uses Poppler; media uses GStreamer, independent of KDE/GNOME viewers and the X11/Wayland window system. [Runtime dependencies](packaging/preview-runtime.json) are declared in the DEB (Base/Good/Libav plugins and `poppler-utils`). Source/tar installations need these components installed; other package formats must provide equivalent runtimes and undergo compatibility testing. Flatpak and AppImage packages remain in preparation.
+
 ## Features
 
 - X11 and Wayland windows, folder tabs, keyboard navigation and a compact toolbar.
@@ -33,6 +41,7 @@ Use Rust 1.95 or newer and a graphical Linux session with OpenGL. On Ubuntu/Debi
 
 ```sh
 sudo apt install build-essential pkg-config libxkbcommon-dev libwayland-dev libx11-dev libxi-dev libxcursor-dev libxrandr-dev libegl1-mesa-dev xdg-utils libglib2.0-bin
+sudo apt install poppler-utils libgstreamer1.0-0 libgstreamer-plugins-base1.0-0 gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-libav
 cargo run
 cargo run -- /path/to/folder
 cargo build --locked --release

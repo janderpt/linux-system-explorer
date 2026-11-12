@@ -14,6 +14,7 @@ mod local_shares;
 mod native_dnd;
 mod navigation;
 mod network;
+mod preview;
 mod renames;
 mod session;
 mod settings;

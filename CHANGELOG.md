@@ -2,6 +2,8 @@
 
 ## Unreleased — 0.1.0 experimental
 
+- Internal Space/context-menu previews for images, SVG, paginated PDF, bounded text/code and audio/video, with zoom, playback controls, active-pane selection, cancellation and standard error toasts. Declare GStreamer/Poppler runtime dependencies in native packages and exercise real decoders in CI.
+
 - Dim pending cut items in every file view and allow Escape to cancel the pending cut across tabs/panes without altering files or cancelling an already started transfer.
 
 - Fix right-click Paste menus in blank folder space, including switching split panes after Ctrl+C. Exclude file rows/tiles, headers, scrollbars and overlaid windows from blank-space hit testing.

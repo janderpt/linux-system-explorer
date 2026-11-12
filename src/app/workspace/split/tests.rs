@@ -539,3 +539,62 @@ fn escape_does_not_clear_the_clipboard_of_an_already_started_move_in_another_pan
         "target"
     );
 }
+
+#[test]
+fn space_previews_the_selected_file_from_the_active_pane() {
+    let root = tempfile::tempdir().unwrap();
+    let a = root.path().join("Left");
+    let b = root.path().join("Right");
+    std::fs::create_dir(&a).unwrap();
+    std::fs::create_dir(&b).unwrap();
+    std::fs::write(a.join("left.txt"), "LEFT CONTENT").unwrap();
+    std::fs::write(b.join("right.txt"), "RIGHT CONTENT").unwrap();
+    let ctx = egui::Context::default();
+    let mut app = workspace(&ctx, a);
+    app.toggle_split(&ctx);
+    settle(&mut app);
+    let [left, right] = app.split_indices().unwrap();
+    app.tabs[right].navigate(b, Navigation::Visit);
+    settle(&mut app);
+    render(&mut app, &ctx, vec![], Modifiers::NONE);
+    let output = render(&mut app, &ctx, vec![], Modifiers::NONE);
+    click(&mut app, &ctx, points(&output, "left.txt")[0]);
+    click(&mut app, &ctx, points(&output, "right.txt")[0]);
+    render(
+        &mut app,
+        &ctx,
+        vec![Event::Key {
+            key: Key::Space,
+            physical_key: None,
+            pressed: true,
+            repeat: false,
+            modifiers: Modifiers::NONE,
+        }],
+        Modifiers::NONE,
+    );
+    assert!(app.tabs[right].preview.is_some());
+    assert!(app.tabs[left].preview.is_none());
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(3);
+    loop {
+        let output = render(&mut app, &ctx, vec![], Modifiers::NONE);
+        if !points(&output, "RIGHT CONTENT").is_empty() {
+            assert!(points(&output, "LEFT CONTENT").is_empty());
+            break;
+        }
+        assert!(std::time::Instant::now() < deadline);
+        std::thread::sleep(std::time::Duration::from_millis(2));
+    }
+    render(
+        &mut app,
+        &ctx,
+        vec![Event::Key {
+            key: Key::Escape,
+            physical_key: None,
+            pressed: true,
+            repeat: false,
+            modifiers: Modifiers::NONE,
+        }],
+        Modifiers::NONE,
+    );
+    assert!(app.tabs[right].preview.is_none());
+}

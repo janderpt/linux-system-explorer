@@ -105,6 +105,7 @@ aplica a mesma regra à pasta pessoal. Sem uma janela correspondente, abre norma
 
 ```bash
 sudo apt install build-essential pkg-config libx11-dev libxi-dev libxcursor-dev libxrandr-dev libxkbcommon-dev libwayland-dev libegl1-mesa-dev xdg-utils libglib2.0-bin
+sudo apt install poppler-utils libgstreamer1.0-0 libgstreamer-plugins-base1.0-0 gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-libav
 ```
 
 ## Abas, janelas e terminal integrado
@@ -185,6 +186,7 @@ A sessão fica em `$XDG_STATE_HOME/linux-system-explorer/session.json` (por padr
 | `Home` / `End` | Ir ao primeiro/último item da ordem exibida |
 | `Shift` + `Page Up` / `Page Down` / `Home` / `End` | Estender ou reduzir a seleção desde a âncora |
 | `Ctrl` + `Shift` + clique | Acrescentar um intervalo à seleção existente |
+| `Espaço` | Pré-visualizar o arquivo selecionado no painel ativo |
 | `F2` | Renomear o único item selecionado |
 | `F5` | Atualizar |
 | `Esc` | Sair da edição do caminho, limpar a pesquisa ou cancelar a criação |
@@ -244,6 +246,19 @@ Nos três modos de visualização, arraste um ou vários itens selecionados para
 
 Também há troca de arquivos com outros aplicativos: arrastar para fora exporta arquivos locais como `text/uri-list`; soltar arquivos vindos do sistema usa a pasta ou atalho apontado, ou a pasta atual quando o alvo é sua área vazia. **Ctrl solicita copiar** e **Shift solicita mover**, nos dois sentidos, conforme as operações aceitas pelo outro aplicativo. Ctrl tem prioridade se as duas teclas estiverem pressionadas. Sem modificadores, a entrada prefere copiar; na saída, o destino participa da negociação padrão do sistema. No X11, a preferência é atualizada durante o gesto e a posição/ação do drop ficam fixadas ao soltar. No Wayland, o compositor negocia as ações e os modificadores. Uma movimentação recebida só é confirmada ao aplicativo de origem depois de a transferência inteira terminar; falhas parciais e cancelamentos não enviam confirmação de sucesso. Na saída, o destino executa a movimentação e o explorador atualiza a lista sem excluir os arquivos novamente. Os cursores vêm do tema do SO: seta para movimentação, indicador de cópia e sinal de destino inválido. No X11, a integração usa XDND v5 com um proxy para receber a posição nativa do drop, URIs locais e transferência incremental para seleções extensas. No Wayland, usa `guth-wayland-dnd` na conexão da própria janela, que exige Rust 1.95+. Aplicativos de destino precisam aceitar arquivos locais. Não são importados URLs de rede nem dados arbitrários de páginas web. A Lixeira recebe itens com a confirmação configurada para envio à lixeira; arrastar itens de dentro dela requer restaurá-los primeiro.
 
+## Pré-visualização com Espaço
+
+Selecione um arquivo e pressione **Espaço**, ou use **Pré-visualizar** no menu de contexto. O popup pertence ao próprio explorador e usa a seleção do painel ativo. **Esc**, o botão de fechar ou um clique fora encerram o preview e a reprodução. O botão **Abrir no aplicativo padrão** é uma ação explícita e independente. Campos de texto e o terminal continuam recebendo espaços normalmente.
+
+- **Imagens:** PNG, JPEG, WebP, BMP, TIFF, ICO, GIF (primeiro quadro) e SVG, com ajuste à janela, zoom e rolagem. Decodificadores, renderizador SVG e fontes de apoio estão incorporados; imagens externas referenciadas por SVG não são carregadas.
+- **PDF:** renderização de páginas com Anterior/Próxima, zoom e rolagem, usando Poppler.
+- **Texto e código:** leitura de até 128 KiB, com aviso de truncamento. HTML, Markdown, CSV e código são mostrados como texto, sem executar conteúdo.
+- **Áudio e vídeo:** reprodução dentro do popup com pausa, posição e volume, usando GStreamer. A disponibilidade de formatos depende dos plugins/codecs distribuídos com o pacote.
+
+Office ainda não tem renderização própria nesta etapa. Arquivos sem preview mostram uma indicação neutra; falhas usam os toasts de erro. O carregamento ocorre em segundo plano, com limites para imagens/texto e cancelamento dos conversores de PDF, sem alterar o arquivo original.
+
+O preview não depende de um visualizador do KDE ou GNOME. As dependências de execução estão em [preview-runtime.json](packaging/preview-runtime.json); o DEB declara GStreamer, os plugins Base/Good/Libav e `poppler-utils`. Compilações pelo código e arquivos tar precisam desses componentes instalados. A distribuição em outros formatos deve fornecer os mesmos recursos e ser validada em cada ambiente; os pacotes Flatpak e AppImage ainda estão em preparação.
+
 ## Copiar, recortar e colar
 
 Selecione os itens e use os atalhos, os ícones da barra da pasta ou **Copiar/Recortar/Colar** no menu de contexto. O menu de uma área vazia oferece **Colar** na pasta atual. Ao usar **Colar** no menu de uma pasta, ela recebe os itens diretamente.
@@ -296,7 +311,7 @@ A operação usa a lista confirmada: itens enviados à lixeira depois dessa list
 
 ## Configurações e metadados Linux
 
-A engrenagem abre as abas **Geral**, **Barra lateral**, **Colunas** e **Aparência e ícones**, nessa ordem, começando por **Geral**. Todas mantêm a mesma altura, com rolagem independente no conteúdo de cada aba e botões em posições estáveis. Os elementos são centralizados verticalmente em suas linhas. **Aplicar** salva as alterações e mantém a janela aberta; **Salvar e fechar** também fecha a janela. **Cancelar** descarta as alterações ainda não aplicadas. O catálogo permite buscar pelo nome Font Awesome (por exemplo, `house`, `folder` ou `gear`) e escolher o ícone de cada uma das 80 ações, locais e notificações configuráveis. São 1.407 ícones do estilo Free Solid, incorporados ao executável e disponíveis sem conexão. A licença e a origem estão em [assets/fontawesome](assets/fontawesome/README.md). Os menus de contexto usam essas mesmas escolhas para Abrir, Abrir com, Copiar, Recortar, Colar, Renomear, Copiar caminho, Propriedades, Fixar, Desafixar e as duas ações de exclusão.
+A engrenagem abre as abas **Geral**, **Barra lateral**, **Colunas** e **Aparência e ícones**, nessa ordem, começando por **Geral**. Todas mantêm a mesma altura, com rolagem independente no conteúdo de cada aba e botões em posições estáveis. Os elementos são centralizados verticalmente em suas linhas. **Aplicar** salva as alterações e mantém a janela aberta; **Salvar e fechar** também fecha a janela. **Cancelar** descarta as alterações ainda não aplicadas. O catálogo permite buscar pelo nome Font Awesome (por exemplo, `house`, `folder` ou `gear`) e escolher o ícone de cada uma das 81 ações, locais e notificações configuráveis. São 1.407 ícones do estilo Free Solid, incorporados ao executável e disponíveis sem conexão. A licença e a origem estão em [assets/fontawesome](assets/fontawesome/README.md). Os menus de contexto usam essas mesmas escolhas para Abrir, Abrir com, Copiar, Recortar, Colar, Renomear, Copiar caminho, Propriedades, Fixar, Desafixar e as duas ações de exclusão.
 
 ### Ícones de arquivos e abertura no aplicativo padrão
 

@@ -39,6 +39,7 @@ pub enum Icon {
     Up,
     Refresh,
     Open,
+    Preview,
     NewWindow,
     NewTab,
     DuplicateTab,
@@ -91,7 +92,7 @@ pub enum Icon {
 }
 
 impl Icon {
-    pub const ALL: [Self; 80] = [
+    pub const ALL: [Self; 81] = [
         Self::Home,
         Self::Desktop,
         Self::Download,
@@ -123,6 +124,7 @@ impl Icon {
         Self::File,
         Self::Link,
         Self::Open,
+        Self::Preview,
         Self::NewWindow,
         Self::NewTab,
         Self::DuplicateTab,
@@ -207,6 +209,7 @@ impl Icon {
             Self::Up => crate::i18n::tr("Pasta acima"),
             Self::Refresh => crate::i18n::tr("Atualizar"),
             Self::Open => crate::i18n::tr("Abrir item"),
+            Self::Preview => crate::i18n::tr("Pré-visualizar"),
             Self::NewWindow => crate::i18n::tr("Abrir em nova janela"),
             Self::NewTab => crate::i18n::tr("Abrir em nova aba"),
             Self::DuplicateTab => crate::i18n::tr("Duplicar aba"),
@@ -292,6 +295,7 @@ impl Icon {
             Self::Up => "arrow-up",
             Self::Refresh => "arrows-rotate",
             Self::Open => "folder-open",
+            Self::Preview => "eye",
             Self::NewWindow => "window-restore",
             Self::NewTab => "plus",
             Self::DuplicateTab => "clone",
