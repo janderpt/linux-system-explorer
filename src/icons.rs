@@ -10,6 +10,10 @@ use std::{
 pub enum Icon {
     Applications,
     SoftwareManager,
+    Print,
+    RotateImage,
+    ResizeImage,
+    ConvertImage,
     ExtractHere,
     ExtractTo,
     Home,
@@ -96,9 +100,13 @@ pub enum Icon {
 }
 
 impl Icon {
-    pub const ALL: [Self; 85] = [
+    pub const ALL: [Self; 89] = [
         Self::Applications,
         Self::SoftwareManager,
+        Self::Print,
+        Self::RotateImage,
+        Self::ResizeImage,
+        Self::ConvertImage,
         Self::ExtractHere,
         Self::ExtractTo,
         Self::Home,
@@ -188,6 +196,10 @@ impl Icon {
         match self {
             Self::Applications => crate::i18n::tr("Aplicativos"),
             Self::SoftwareManager => crate::i18n::tr("Gerenciador de software"),
+            Self::Print => crate::i18n::tr("Imprimir…"),
+            Self::RotateImage => crate::i18n::tr("Girar imagem…"),
+            Self::ResizeImage => crate::i18n::tr("Redimensionar imagem…"),
+            Self::ConvertImage => crate::i18n::tr("Converter imagem…"),
             Self::ExtractHere => crate::i18n::tr("Extrair aqui"),
             Self::ExtractTo => crate::i18n::tr("Extrair em…"),
             Self::Home => crate::i18n::tr("Pasta pessoal"),
@@ -278,6 +290,10 @@ impl Icon {
         match self {
             Self::Applications => "shapes",
             Self::SoftwareManager => "store",
+            Self::Print => "print",
+            Self::RotateImage => "rotate-right",
+            Self::ResizeImage => "up-right-and-down-left-from-center",
+            Self::ConvertImage => "arrows-rotate",
             Self::ExtractHere => "box-open",
             Self::ExtractTo => "folder-open",
             Self::Home => "house",

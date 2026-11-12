@@ -15,6 +15,7 @@ pub mod archive;
 mod html;
 pub mod media;
 mod office;
+pub mod print;
 pub mod thumbnail;
 pub use office::{Document, Family};
 

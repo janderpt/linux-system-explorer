@@ -291,6 +291,8 @@ impl Workspace {
                 tab.cancel_deletion();
                 tab.cancel_restore();
                 tab.cancel_empty_trash();
+                tab.cancel_images();
+                tab.cancel_print();
             }
         }
         self.tab_bar(ctx);
@@ -354,6 +356,8 @@ impl Explorer {
             || self.active_deletion.is_some()
             || self.active_restore.is_some()
             || self.active_empty_trash.is_some()
+            || self.print_cancel.is_some()
+            || self.image_pending()
             || self.rename_pending()
             || self.local_shares_pending()
             || self.dnd.trash_prepare.is_some()
@@ -370,6 +374,7 @@ impl Explorer {
             || self.rename.is_some()
             || self.network_dialog.is_some()
             || self.local_shares.is_some()
+            || self.image_editor.is_some()
             || self.preview.is_some()
     }
 }

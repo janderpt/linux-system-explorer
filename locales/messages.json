@@ -2366,5 +2366,257 @@
   "Não foi possível abrir o gerenciador de compactados: {}": {
     "en": "Could not open the archive manager: {0}",
     "pt": "Não foi possível abrir o gerenciador de compactados: {0}"
+  },
+  " (girada)": {
+    "en": " (rotated)",
+    "pt": " (girada)"
+  },
+  " (redimensionada)": {
+    "en": " (resized)",
+    "pt": " (redimensionada)"
+  },
+  " (convertida)": {
+    "en": " (converted)",
+    "pt": " (convertida)"
+  },
+  "A imagem deve ter até 32 milhões de pixels e 16384 pixels por lado.": {
+    "en": "The image must have at most 32 million pixels and 16384 pixels per side.",
+    "pt": "A imagem deve ter até 32 milhões de pixels e 16384 pixels por lado."
+  },
+  "Selecione uma imagem compatível fora da lixeira.": {
+    "en": "Select a supported image outside Trash.",
+    "pt": "Selecione uma imagem compatível fora da lixeira."
+  },
+  "A imagem foi substituída. Atualize a pasta e tente novamente.": {
+    "en": "The image was replaced. Refresh the folder and try again.",
+    "pt": "A imagem foi substituída. Atualize a pasta e tente novamente."
+  },
+  "A imagem deve ser um arquivo regular de até 64 MiB.": {
+    "en": "The image must be a regular file of at most 64 MiB.",
+    "pt": "A imagem deve ser um arquivo regular de até 64 MiB."
+  },
+  "A imagem mudou durante a leitura. Tente novamente.": {
+    "en": "The image changed while being read. Try again.",
+    "pt": "A imagem mudou durante a leitura. Tente novamente."
+  },
+  "Esta operação ainda não suporta imagens animadas ou TIFF com várias páginas. O original foi preservado.": {
+    "en": "This operation does not yet support animated images or multipage TIFF. The original was preserved.",
+    "pt": "Esta operação ainda não suporta imagens animadas ou TIFF com várias páginas. O original foi preservado."
+  },
+  "O SVG deve ter até 2 MiB.": {
+    "en": "SVG input must be at most 2 MiB.",
+    "pt": "O SVG deve ter até 2 MiB."
+  },
+  "Não foi possível encontrar um nome livre para a cópia.": {
+    "en": "Could not find an available filename for the copy.",
+    "pt": "Não foi possível encontrar um nome livre para a cópia."
+  },
+  "Girar imagem…": {
+    "en": "Rotate image…",
+    "pt": "Girar imagem…"
+  },
+  "Redimensionar imagem…": {
+    "en": "Resize image…",
+    "pt": "Redimensionar imagem…"
+  },
+  "Converter imagem…": {
+    "en": "Convert image…",
+    "pt": "Converter imagem…"
+  },
+  "Imagem": {
+    "en": "Image",
+    "pt": "Imagem"
+  },
+  "Girar…": {
+    "en": "Rotate…",
+    "pt": "Girar…"
+  },
+  "Redimensionar…": {
+    "en": "Resize…",
+    "pt": "Redimensionar…"
+  },
+  "Converter…": {
+    "en": "Convert…",
+    "pt": "Converter…"
+  },
+  "O serviço de imagem foi encerrado.": {
+    "en": "The image service has stopped.",
+    "pt": "O serviço de imagem foi encerrado."
+  },
+  "{} imagem selecionada": {
+    "en": "{0} selected image",
+    "pt": "{0} imagem selecionada"
+  },
+  "{} imagens selecionadas": {
+    "en": "{0} selected images",
+    "pt": "{0} imagens selecionadas"
+  },
+  "Uma nova cópia será criada na mesma pasta. Os originais serão preservados.": {
+    "en": "A new copy will be created in the same folder. Originals will be preserved.",
+    "pt": "Uma nova cópia será criada na mesma pasta. Os originais serão preservados."
+  },
+  "Imagem de referência: {} × {} px": {
+    "en": "Reference image: {0} × {1} px",
+    "pt": "Imagem de referência: {0} × {1} px"
+  },
+  "Largura (px)": {
+    "en": "Width (px)",
+    "pt": "Largura (px)"
+  },
+  "Altura (px)": {
+    "en": "Height (px)",
+    "pt": "Altura (px)"
+  },
+  "Manter proporção (encaixar nos limites)": {
+    "en": "Keep aspect ratio (fit within bounds)",
+    "pt": "Manter proporção (encaixar nos limites)"
+  },
+  "Formato da cópia": {
+    "en": "Copy format",
+    "pt": "Formato da cópia"
+  },
+  "Manter formato": {
+    "en": "Keep format",
+    "pt": "Manter formato"
+  },
+  "Qualidade JPEG": {
+    "en": "JPEG quality",
+    "pt": "Qualidade JPEG"
+  },
+  "No JPEG, áreas transparentes serão preenchidas com branco.": {
+    "en": "In JPEG, transparent areas will be filled with white.",
+    "pt": "No JPEG, áreas transparentes serão preenchidas com branco."
+  },
+  "Nova cópia: {}": {
+    "en": "New copy: {0}",
+    "pt": "Nova cópia: {0}"
+  },
+  "Se o nome já existir, a cópia receberá uma numeração.": {
+    "en": "If the name already exists, the copy will receive a number.",
+    "pt": "Se o nome já existir, a cópia receberá uma numeração."
+  },
+  "Lendo imagem…": {
+    "en": "Reading image…",
+    "pt": "Lendo imagem…"
+  },
+  "Processando imagens: {}/{}": {
+    "en": "Processing images: {0}/{1}",
+    "pt": "Processando imagens: {0}/{1}"
+  },
+  "Criar cópia": {
+    "en": "Create copy",
+    "pt": "Criar cópia"
+  },
+  "{} cópia de imagem criada. O original foi preservado.": {
+    "en": "{0} image copy created. The original was preserved.",
+    "pt": "{0} cópia de imagem criada. O original foi preservado."
+  },
+  "{} cópias de imagens criadas. Os originais foram preservados.": {
+    "en": "{0} image copies created. Originals were preserved.",
+    "pt": "{0} cópias de imagens criadas. Os originais foram preservados."
+  },
+  "Operação cancelada. As cópias já concluídas foram mantidas.": {
+    "en": "Operation cancelled. Completed copies were kept.",
+    "pt": "Operação cancelada. As cópias já concluídas foram mantidas."
+  },
+  "{} imagem não pôde ser processada.": {
+    "en": "{0} image could not be processed.",
+    "pt": "{0} imagem não pôde ser processada."
+  },
+  "{} imagens não puderam ser processadas.": {
+    "en": "{0} images could not be processed.",
+    "pt": "{0} imagens não puderam ser processadas."
+  },
+  "90° para a direita": {
+    "en": "90° clockwise",
+    "pt": "90° para a direita"
+  },
+  "90° para a esquerda": {
+    "en": "90° counterclockwise",
+    "pt": "90° para a esquerda"
+  },
+  "180°": {
+    "en": "180°",
+    "pt": "180°"
+  },
+  "Impressão": {
+    "en": "Printing",
+    "pt": "Impressão"
+  },
+  "Imprimir…": {
+    "en": "Print…",
+    "pt": "Imprimir…"
+  },
+  "Imprimir seleção…": {
+    "en": "Print selection…",
+    "pt": "Imprimir seleção…"
+  },
+  "Documento enviado ao sistema de impressão.": {
+    "en": "Document sent to the printing system.",
+    "pt": "Documento enviado ao sistema de impressão."
+  },
+  "Este tipo de arquivo não oferece impressão.": {
+    "en": "Printing is not available for this file type.",
+    "pt": "Este tipo de arquivo não oferece impressão."
+  },
+  "O arquivo para impressão deve ser regular e ter até 256 MiB.": {
+    "en": "The print source must be a regular file of at most 256 MiB.",
+    "pt": "O arquivo para impressão deve ser regular e ter até 256 MiB."
+  },
+  "O arquivo não contém um PDF válido.": {
+    "en": "The file does not contain a valid PDF.",
+    "pt": "O arquivo não contém um PDF válido."
+  },
+  "A impressão de texto está limitada a 1 MiB.": {
+    "en": "Text printing is limited to 1 MiB.",
+    "pt": "A impressão de texto está limitada a 1 MiB."
+  },
+  "A impressão de texto requer codificação UTF-8.": {
+    "en": "Text printing requires UTF-8 encoding.",
+    "pt": "A impressão de texto requer codificação UTF-8."
+  },
+  "A imagem excede o limite de preparação para impressão.": {
+    "en": "The image exceeds the print preparation size limit.",
+    "pt": "A imagem excede o limite de preparação para impressão."
+  },
+  "A impressão de vários arquivos requer pdfunite (Poppler).": {
+    "en": "Printing multiple files requires pdfunite (Poppler).",
+    "pt": "A impressão de vários arquivos requer pdfunite (Poppler)."
+  },
+  "Não foi possível imprimir: {}": {
+    "en": "Could not print: {0}",
+    "pt": "Não foi possível imprimir: {0}"
+  },
+  "Selecione até 100 arquivos de tipos compatíveis com impressão.": {
+    "en": "Select up to 100 files of printable types.",
+    "pt": "Selecione até 100 arquivos de tipos compatíveis com impressão."
+  },
+  "A seleção excede o limite de 512 MiB para impressão.": {
+    "en": "The selection exceeds the 512 MiB print size limit.",
+    "pt": "A seleção excede o limite de 512 MiB para impressão."
+  },
+  "{} arquivo selecionado": {
+    "en": "{0} selected file",
+    "pt": "{0} arquivo selecionado"
+  },
+  "{} arquivos selecionados": {
+    "en": "{0} selected files",
+    "pt": "{0} arquivos selecionados"
+  },
+  "O diálogo de impressão foi encerrado sem resposta.": {
+    "en": "The print dialog closed without a response.",
+    "pt": "O diálogo de impressão foi encerrado sem resposta."
+  },
+  "O sistema não conseguiu concluir a solicitação de impressão.": {
+    "en": "The system could not complete the print request.",
+    "pt": "O sistema não conseguiu concluir a solicitação de impressão."
+  },
+  "Dimensões de imagem inválidas.": {
+    "pt": "Dimensões de imagem inválidas.",
+    "en": "Invalid image dimensions."
+  },
+  "Formato de imagem não reconhecido.": {
+    "pt": "Formato de imagem não reconhecido.",
+    "en": "Unrecognized image format."
   }
 }

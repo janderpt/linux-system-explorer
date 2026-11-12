@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Add built-in image rotation, aspect-preserving/exact resizing and PNG/JPEG/WebP/BMP/TIFF conversion, including batch processing, EXIF orientation, transparency handling, cancellable workers and numbered atomic no-replace output; preserve originals and reject animated/multipage input instead of silently flattening it.
+- Add type-aware Print/Print selection through the desktop Print portal, always requiring its dialog; prepare read-only image/text/markup/Office sources as temporary PDFs, merge selections in display order, handle cancellation and report submission rather than physical printing.
+
 - Add a file-type-specific archive context section with internal content preview and external Extract here/Extract to actions, desktop-aware Ark/File Roller/Engrampa selection, whole-selection validation, configurable icons, background execution and error toasts; keep host extraction explicitly unavailable in the experimental Flatpak.
 
 - Enable Details, List and Icons for Applications, with sortable application metadata columns, a zoomable icon grid, keyboard navigation and saved location view/zoom; add a configurable software-manager context action for Discover/GNOME Software, including XFCE availability-based selection, AppStream-to-desktop mapping, name-search fallback and startup error toasts.

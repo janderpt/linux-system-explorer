@@ -435,6 +435,8 @@ impl Explorer {
                 || self.active_deletion.is_some()
                 || self.active_restore.is_some()
                 || self.active_empty_trash.is_some()
+                || self.print_cancel.is_some()
+                || self.image_pending()
                 || self.rename_pending()
                 || self.dnd.trash_prepare.is_some())
         {
@@ -444,12 +446,16 @@ impl Explorer {
             self.cancel_deletion();
             self.cancel_restore();
             self.cancel_empty_trash();
+            self.cancel_images();
+            self.cancel_print();
         }
         if self.close_after_transfer
             && self.active_transfer.is_none()
             && self.active_deletion.is_none()
             && self.active_restore.is_none()
             && self.active_empty_trash.is_none()
+            && self.print_cancel.is_none()
+            && !self.image_pending()
             && !self.rename_pending()
             && self.dnd.trash_prepare.is_none()
         {

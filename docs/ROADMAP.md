@@ -15,7 +15,7 @@ Implementado para instalações nativas. A integração do menu do host no Flatp
 
 ## Ações específicas por tipo
 
-Primeira etapa implementada para compactados: seção própria no menu, preview do conteúdo e extração delegada ao gerenciador instalado. As opções abaixo são sugestões para próximas etapas, ainda não implementadas como ações de contexto. Quando já houver preview correspondente, a proposta é permitir acessá-lo diretamente pela seção do tipo.
+Implementados: seção de compactados com preview/extração; rotação, redimensionamento e conversão de imagens estáticas com novas cópias; impressão por tipo com diálogo do sistema. As opções abaixo incluem sugestões para próximas etapas; impressão e as operações de imagem já estão disponíveis conforme documentado no README. Quando já houver preview correspondente, a proposta é permitir acessá-lo diretamente pela seção do tipo.
 
 | Tipo | Sugestões |
 | --- | --- |
@@ -40,4 +40,4 @@ Primeira etapa implementada para compactados: seção própria no menu, preview 
 | Binários e tipos desconhecidos | Calcular SHA-256, ver metadados, abrir no editor hexadecimal |
 | Pastas | Agrupar as ações existentes de terminal/compartilhamento e acrescentar compactação |
 
-Ações aparecem conforme o tipo, a seleção e os componentes disponíveis. Sugestão de prioridade: PDF e imagens primeiro; documentos e montagem de ISO depois. Conversões devem preservar o original e produzir um novo arquivo, com operações e confirmações apresentadas pelo componente responsável.
+Ações aparecem conforme o tipo, a seleção e os componentes disponíveis. Próximas prioridades sugeridas: operações de páginas PDF e montagem de ISO. Conversões devem preservar o original e produzir um novo arquivo, com operações e confirmações apresentadas pelo componente responsável.

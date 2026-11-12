@@ -21,6 +21,7 @@ mod drag_drop;
 mod empty_trash;
 mod folder_actions;
 mod folder_picker;
+mod image_actions;
 mod local_shares;
 mod network;
 mod open_with;
@@ -57,6 +58,9 @@ enum Event {
         Navigation,
     ),
     OpenFailed(String),
+    PrintFinished(Result<bool, String>),
+    ImagesProgress(usize, usize),
+    ImagesFinished(crate::image_ops::Report),
     ArchiveManagerFinished(Result<(), String>),
     SoftwareOpened(Result<bool, String>),
     TransferProgress(file_ops::Progress),
@@ -87,6 +91,8 @@ pub struct Explorer {
     folder_picker: Option<folder_picker::FolderPicker>,
     open_with: Option<open_with::Chooser>,
     preview: Option<preview::Preview>,
+    image_editor: Option<image_actions::Editor>,
+    print_cancel: Option<std::sync::Arc<std::sync::atomic::AtomicBool>>,
     thumbnails: thumbnails::Cache,
     rename: Option<rename::RenameDialog>,
     network_dialog: Option<network::ConnectDialog>,
@@ -241,6 +247,8 @@ impl Explorer {
             folder_picker: None,
             open_with: None,
             preview: None,
+            image_editor: None,
+            print_cancel: None,
             thumbnails: Default::default(),
             rename: None,
             network_dialog: None,
@@ -402,6 +410,9 @@ impl Explorer {
                     self.applications.replace(items, error);
                 }
                 Event::OpenFailed(message) => self.report_error(message),
+                Event::PrintFinished(result)=>{self.print_cancel=None;match result{Ok(true)=>self.post_notice(crate::i18n::tr("Documento enviado ao sistema de impressão.").into()),Ok(false)=>{},Err(error)=>self.report_error(error)}},
+                Event::ImagesProgress(done,total)=>if let Some(editor)=&mut self.image_editor{editor.done=done;editor.total=total;},
+                Event::ImagesFinished(report)=>self.finish_images(report),
                 Event::ArchiveManagerFinished(result) => {
                     if let Err(error) = result { self.report_error(error); }
                     self.refresh_after_transfer = true;
@@ -508,7 +519,14 @@ impl Explorer {
             || self.network_dialog.is_some()
             || self.local_shares.is_some()
             || self.preview.is_some()
+            || self.image_editor.is_some()
         {
+            return;
+        }
+        if self.print_cancel.is_some()
+            && ctx.input_mut(|i| i.consume_key(egui::Modifiers::NONE, Key::Escape))
+        {
+            self.cancel_print();
             return;
         }
         if ctx.input_mut(|i| i.consume_key(egui::Modifiers::NONE, Key::F4)) {
@@ -1701,6 +1719,7 @@ impl Explorer {
         self.folder_picker_dialog(ctx);
         self.open_with_dialog(ctx);
         self.rename_dialog(ctx);
+        self.image_dialog(ctx);
         self.network_dialog(ctx);
         self.local_shares_dialog(ctx);
         self.preview_dialog(ctx);

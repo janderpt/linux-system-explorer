@@ -10,6 +10,16 @@ desktop file explorers. **Source published on GitHub; version 0.1.0-alpha.2 rema
 
 A local **experimental Flatpak** and the remaining Flathub work are documented in [Flatpak](docs/FLATPAK.md). It does not yet provide all native-package integrations/renderers.
 
+## Image operations and printing
+
+Image context menus offer **Rotate…**, **Resize…** and **Convert…**, including image-only multi-selections. Every operation creates a new sibling file, preserves originals and never replaces an existing path. Collisions receive numbered names; temporary partial output is discarded. Completed copies are selected after refresh. Processing is built into the executable and runs in the background with progress, cancellation and result toasts.
+
+Rotation supports clockwise/counterclockwise 90° and 180°. Resize preserves aspect ratio by default, fitting each image inside the requested bounds; turning this off produces exact dimensions. Output formats are PNG, JPEG, lossless WebP, BMP and TIFF. Rotate/resize retain the source format when supported; static GIF, ICO and SVG default to PNG, with SVG rasterized. JPEG quality defaults to 90 and transparent pixels are composited onto white. PNG/WebP retain transparency. EXIF orientation is applied before transformation; generated copies do not promise to retain all original metadata. Animated GIF/WebP/APNG and multipage TIFF are rejected instead of silently flattening content. Input limits are 64 MiB (SVG: 2 MiB), 32 million pixels and 16384 pixels per side.
+
+**Print…** is available for supported static images, PDF, Office/LibreOffice, HTML, Markdown and text/code. Fully printable selections offer **Print selection…**, combining documents in display order. The desktop Print portal always presents its printer/page/copy dialog; no option bypasses confirmation. Preparation uses temporary PDFs and read-only originals. Dialog cancellation is normal, Escape can cancel preparation, and success means submission to the printing system rather than confirmation of physical output.
+
+Printing requires `xdg-desktop-portal` with a Print-capable desktop backend. Single PDFs go directly to the portal. Images/text need WeasyPrint pagination, HTML/Markdown use the existing static renderer, Office uses LibreOffice, and multiple documents need Poppler's `pdfunite`. Images fit an A4 printable area without changing the source. Limits are 100 files, 256 MiB per source and 512 MiB of prepared PDFs; UTF-8 text is limited to 1 MiB. Operation/print icons are customizable.
+
 ## File type actions
 
 Context menus separate common commands from type-specific actions. Recognized archives have an **Archive** section with **View contents**, **Extract here** and **Extract to…**. Preview stays inside the explorer. Extraction is delegated to Ark, File Roller or Engrampa according to the desktop and installed tools, with Ark preferred on KDE and File Roller on GNOME. XFCE and other desktops use an available compatible tool. The manager owns destination selection, password/conflict dialogs and format support; no force-overwrite options are passed. Extract-here folder organization follows that tool’s behavior, including Ark’s automatic subfolder when needed.

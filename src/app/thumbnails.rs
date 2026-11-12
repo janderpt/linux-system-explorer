@@ -114,7 +114,14 @@ impl Cache {
                         ),
                         egui::TextureOptions::LINEAR,
                     )),
-                    _ => State::Failed,
+                    Err(error) => {
+                        #[cfg(test)]
+                        eprintln!("Thumbnail failed for {}: {}", entry.path.display(), error);
+                        #[cfg(not(test))]
+                        let _ = error;
+                        State::Failed
+                    }
+                    Ok(_) => State::Failed,
                 };
             } else {
                 ctx.request_repaint_after(std::time::Duration::from_millis(50));
@@ -181,7 +188,8 @@ mod tests {
             }
             assert!(
                 std::time::Instant::now() < deadline,
-                "thumbnail did not become ready"
+                "thumbnail did not become ready: {}",
+                path.display()
             );
             std::thread::sleep(std::time::Duration::from_millis(2));
         }
