@@ -47,9 +47,13 @@ pub fn prepare(entry: &Entry, cancel: &AtomicBool) -> io::Result<Prepared> {
                     "O arquivo não contém um PDF válido.",
                 )));
             }
+            let document = pdf_source::prepare(&entry.path, cancel)?;
             Ok(Prepared {
-                path: entry.path.clone(),
-                _document: None,
+                path: document
+                    .as_ref()
+                    .map(Document::path)
+                    .unwrap_or_else(|| entry.path.clone()),
+                _document: document,
             })
         }
         Kind::Office(_) => office::convert(&entry.path, cancel).map(prepared),

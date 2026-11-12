@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fix PDF previews on non-seekable mounted streams such as GVfs FTP: use a bounded, cancellable private local snapshot for Poppler, reuse it across preview pages and remove it after use. Apply the same preparation to PDF thumbnails and printing, preserve original paths/files and verify a read-only real mounted PDF.
+
 - Reveal the closest sidebar ancestor when opening or navigating folders, including remote shares, pins and volumes; react to newly available shortcuts, keep pane/tab scrolling independent and preserve subsequent manual scrolling.
 
 - Let notification toasts grow with their content up to the available window height, removing the fixed/percentage height cap; scroll overflowing stacks and keep dismissal controls accessible.

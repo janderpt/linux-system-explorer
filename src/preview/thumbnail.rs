@@ -131,6 +131,9 @@ fn render(path: &Path, display_path: &Path, kind: Kind, cancel: &AtomicBool) -> 
 }
 
 fn pdf_first_page(path: &Path, cancel: &AtomicBool) -> io::Result<Pixels> {
+    let document = pdf_source::prepare(path, cancel)?;
+    let snapshot = document.as_ref().map(Document::path);
+    let path = snapshot.as_deref().unwrap_or(path);
     let work = tempfile::tempdir()?;
     let output = work.path().join("first");
     pdf_command(

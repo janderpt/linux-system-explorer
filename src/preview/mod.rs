@@ -15,6 +15,7 @@ pub mod archive;
 mod html;
 pub mod media;
 mod office;
+mod pdf_source;
 pub mod print;
 pub mod thumbnail;
 pub use office::{Document, Family};
@@ -348,6 +349,9 @@ fn command_with_timeout(
     Ok(bytes)
 }
 fn pdf(path: &Path, page: u32, cancel: &AtomicBool) -> io::Result<Content> {
+    let document = pdf_source::prepare(path, cancel)?;
+    let snapshot = document.as_ref().map(Document::path);
+    let path = snapshot.as_deref().unwrap_or(path);
     let info = pdf_command(Command::new("pdfinfo").arg(path), cancel)?;
     let pages = String::from_utf8_lossy(&info)
         .lines()
@@ -385,7 +389,7 @@ fn pdf(path: &Path, page: u32, cancel: &AtomicBool) -> io::Result<Content> {
         pixels: pixels(&data)?,
         page,
         pages,
-        document: None,
+        document,
     })
 }
 

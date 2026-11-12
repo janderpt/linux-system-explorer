@@ -2826,5 +2826,9 @@
   "Abrir local do arquivo": {
     "pt": "Abrir local do arquivo",
     "en": "Open file location"
+  },
+  "O arquivo mudou durante a leitura. Tente novamente.": {
+    "pt": "O arquivo mudou durante a leitura. Tente novamente.",
+    "en": "The file changed while it was being read. Please try again."
   }
 }
