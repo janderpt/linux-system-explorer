@@ -1,6 +1,6 @@
 use super::*;
 use crate::preview::{
-    Content, Document, Job, Kind, Pixels,
+    Content, Document, Family, Job, Kind, Pixels,
     media::{Control, Session, Snapshot},
 };
 
@@ -283,7 +283,7 @@ impl Preview {
             ctx.request_repaint_after(std::time::Duration::from_millis(100));
             return error;
         }
-        let paginated = matches!(self.kind, Kind::Pdf | Kind::Docx | Kind::Xlsx | Kind::Pptx)
+        let paginated = matches!(self.kind, Kind::Pdf | Kind::Office(_))
             || matches!(self.kind, Kind::Html | Kind::Markdown)
                 && self.markup_view == MarkupView::Presentation;
         if paginated || self.texture.is_some() {
@@ -292,15 +292,17 @@ impl Preview {
                     let previous = ui
                         .add_enabled(
                             self.page > 1 && self.job.is_none(),
-                            egui::Button::new(crate::i18n::tr(if self.kind == Kind::Pptx {
-                                "Slide anterior"
-                            } else {
-                                "Página anterior"
-                            })),
+                            egui::Button::new(crate::i18n::tr(
+                                if self.kind == Kind::Office(Family::Presentation) {
+                                    "Slide anterior"
+                                } else {
+                                    "Página anterior"
+                                },
+                            )),
                         )
                         .clicked();
                     ui.label(crate::i18n::message(
-                        if self.kind == Kind::Pptx {
+                        if self.kind == Kind::Office(Family::Presentation) {
                             "Slide {} de {}"
                         } else {
                             "Página {} de {}"
@@ -310,11 +312,13 @@ impl Preview {
                     let next = ui
                         .add_enabled(
                             self.page < self.pages && self.job.is_none(),
-                            egui::Button::new(crate::i18n::tr(if self.kind == Kind::Pptx {
-                                "Próximo slide"
-                            } else {
-                                "Próxima página"
-                            })),
+                            egui::Button::new(crate::i18n::tr(
+                                if self.kind == Kind::Office(Family::Presentation) {
+                                    "Próximo slide"
+                                } else {
+                                    "Próxima página"
+                                },
+                            )),
                         )
                         .clicked();
                     if previous {

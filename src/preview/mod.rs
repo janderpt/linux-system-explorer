@@ -14,7 +14,7 @@ use std::{
 mod html;
 pub mod media;
 mod office;
-pub use office::Document;
+pub use office::{Document, Family};
 
 const IMAGE_BYTES: u64 = 64 * 1024 * 1024;
 const TEXT_BYTES: u64 = 128 * 1024;
@@ -25,9 +25,7 @@ pub enum Kind {
     Image,
     Svg,
     Pdf,
-    Docx,
-    Xlsx,
-    Pptx,
+    Office(Family),
     Html,
     Markdown,
     Text,
@@ -47,9 +45,6 @@ impl Kind {
             "png" | "jpg" | "jpeg" | "gif" | "webp" | "bmp" | "tif" | "tiff" | "ico" => Self::Image,
             "svg" => Self::Svg,
             "pdf" => Self::Pdf,
-            "docx" => Self::Docx,
-            "xlsx" => Self::Xlsx,
-            "pptx" => Self::Pptx,
             "html" | "htm" | "xhtml" => Self::Html,
             "md" | "markdown" => Self::Markdown,
             "mp3" | "wav" | "flac" | "ogg" | "oga" | "opus" | "m4a" | "aac" | "wma" | "aif"
@@ -59,7 +54,9 @@ impl Kind {
             "txt" | "log" | "csv" | "tsv" | "rs" | "py" | "js" | "ts" | "jsx" | "tsx" | "c"
             | "cpp" | "h" | "hpp" | "java" | "go" | "sh" | "json" | "xml" | "css" | "toml"
             | "yaml" | "yml" | "ini" | "conf" | "sql" | "rst" => Self::Text,
-            _ => Self::Unknown,
+            extension => Family::for_extension(extension)
+                .map(Self::Office)
+                .unwrap_or(Self::Unknown),
         }
     }
 }
@@ -191,9 +188,7 @@ fn load(path: &Path, page: u32, cancel: &AtomicBool) -> io::Result<Content> {
     check(cancel)?;
     match Kind::for_path(path) {
         Kind::Pdf => pdf(path, page, cancel),
-        Kind::Docx | Kind::Xlsx | Kind::Pptx => {
-            converted_content(office::convert(path, cancel)?, page, cancel)
-        }
+        Kind::Office(_) => converted_content(office::convert(path, cancel)?, page, cancel),
         Kind::Image | Kind::Svg => {
             let data = read_limited(path, IMAGE_BYTES, cancel)?;
             if data.len() as u64 > IMAGE_BYTES {
@@ -276,6 +271,13 @@ fn svg(data: &[u8]) -> io::Result<Pixels> {
     })
 }
 fn command(command: &mut Command, cancel: &AtomicBool) -> io::Result<Vec<u8>> {
+    command_with_timeout(command, cancel, Duration::from_secs(25))
+}
+fn command_with_timeout(
+    command: &mut Command,
+    cancel: &AtomicBool,
+    timeout: Duration,
+) -> io::Result<Vec<u8>> {
     use std::os::unix::process::CommandExt;
     let mut out = tempfile::tempfile()?;
     let mut err = tempfile::tempfile()?;
@@ -286,7 +288,7 @@ fn command(command: &mut Command, cancel: &AtomicBool) -> io::Result<Vec<u8>> {
         .stderr(err.try_clone()?)
         .env("LC_ALL", "C")
         .spawn()?;
-    let deadline = Instant::now() + Duration::from_secs(25);
+    let deadline = Instant::now() + timeout;
     loop {
         if cancel.load(Ordering::Acquire) || Instant::now() >= deadline {
             if let Some(pid) = rustix::process::Pid::from_raw(child.id() as i32) {

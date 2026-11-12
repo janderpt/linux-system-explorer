@@ -26,6 +26,8 @@ class PreviewRuntimeTests(unittest.TestCase):
         self.assertIn("libreoffice-writer", depends)
         self.assertIn("libreoffice-calc", depends)
         self.assertIn("libreoffice-impress", depends)
+        self.assertIn("libreoffice-draw", depends)
+        self.assertIn("libreoffice-math", depends)
         self.assertIn("weasyprint", depends)
 
 

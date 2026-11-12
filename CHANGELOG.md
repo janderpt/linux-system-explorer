@@ -2,6 +2,9 @@
 
 ## Unreleased — 0.1.0 experimental
 
+- Route Office previews by document family, sharing engines across DOC/DOCX/ODT/RTF, XLS/XLSX/ODS, PPT/PPTX/ODP, Draw/Math documents, templates and Flat XML variants.
+- Increase Office preview input capacity to 256 MiB, stream private snapshots with a bounded buffer and allow two minutes for conversion while retaining cancellation. Add legacy/OpenDocument fixtures and runtime dependencies for Draw/Math.
+
 - Add XLSX print-layout previews via LibreOffice Calc and static PPTX previews via Impress, with cached page/slide navigation and declared runtime dependencies.
 - Add Markdown Source/Presentation views with formatted headings, lists, tables and code, using the bundled CommonMark parser and the existing presentation engine.
 - Fix HTML presentation failures caused by applying screen layouts to paginated output: honor print styles, retain source fallback and replace Python tracebacks with concise localized errors.

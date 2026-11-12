@@ -378,7 +378,9 @@ fn office_previews_use_formatted_pages_and_reuse_the_conversion_when_navigating(
     if !crate::preview::tests::office_available() {
         return;
     }
-    for extension in ["docx", "xlsx", "pptx"] {
+    for extension in [
+        "docx", "doc", "odt", "xlsx", "xls", "ods", "pptx", "ppt", "odp", "odg",
+    ] {
         let root = tempfile::tempdir().unwrap();
         let file = root.path().join(format!("document.{extension}"));
         crate::preview::tests::test_office(&file);
@@ -393,13 +395,14 @@ fn office_previews_use_formatted_pages_and_reuse_the_conversion_when_navigating(
         let cache = preview.document.as_ref().unwrap().cached_path();
         let converted = std::fs::read(&cache).unwrap();
         let output = render(&mut app, &ctx, vec![]);
-        let label = if extension == "pptx" {
+        let presentation = matches!(extension, "pptx" | "ppt" | "odp");
+        let label = if presentation {
             "Próximo slide"
         } else {
             "Próxima página"
         };
         let position = text_center(&output, label).unwrap();
-        if extension == "pptx" {
+        if presentation {
             assert!(text_center(&output, "Slide 1 de 2").is_some());
         }
         assert!((position.y - text_center(&output, "Ajustar à janela").unwrap().y).abs() < 1.0);

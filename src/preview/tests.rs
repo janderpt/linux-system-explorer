@@ -193,21 +193,38 @@ pub(crate) fn test_docx(path: &Path) {
 pub(crate) fn test_office(path: &Path) {
     let data: &[u8] = match path.extension().unwrap().to_str().unwrap() {
         "docx" => include_bytes!("fixtures/two-pages.docx"),
+        "doc" => include_bytes!("fixtures/two-pages.doc"),
+        "odt" => include_bytes!("fixtures/two-pages.odt"),
         "xlsx" => include_bytes!("fixtures/two-sheets.xlsx"),
+        "xls" => include_bytes!("fixtures/two-sheets.xls"),
+        "ods" => include_bytes!("fixtures/two-sheets.ods"),
         "pptx" => include_bytes!("fixtures/two-slides.pptx"),
+        "ppt" => include_bytes!("fixtures/two-slides.ppt"),
+        "odp" => include_bytes!("fixtures/two-slides.odp"),
+        "odg" => include_bytes!("fixtures/two-drawings.odg"),
+        "odf" => include_bytes!("fixtures/formula.odf"),
         _ => panic!("unsupported test fixture"),
     };
     std::fs::write(path, data).unwrap();
 }
 
 #[test]
-fn spreadsheets_and_presentations_render_formatted_pages_without_changing_sources() {
+fn office_families_render_legacy_microsoft_and_opendocument_files_without_changing_sources() {
     if !office_available() {
         return;
     }
     for (extension, expected) in [
+        ("docx", "Second page preview"),
+        ("doc", "Second page preview"),
+        ("odt", "Second page preview"),
         ("xlsx", "Second sheet preview"),
+        ("xls", "Second sheet preview"),
+        ("ods", "Second sheet preview"),
         ("pptx", "Second slide preview"),
+        ("ppt", "Second slide preview"),
+        ("odp", "Second slide preview"),
+        ("odg", "Second drawing preview"),
+        ("odf", "1"),
     ] {
         let root = tempfile::tempdir().unwrap();
         let source = root.path().join(format!("preview with spaces.{extension}"));
@@ -222,9 +239,13 @@ fn spreadsheets_and_presentations_render_formatted_pages_without_changing_source
         else {
             panic!("formatted Office preview")
         };
-        assert_eq!(pages, 2);
-        if extension == "pptx" {
-            assert!(pixels.width > pixels.height);
+        assert_eq!(pages, if extension == "odf" { 1 } else { 2 });
+        let kind = Kind::for_path(&source);
+        if kind == Kind::Office(Family::Presentation) {
+            assert!(
+                pixels.width > pixels.height,
+                "landscape slide fixture: {extension}"
+            );
         }
         let cached = document.cached_path();
         let output = Command::new("pdftotext")
@@ -237,15 +258,15 @@ fn spreadsheets_and_presentations_render_formatted_pages_without_changing_source
             .collect::<Vec<_>>()
             .join(" ");
         assert!(text.contains(expected), "{text}");
-        if extension == "xlsx" {
+        if kind == Kind::Office(Family::Spreadsheet) {
             assert!(
                 text.contains("Apples") && text.contains("150"),
                 "values and formulas: {text}"
             );
         }
         assert!(matches!(
-            pdf(&cached, 2, &AtomicBool::new(false)).unwrap(),
-            Content::Pdf { page: 2, .. }
+            pdf(&cached, pages, &AtomicBool::new(false)).unwrap(),
+            Content::Pdf { page, .. } if page==pages
         ));
         assert_eq!(std::fs::read(&source).unwrap(), before);
         assert_eq!(std::fs::read_dir(root.path()).unwrap().count(), 1);
@@ -460,7 +481,9 @@ fn missing_preview_tools_only_disable_their_corresponding_renderer() {
     const CHILD: &str = "LSE_TEST_NO_PREVIEW_TOOLS";
     if std::env::var_os(CHILD).is_some() {
         let root = tempfile::tempdir().unwrap();
-        for extension in ["docx", "xlsx", "pptx"] {
+        for extension in [
+            "docx", "doc", "odt", "xlsx", "xls", "ods", "pptx", "ppt", "odp", "odg", "odf",
+        ] {
             let source = root.path().join(format!("document.{extension}"));
             test_office(&source);
             assert_eq!(

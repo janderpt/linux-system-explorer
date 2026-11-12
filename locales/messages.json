@@ -2182,5 +2182,29 @@
   "Não foi possível apresentar este Markdown. O código-fonte continua disponível.": {
     "pt": "Não foi possível apresentar este Markdown. O código-fonte continua disponível.",
     "en": "Could not present this Markdown. The source remains available."
+  },
+  "O preview de documentos de texto requer LibreOffice Writer.": {
+    "pt": "O preview de documentos de texto requer LibreOffice Writer.",
+    "en": "Text document preview requires LibreOffice Writer."
+  },
+  "O preview de planilhas requer LibreOffice Calc.": {
+    "pt": "O preview de planilhas requer LibreOffice Calc.",
+    "en": "Spreadsheet preview requires LibreOffice Calc."
+  },
+  "O preview de apresentações requer LibreOffice Impress.": {
+    "pt": "O preview de apresentações requer LibreOffice Impress.",
+    "en": "Presentation preview requires LibreOffice Impress."
+  },
+  "O preview de desenhos requer LibreOffice Draw.": {
+    "pt": "O preview de desenhos requer LibreOffice Draw.",
+    "en": "Drawing preview requires LibreOffice Draw."
+  },
+  "O preview de fórmulas requer LibreOffice Math.": {
+    "pt": "O preview de fórmulas requer LibreOffice Math.",
+    "en": "Formula preview requires LibreOffice Math."
+  },
+  "O documento excede o limite de {} MiB da pré-visualização.": {
+    "pt": "O documento excede o limite de {0} MiB da pré-visualização.",
+    "en": "The document exceeds the {0} MiB preview size limit."
   }
 }

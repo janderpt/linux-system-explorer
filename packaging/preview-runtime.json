@@ -42,6 +42,8 @@
       "libreoffice-writer",
       "libreoffice-calc",
       "libreoffice-impress",
+      "libreoffice-draw",
+      "libreoffice-math",
       "fonts-liberation"
     ],
     "executable_alternatives": [
