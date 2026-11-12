@@ -78,7 +78,8 @@ impl Explorer {
         }
     }
     pub(super) fn file_drop_available(&self) -> bool {
-        !self.loading
+        !self.is_applications()
+            && !self.loading
             && !self.close_after_transfer
             && self.dnd.trash_prepare.is_none()
             && self.active_transfer.is_none()

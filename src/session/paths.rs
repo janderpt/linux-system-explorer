@@ -11,10 +11,12 @@ pub(super) fn decode(key: &str) -> Result<PathBuf, String> {
 }
 pub(super) fn validate(path: &Path) -> Result<(), String> {
     use std::os::unix::ffi::OsStrExt;
-    if (!path.is_absolute() && !crate::trashbin::is_location(path))
+    if (!path.is_absolute()
+        && !crate::trashbin::is_location(path)
+        && !crate::applications::menu::is_location(path))
         || path.as_os_str().as_bytes().contains(&0)
     {
-        return Err("Saved tabs must contain absolute local paths or Trash".into());
+        return Err("Saved tabs must contain absolute local paths, Trash or Applications".into());
     }
     Ok(())
 }

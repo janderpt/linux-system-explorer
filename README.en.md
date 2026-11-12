@@ -10,6 +10,12 @@ desktop file explorers. **Source published on GitHub; version 0.1.0-alpha.2 rema
 
 A local **experimental Flatpak** and the remaining Flathub work are documented in [Flatpak](docs/FLATPAK.md). It does not yet provide all native-package integrations/renderers.
 
+## System applications
+
+**Applications** is the first sidebar item. It shows menu launchers in one flat, name-sorted list with installed icons, without folders or categories. Filter by name using the search field or **Ctrl+F**. A single click selects; double-click or **Enter** launches. **F5** refreshes the list after installing or removing programs. Catalog loading and icon decoding run in the background, with a generic icon when necessary.
+
+Native installations read XDG `.desktop` entries, respect hidden/desktop visibility rules and user overrides, check available executables, and launch through GIO with the launcher's arguments. This location works with tabs and navigation history and excludes file operations. Hide its shortcut in **Settings → Sidebar**, or customize its icon in **Appearance and icons**. Host application discovery and launching are not yet available in the experimental Flatpak.
+
 ## File previews with Space
 
 Select a file and press **Space**, or choose **Preview** from its context menu. The explorer's popup uses the active pane's selection. Pressing Space again, Escape, Close or clicking outside stops playback and closes it. Images and videos fit the available area, centered and preserving their aspect ratio. Video popups follow the decoded landscape, portrait or square format within the window limits, with responsive playback controls. Opening the system default application is a separate explicit action. Space still types normally in text fields and the terminal.

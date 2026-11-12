@@ -2274,5 +2274,33 @@
   "Terminal (Flatpak)": {
     "en": "Terminal (Flatpak)",
     "pt": "Terminal (Flatpak)"
+  },
+  "Aplicativos": {
+    "en": "Applications",
+    "pt": "Aplicativos"
+  },
+  "Pesquisar aplicativos · Ctrl+F": {
+    "en": "Search applications · Ctrl+F",
+    "pt": "Pesquisar aplicativos · Ctrl+F"
+  },
+  "Nenhum aplicativo encontrado": {
+    "en": "No applications found",
+    "pt": "Nenhum aplicativo encontrado"
+  },
+  "{} aplicativo": {
+    "en": "{0} application",
+    "pt": "{0} aplicativo"
+  },
+  "{} aplicativos": {
+    "en": "{0} applications",
+    "pt": "{0} aplicativos"
+  },
+  "Não foi possível iniciar {}: {}": {
+    "en": "Could not launch {0}: {1}",
+    "pt": "Não foi possível iniciar {0}: {1}"
+  },
+  "A lista de aplicativos do sistema ainda não está disponível no Flatpak experimental.": {
+    "en": "The system application list is not yet available in the experimental Flatpak.",
+    "pt": "A lista de aplicativos do sistema ainda não está disponível no Flatpak experimental."
   }
 }

@@ -35,6 +35,7 @@ As preferências ficam em `~/.var/app/io.github.janderpt.linux-system-explorer/`
 | PDF, Office e HTML/Markdown formatado | Conversores ainda não incluídos; fonte HTML/Markdown continua disponível e as miniaturas mantêm o ícone | Incluir Poppler, LibreOffice e WeasyPrint a partir de fontes e revisar licenças/tamanho; instalar esses componentes apenas no host não resolve |
 | Abrir e Abrir com | OpenFile do portal, passando descritor do arquivo; o seletor e as associações ficam com o desktop | Conferir o backend de portal KDE/GNOME e cancelamento |
 | Associação padrão de tipos de arquivo | A escolha fica com o portal; não há gravação direta no registro MIME do host | Avaliar o fluxo oferecido por cada backend |
+| Aplicativos do menu do host | Ainda indisponível; a tela explica a limitação, sem apresentar o menu interno do runtime | Projetar descoberta e lançamento apropriados ao sandbox |
 | Terminal integrado | Shell e programas disponíveis **dentro do Flatpak**; identificado como Terminal (Flatpak) | Não apresentar como terminal administrativo/do host |
 | Compartilhamentos Samba locais e novas conexões remotas | Gerenciamento local oculto; novas conexões informam que a integração ainda não está disponível | Projetar integração apropriada; não adicionar execução irrestrita no host |
 | Pastas de rede já montadas | Podem ser acessadas pelos caminhos expostos, incluindo GVfs | Validar permissões e autenticação na sessão real |

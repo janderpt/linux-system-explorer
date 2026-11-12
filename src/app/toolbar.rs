@@ -140,6 +140,8 @@ impl Explorer {
     fn folder_action(&mut self, ui: &mut egui::Ui, action: FolderAction, menu: bool) {
         let enabled = !self.loading
             && !self.current.as_os_str().is_empty()
+            && (!self.is_applications()
+                || matches!(action, FolderAction::ZoomOut | FolderAction::ZoomIn))
             && match action {
                 FolderAction::NewFolder | FolderAction::Hidden if self.is_trash() => false,
                 FolderAction::Copy | FolderAction::Cut => {

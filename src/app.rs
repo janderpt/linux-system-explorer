@@ -14,6 +14,7 @@ use std::{
     thread,
 };
 
+mod applications;
 mod breadcrumbs;
 mod deletions;
 mod drag_drop;
@@ -50,6 +51,10 @@ struct ReadRequest {
 
 enum Event {
     Listed(std::io::Result<Listing>, Navigation),
+    ApplicationsListed(
+        std::io::Result<Vec<crate::applications::menu::Launcher>>,
+        Navigation,
+    ),
     OpenFailed(String),
     TransferProgress(file_ops::Progress),
     TransferConflict(Box<transfers::ConflictPrompt>),
@@ -72,6 +77,7 @@ pub struct Explorer {
     initial_path: PathBuf,
     current: PathBuf,
     entries: Vec<Entry>,
+    applications: applications::Browser,
     history: History,
     address: String,
     editing_address: bool,
@@ -187,6 +193,14 @@ impl Explorer {
         thread::spawn(move || {
             while let Ok(request) = incoming.recv() {
                 crate::i18n::set_locale(request.locale);
+                if crate::applications::menu::is_location(&request.path) {
+                    let _ = sender.send(Event::ApplicationsListed(
+                        crate::applications::menu::load(),
+                        request.navigation,
+                    ));
+                    context.request_repaint();
+                    continue;
+                }
                 let result = if crate::trashbin::is_location(&request.path) {
                     crate::trashbin::read()
                 } else {
@@ -208,13 +222,16 @@ impl Explorer {
             tab_id: 0,
             activation: None,
             loading_path: None,
-            initial_path: if crate::trashbin::is_location(&initial) {
+            initial_path: if crate::trashbin::is_location(&initial)
+                || crate::applications::menu::is_location(&initial)
+            {
                 initial.clone()
             } else {
                 filesystem::absolute_path(&initial).unwrap_or_else(|_| initial.clone())
             },
             current: PathBuf::new(),
             entries: Vec::new(),
+            applications: Default::default(),
             history: History::default(),
             address: initial.display().to_string(),
             editing_address: false,
@@ -297,7 +314,9 @@ impl Explorer {
         if self.loading {
             return;
         }
-        let loading_path = if crate::trashbin::is_location(&path) {
+        let loading_path = if crate::trashbin::is_location(&path)
+            || crate::applications::menu::is_location(&path)
+        {
             path.clone()
         } else {
             filesystem::absolute_path(&path).unwrap_or_else(|_| path.clone())
@@ -349,32 +368,7 @@ impl Explorer {
                     self.loading_path = None;
                     match result {
                         Ok(listing) => {
-                            let changed = self.current != listing.path;
-                            if changed {
-                                self.remember_current_folder();
-                            }
-                            self.history.commit(listing.path.clone(), navigation);
-                            self.current = listing.path;
-                            if changed {
-                                self.restore_current_folder();
-                            }
-                            self.entries = listing.entries;
-                            self.skipped = listing.skipped;
-                            self.address = self.display_address(&self.current);
-                            self.editing_address = false;
-                            if changed {
-                                self.query.clear();
-                                self.clear_selection();
-                                self.reveal_hidden = false;
-                            } else {
-                                let paths: BTreeSet<_> = self
-                                    .entries
-                                    .iter()
-                                    .map(|entry| entry.path.clone())
-                                    .collect();
-                                self.retain_selection(&paths);
-                            }
-                            self.complete_external_reveal();
+                            self.accept_listing(listing, navigation);
                         }
                         Err(error) => {
                             self.pending_external = None;
@@ -384,6 +378,25 @@ impl Explorer {
                             ))
                         }
                     }
+                }
+                Event::ApplicationsListed(result, navigation) => {
+                    self.loading = false;
+                    self.loading_path = None;
+                    // An unsupported Flatpak host menu is still a virtual location,
+                    // never a listing of the runtime's internal desktop files.
+                    let (items, error) = match result {
+                        Ok(items) => (items, None),
+                        Err(error) => (vec![], Some(error.to_string())),
+                    };
+                    self.accept_listing(
+                        Listing {
+                            path: crate::applications::menu::location(),
+                            entries: vec![],
+                            skipped: 0,
+                        },
+                        navigation,
+                    );
+                    self.applications.replace(items, error);
                 }
                 Event::OpenFailed(message) => self.report_error(message),
                 Event::TransferProgress(progress) => {
@@ -416,8 +429,40 @@ impl Explorer {
         }
     }
 
+    fn accept_listing(&mut self, listing: Listing, navigation: Navigation) {
+        if !crate::applications::menu::is_location(&listing.path) {
+            self.applications = Default::default();
+        }
+        let changed = self.current != listing.path;
+        if changed {
+            self.remember_current_folder();
+        }
+        self.history.commit(listing.path.clone(), navigation);
+        self.current = listing.path;
+        if changed {
+            self.restore_current_folder();
+        }
+        self.entries = listing.entries;
+        self.skipped = listing.skipped;
+        self.address = self.display_address(&self.current);
+        self.editing_address = false;
+        if changed {
+            self.query.clear();
+            self.clear_selection();
+            self.reveal_hidden = false;
+        } else {
+            let paths: BTreeSet<_> = self
+                .entries
+                .iter()
+                .map(|entry| entry.path.clone())
+                .collect();
+            self.retain_selection(&paths);
+        }
+        self.complete_external_reveal();
+    }
+
     fn open(&mut self, entry: &Entry, ctx: &egui::Context) {
-        if self.is_trash() {
+        if self.is_trash() || self.is_applications() {
             return;
         }
         if entry.is_dir {
@@ -457,7 +502,10 @@ impl Explorer {
         if ctx.input_mut(|i| i.consume_key(egui::Modifiers::NONE, Key::F4)) {
             if let Some(panel) = &mut self.terminal {
                 panel.toggle(ctx, self.tab_id);
-            } else if !self.is_trash() && !self.current.as_os_str().is_empty() {
+            } else if !self.is_trash()
+                && !self.is_applications()
+                && !self.current.as_os_str().is_empty()
+            {
                 self.open_terminal(self.current.clone(), ctx);
             }
             return;
@@ -465,14 +513,23 @@ impl Explorer {
         if self.terminal_focused(ctx) {
             return;
         }
-        if !ctx.wants_keyboard_input() && !self.drag_blocks_tabs() && preview::consume_space(ctx) {
+        if self.is_applications() {
+            self.application_shortcuts(ctx);
+        }
+        if !self.is_applications()
+            && !ctx.wants_keyboard_input()
+            && !self.drag_blocks_tabs()
+            && preview::consume_space(ctx)
+        {
             self.preview_selected(ctx);
             return;
         }
         self.transfer_shortcuts(ctx);
-        self.deletion_shortcuts(ctx);
-        self.selection_shortcuts(ctx);
-        self.rename_shortcut(ctx);
+        if !self.is_applications() {
+            self.deletion_shortcuts(ctx);
+            self.selection_shortcuts(ctx);
+            self.rename_shortcut(ctx);
+        }
         let (address, search, back, forward, up, refresh, hidden, create) = ctx.input(|i| {
             (
                 i.modifiers.command && i.key_pressed(Key::L),
@@ -505,10 +562,15 @@ impl Explorer {
         if refresh {
             self.refresh();
         }
-        if hidden && !self.is_trash() {
+        if hidden && !self.is_trash() && !self.is_applications() {
             self.toggle_hidden();
         }
-        if create && !self.loading && !self.is_trash() && !self.current.as_os_str().is_empty() {
+        if create
+            && !self.loading
+            && !self.is_trash()
+            && !self.is_applications()
+            && !self.current.as_os_str().is_empty()
+        {
             self.error = None;
             self.new_folder = Some(String::new());
         }
@@ -572,7 +634,10 @@ impl Explorer {
                 if self
                     .navigation_button(
                         ui,
-                        !self.loading && !self.is_trash() && self.current.parent().is_some(),
+                        !self.loading
+                            && !self.is_trash()
+                            && !self.is_applications()
+                            && self.current.parent().is_some(),
                         Icon::Up,
                         crate::i18n::tr("Pasta acima · Alt+↑"),
                     )
@@ -656,6 +721,7 @@ impl Explorer {
     }
 
     fn filter_field(&mut self, ui: &mut egui::Ui) -> egui::Response {
+        let applications = self.is_applications();
         let search_width = ui.available_width().clamp(200.0, 320.0);
         ui.allocate_ui_with_layout(
             Vec2::new(ui.available_width(), 32.0),
@@ -665,7 +731,11 @@ impl Explorer {
                     [search_width, 32.0],
                     egui::TextEdit::singleline(&mut self.query)
                         .vertical_align(Align::Center)
-                        .hint_text(crate::i18n::tr("Pesquisar nesta pasta · Ctrl+F")),
+                        .hint_text(crate::i18n::tr(if applications {
+                            "Pesquisar aplicativos · Ctrl+F"
+                        } else {
+                            "Pesquisar nesta pasta · Ctrl+F"
+                        })),
                 );
                 if self.focus_search {
                     response.request_focus();
@@ -695,7 +765,9 @@ impl Explorer {
                     Vec2::new(path_width, height),
                     Layout::left_to_right(Align::Center),
                     |ui| {
-                        if self.is_trash() && !self.editing_address {
+                        if self.is_applications() && !self.editing_address {
+                            ui.label(RichText::new(crate::i18n::tr("Aplicativos")).strong());
+                        } else if self.is_trash() && !self.editing_address {
                             ui.label(RichText::new(crate::i18n::tr("Lixeira")).strong());
                         } else if editing {
                             if self
@@ -985,6 +1057,12 @@ impl Explorer {
         if text == self.location().display().to_string() {
             return self.location().to_owned();
         }
+        if matches!(
+            text,
+            "applications:" | "applications://" | "applications:///"
+        ) {
+            return crate::applications::menu::location();
+        }
         if matches!(text, "trash:" | "trash://" | "trash:///") {
             return crate::trashbin::location();
         }
@@ -999,7 +1077,7 @@ impl Explorer {
         let path = PathBuf::from(text);
         if path.is_absolute() {
             path
-        } else if self.is_trash() {
+        } else if self.is_trash() || self.is_applications() {
             dirs::home_dir()
                 .unwrap_or_else(|| PathBuf::from("/"))
                 .join(path)
@@ -1035,8 +1113,17 @@ impl Explorer {
         if self.loading {
             ui.horizontal(|ui| {
                 ui.spinner();
-                ui.label(crate::i18n::tr("Carregando pasta…"));
+                ui.label(crate::i18n::tr(if self.is_applications() {
+                    "Carregando aplicativos…"
+                } else {
+                    "Carregando pasta…"
+                }));
             });
+        }
+        if self.is_applications() {
+            self.folder_background_area = None;
+            self.application_list(ui);
+            return;
         }
         let background = ui.available_rect_before_wrap();
         self.folder_background_area = Some(background);
@@ -1538,6 +1625,14 @@ impl Explorer {
     fn status_bar(&mut self, ctx: &egui::Context, visible: &[usize]) {
         egui::TopBottomPanel::bottom("status").show(ctx, |ui| {
             ui.horizontal(|ui| {
+                if self.is_applications() {
+                    ui.label(crate::i18n::plural(
+                        "{} aplicativo",
+                        "{} aplicativos",
+                        self.applications.visible(&self.query).len(),
+                    ));
+                    return;
+                }
                 ui.label(crate::i18n::plural("{} item", "{} itens", visible.len()));
                 if visible.len() != self.entries.len() {
                     ui.weak(crate::i18n::message(

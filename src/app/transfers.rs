@@ -62,7 +62,7 @@ impl Explorer {
     }
 
     pub(super) fn capture_files(&mut self, mode: file_ops::Mode, ctx: &egui::Context) {
-        if self.is_trash() {
+        if self.is_trash() || self.is_applications() {
             return;
         }
         let paths: Vec<_> = filesystem::visible_entries(
@@ -120,6 +120,7 @@ impl Explorer {
         !self.loading
             && self.dnd.trash_prepare.is_none()
             && !self.is_trash()
+            && !self.is_applications()
             && self.active_restore.is_none()
             && self.active_empty_trash.is_none()
             && self.empty_trash_prompt.is_none()

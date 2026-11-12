@@ -68,6 +68,7 @@ impl Explorer {
 
     fn can_delete(&self) -> bool {
         !self.loading
+            && !self.is_applications()
             && self.dnd.trash_prepare.is_none()
             && self.active_restore.is_none()
             && self.active_empty_trash.is_none()

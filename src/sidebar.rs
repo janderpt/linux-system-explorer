@@ -113,6 +113,7 @@ impl Shortcut {
 #[serde(default)]
 pub struct Preferences {
     pub visible: BTreeSet<Item>,
+    pub show_applications: bool,
     pub show_pinned: bool,
     pub show_trash: bool,
     pub show_network: bool,
@@ -127,6 +128,7 @@ impl Default for Preferences {
     fn default() -> Self {
         Self {
             visible: Item::ALL.into_iter().collect(),
+            show_applications: true,
             show_pinned: true,
             show_trash: true,
             show_network: true,

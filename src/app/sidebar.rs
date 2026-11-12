@@ -2,6 +2,7 @@ use super::*;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) enum Location {
+    Applications,
     Standard(locations::Item),
     Pinned(usize),
     Network(usize),
@@ -43,6 +44,17 @@ impl Explorer {
                 icon: item.icon(),
             })
             .collect();
+        if self.sidebar_options.show_applications {
+            entries.insert(
+                0,
+                SidebarEntry {
+                    id: Location::Applications,
+                    label: crate::i18n::tr("Aplicativos").into(),
+                    path: crate::applications::menu::location(),
+                    icon: Icon::Applications,
+                },
+            );
+        }
         if self.sidebar_options.show_trash {
             entries.push(SidebarEntry {
                 id: Location::Trash,
@@ -143,6 +155,8 @@ impl Explorer {
         egui::ScrollArea::vertical().id_salt("sidebar_scroll").max_height(height).auto_shrink([false,false]).show(ui,|ui| {
                 self.drag_hover_scroll(ui);
                 ui.add_space(10.0);
+                for entry in entries.iter().filter(|e|e.id==Location::Applications) { self.sidebar_place(ui,entry,active==Some(entry.id)); }
+                ui.add_space(6.0);
                 for computer in [false,true] {
                     let group:Vec<_>=entries.iter().filter(|entry|matches!(entry.id,Location::Standard(item) if item.computer()==computer)).collect();
                     if !group.is_empty() || computer && self.sidebar_options.show_trash {
@@ -155,7 +169,7 @@ impl Explorer {
                 if self.sidebar_options.show_pinned {
                     sidebar_heading(ui,crate::i18n::tr("PASTAS FIXADAS"));
                     for entry in entries.iter().filter(|e|matches!(e.id,Location::Pinned(_))) {self.sidebar_place(ui,entry,active==Some(entry.id));}
-                    let enabled=!self.loading && !self.is_trash() && !self.current.as_os_str().is_empty() && !self.sidebar_options.pinned.iter().any(|p|p.path==self.current);
+                    let enabled=!self.loading && !self.is_trash() && !self.is_applications() && !self.current.as_os_str().is_empty() && !self.sidebar_options.pinned.iter().any(|p|p.path==self.current);
                     if self.menu_item(ui,Icon::Pin,crate::i18n::tr("Fixar pasta atual"),"",enabled,false).clicked() {self.pin_folder(self.current.clone());}
                     ui.add_space(12.0);
                 }
@@ -321,6 +335,23 @@ impl Explorer {
             self.register_drop_target(ui, response.rect, entry.path.clone());
         }
         response.context_menu(|ui| {
+            if entry.id == Location::Applications {
+                if self
+                    .menu_item(
+                        ui,
+                        Icon::NewTab,
+                        crate::i18n::tr("Abrir em nova aba"),
+                        "",
+                        true,
+                        false,
+                    )
+                    .clicked()
+                {
+                    self.requested_tabs.push(entry.path.clone());
+                    ui.close();
+                }
+                return;
+            }
             if let Location::Remote(i) = entry.id {
                 if self
                     .menu_item(

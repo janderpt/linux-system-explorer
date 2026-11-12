@@ -282,6 +282,8 @@ mod tests {
             include_str!("native_dnd.rs"),
             include_str!("native_dnd/x11.rs"),
             include_str!("applications.rs"),
+            include_str!("applications/menu.rs"),
+            include_str!("app/applications.rs"),
             include_str!("trashbin.rs"),
             include_str!("app/preview.rs"),
             include_str!("app/properties.rs"),

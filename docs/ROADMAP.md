@@ -2,7 +2,7 @@
 
 ## Aplicativos
 
-Desenho definido com o mantenedor; implementação ainda pendente.
+Implementado para instalações nativas. A integração do menu do host no Flatpak permanece pendente.
 
 - Primeiro item configurável da barra lateral, com o nome **Aplicativos** e ícone próprio.
 - A área central mostra os aplicativos do menu do sistema em uma **lista única e plana**, sem pastas, subpastas ou categorias.

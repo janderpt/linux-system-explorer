@@ -47,7 +47,9 @@ impl Explorer {
     }
 
     pub(super) fn display_address(&self, path: &Path) -> String {
-        if crate::trashbin::is_location(path) {
+        if crate::applications::menu::is_location(path) {
+            "applications:///".into()
+        } else if crate::trashbin::is_location(path) {
             "trash:///".into()
         } else {
             self.network_location(path)
@@ -57,7 +59,9 @@ impl Explorer {
     }
 
     pub(super) fn display_title(&self, path: &Path) -> String {
-        if crate::trashbin::is_location(path) {
+        if crate::applications::menu::is_location(path) {
+            crate::i18n::tr("Aplicativos").into()
+        } else if crate::trashbin::is_location(path) {
             crate::i18n::tr("Lixeira").into()
         } else {
             self.network_location(path)
@@ -72,7 +76,7 @@ impl Explorer {
     }
 
     pub(super) fn navigate_up(&mut self, ctx: &egui::Context) {
-        if self.is_trash() {
+        if self.is_trash() || self.is_applications() {
             return;
         }
         if let Some(mut location) = self.network_location(&self.current) {

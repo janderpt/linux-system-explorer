@@ -13,6 +13,12 @@ Pré-release **v0.1.0-alpha.2**: pacotes Ubuntu 24.04+ x86_64, checksums e [inst
 
 Para o protótipo **Flatpak experimental** e a preparação para o Flathub, consulte [Flatpak](docs/FLATPAK.md). Ele ainda tem diferenças de recursos em relação aos pacotes nativos.
 
+## Aplicativos do sistema
+
+**Aplicativos** é o primeiro item da barra lateral. Ele exibe os lançadores do menu em uma lista plana, ordenada pelo nome, com os ícones instalados, sem pastas ou categorias. Use o campo de busca (ou **Ctrl+F**) para filtrar pelo nome; clique uma vez para selecionar e duas vezes para iniciar o aplicativo. **Enter** também abre o selecionado. **F5** atualiza a lista após instalar ou remover programas. O carregamento e a leitura dos ícones acontecem em segundo plano; quando um ícone não puder ser carregado, aparece o ícone genérico.
+
+A instalação nativa consulta os registros `.desktop` XDG, respeita entradas ocultas, regras do desktop, executáveis disponíveis e substituições do usuário. O lançamento usa GIO, preservando os argumentos do lançador. A tela participa das abas e do histórico, mas não oferece operações de arquivo. Em **Configurações → Barra lateral**, é possível ocultar esse atalho; seu ícone é personalizável em **Aparência e ícones**. A descoberta e o lançamento dos aplicativos do host ainda não estão disponíveis no Flatpak experimental.
+
 ## Executar
 
 Use Rust **1.95 ou superior**. Instale o Rust estável com [rustup](https://rustup.rs/). Instale também as [dependências do sistema](#dependências-do-sistema). Para obter e executar o projeto:
@@ -346,7 +352,7 @@ A operação usa a lista confirmada: itens enviados à lixeira depois dessa list
 
 ## Configurações e metadados Linux
 
-A engrenagem abre as abas **Geral**, **Barra lateral**, **Colunas** e **Aparência e ícones**, nessa ordem, começando por **Geral**. Todas mantêm a mesma altura, com rolagem independente no conteúdo de cada aba e botões em posições estáveis. Os elementos são centralizados verticalmente em suas linhas. **Aplicar** salva as alterações e mantém a janela aberta; **Salvar e fechar** também fecha a janela. **Cancelar** descarta as alterações ainda não aplicadas. O catálogo permite buscar pelo nome Font Awesome (por exemplo, `house`, `folder` ou `gear`) e escolher o ícone de cada uma das 81 ações, locais e notificações configuráveis. São 1.407 ícones do estilo Free Solid, incorporados ao executável e disponíveis sem conexão. A licença e a origem estão em [assets/fontawesome](assets/fontawesome/README.md). Os menus de contexto usam essas mesmas escolhas para Abrir, Abrir com, Copiar, Recortar, Colar, Renomear, Copiar caminho, Propriedades, Fixar, Desafixar e as duas ações de exclusão.
+A engrenagem abre as abas **Geral**, **Barra lateral**, **Colunas** e **Aparência e ícones**, nessa ordem, começando por **Geral**. Todas mantêm a mesma altura, com rolagem independente no conteúdo de cada aba e botões em posições estáveis. Os elementos são centralizados verticalmente em suas linhas. **Aplicar** salva as alterações e mantém a janela aberta; **Salvar e fechar** também fecha a janela. **Cancelar** descarta as alterações ainda não aplicadas. O catálogo permite buscar pelo nome Font Awesome (por exemplo, `house`, `folder` ou `gear`) e escolher o ícone de cada uma das 82 ações, locais e notificações configuráveis. São 1.407 ícones do estilo Free Solid, incorporados ao executável e disponíveis sem conexão. A licença e a origem estão em [assets/fontawesome](assets/fontawesome/README.md). Os menus de contexto usam essas mesmas escolhas para Abrir, Abrir com, Copiar, Recortar, Colar, Renomear, Copiar caminho, Propriedades, Fixar, Desafixar e as duas ações de exclusão.
 
 ### Ícones de arquivos e abertura no aplicativo padrão
 

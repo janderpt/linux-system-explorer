@@ -5,6 +5,10 @@ impl Editor {
         ui.label(crate::i18n::tr(
             "Escolha os atalhos e as seções da barra lateral.",
         ));
+        ui.checkbox(
+            &mut self.draft.sidebar.show_applications,
+            crate::i18n::tr("Aplicativos"),
+        );
         egui::Grid::new("sidebar_choices")
             .num_columns(2)
             .spacing([24.0, 6.0])

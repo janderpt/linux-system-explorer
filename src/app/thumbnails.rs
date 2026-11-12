@@ -47,7 +47,11 @@ impl Cache {
             !matches!(value.state, State::Loading(_)) || paths.contains(path)
         });
     }
-    fn texture(&mut self, entry: &Entry, ctx: &egui::Context) -> Option<egui::TextureHandle> {
+    pub(super) fn texture(
+        &mut self,
+        entry: &Entry,
+        ctx: &egui::Context,
+    ) -> Option<egui::TextureHandle> {
         let stamp = Stamp::for_entry(entry);
         if entry.is_dir
             || !thumbnail::supported(stamp.kind)

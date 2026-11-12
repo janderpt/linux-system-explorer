@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add Applications as the configurable first sidebar item in native installations, with a flat localized launcher list, installed icons, name filtering, double-click/Enter launching, asynchronous catalog/icon loading and tab/history/session support; exclude file operations and explicitly report the experimental Flatpak host-menu limitation.
+
 - Prepare a local experimental Flatpak bundle with Freedesktop 26.08 runtime verification, staged-file hashes, notices/MPL sources, capability reporting and checksums; document unsupported converters/integrations and the independent human Flathub submission path.
 - Use OpenFile portals for Flatpak opening/application choice, preserve writable access when permitted and handle chooser cancellation without errors; label the sandbox terminal, avoid unsupported host share management and derive window endpoints from unique bus names across PID namespaces.
 

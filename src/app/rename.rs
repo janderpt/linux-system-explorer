@@ -18,6 +18,7 @@ impl Explorer {
 
     pub(super) fn can_rename(&self) -> bool {
         !self.is_trash()
+            && !self.is_applications()
             && self.dnd.trash_prepare.is_none()
             && !self.loading
             && !self.close_after_transfer

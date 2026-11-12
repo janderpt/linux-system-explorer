@@ -447,7 +447,9 @@ fn tab_widget(
     icons::paint(
         ui.painter(),
         egui::Rect::from_center_size(rect.left_center() + Vec2::new(19.0, 0.0), Vec2::splat(16.0)),
-        if crate::trashbin::is_location(tab.location()) {
+        if crate::applications::menu::is_location(tab.location()) {
+            Icon::Applications
+        } else if crate::trashbin::is_location(tab.location()) {
             Icon::TrashBin
         } else {
             Icon::Folder

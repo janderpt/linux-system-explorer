@@ -114,7 +114,9 @@ impl Explorer {
         } else {
             self.expand_address()
         };
-        let initial = if crate::trashbin::is_location(&initial) {
+        let initial = if crate::trashbin::is_location(&initial)
+            || crate::applications::menu::is_location(&initial)
+        {
             dirs::home_dir().unwrap_or_else(|| PathBuf::from("/"))
         } else {
             initial
