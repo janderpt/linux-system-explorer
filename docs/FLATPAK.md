@@ -76,6 +76,10 @@ O registro identifica alterações não commitadas. Para distribuir builds de te
 O teste automatizado `scripts/smoke-flatpak.py` exige um container descartável com Flatpak, runtime, proxy atualizado, D-Bus isolado e Xvfb. Ele instala a alpha.4 do zero, verifica a versão e a abertura gráfica, remove o app, instala o bundle anterior e atualiza **no mesmo ref**, conferindo o commit e a preservação exata das preferências. Também verifica a remoção e que os padrões MIME e as configurações nativas não foram alterados. Exemplo dentro desse ambiente, com os caminhos adaptados aos volumes montados:
 
 ```sh
+mkdir -p /run/dbus /run/user/0
+chmod 700 /run/user/0
+export XDG_RUNTIME_DIR=/run/user/0
+dbus-daemon --system --fork
 dbus-run-session -- xvfb-run -a python3 scripts/smoke-flatpak.py \
   /pacotes/linux-system-explorer-0.1.0-alpha.4-flatpak-experimental-x86_64.flatpak \
   --previous /anterior/linux-system-explorer-0.1.0-alpha.2-flatpak-experimental-x86_64.flatpak \
@@ -83,6 +87,8 @@ dbus-run-session -- xvfb-run -a python3 scripts/smoke-flatpak.py \
 ```
 
 O relatório identifica a versão realmente atualizada, o commit OSTree e as capacidades presentes. Testes com Xvfb/software OpenGL validam o sandbox e o ciclo de instalação; a sessão real KDE/GNOME e Wayland continua sendo uma validação separada. O relatório e suas instruções podem ser incluídos no `SHA256SUMS` do bundle após o teste.
+
+Opcionalmente, `--test-binary /caminho/lse-tests --fixtures /caminho/fixtures` executa grupos de testes Rust dentro do app instalado: transferências, terminal, toasts, teclado, filtro e painéis, além de miniaturas, compactados, Lixeira e preferências privadas. O executável de testes e as fixtures sintéticas são montados somente para leitura; não são incluídos no bundle distribuído.
 
 ## Ferramentas em container (opcional)
 

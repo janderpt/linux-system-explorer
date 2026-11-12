@@ -9,8 +9,10 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import signal
 import subprocess
+import sys
 import tempfile
 import time
 
@@ -19,8 +21,12 @@ REF = APP + '//experimental'
 
 
 def run(*args, **kwargs):
-    return subprocess.run([str(arg) for arg in args], check=True, text=True,
-                          capture_output=True, **kwargs).stdout.strip()
+    try:
+        return subprocess.run([str(arg) for arg in args], check=True, text=True,
+                              capture_output=True, **kwargs).stdout.strip()
+    except subprocess.CalledProcessError as error:
+        print(error.stdout, error.stderr, file=sys.stderr)
+        raise
 
 
 def app_python(code):
@@ -67,14 +73,49 @@ def gui(work, label):
     return {'seconds_alive': 8, 'renderer': 'Xvfb/software OpenGL'}
 
 
+def sandbox_tests(binary, fixtures):
+    base = ['flatpak', 'run', '--user', '--branch=experimental',
+            '--filesystem=' + str(binary.parent) + ':ro',
+            '--filesystem=' + str(fixtures) + ':ro',
+            '--env=LSE_FLATPAK_FIXTURES=' + str(fixtures),
+            '--command=' + str(binary), APP]
+    filters = [
+        'transfers::tests::', 'terminal::tests::', 'app::toast::tests::',
+        'app::search::tests::filter_',
+        'app::search::tests::modified_arrows_',
+        'app::workspace::split::tests::filter_arrows_',
+        'app::workspace::split::tests::enter_opens_',
+        'app::type_ahead::tests::enter_opens_the_folder_',
+        'app::sidebar::tests::navigation_reveals_',
+    ]
+    results = []
+    for selection in filters:
+        output = run(*base, selection, '--nocapture')
+        matches = re.findall(r'test result: ok\. (\d+) passed;', output)
+        if not matches or int(matches[-1]) == 0:
+            raise RuntimeError('No sandbox tests ran for ' + selection)
+        results.append({'selection': selection, 'passed': int(matches[-1])})
+    selection = 'sandbox::tests::flatpak_runtime_exercises_renderers_file_operations_and_private_preferences'
+    output = run(*base, '--exact', selection, '--ignored', '--nocapture')
+    assert '1 passed; 0 failed' in output
+    results.append({'selection': selection, 'passed': 1})
+    return {'passed': sum(r['passed'] for r in results), 'groups': results}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('bundle', type=Path)
     parser.add_argument('--previous', required=True, type=Path)
     parser.add_argument('--report', required=True, type=Path)
+    parser.add_argument('--test-binary', type=Path)
+    parser.add_argument('--fixtures', type=Path)
     args = parser.parse_args()
     if not Path('/.dockerenv').exists() or not os.environ.get('DISPLAY'):
         parser.error('Use a disposable container with an isolated D-Bus session and Xvfb')
+    if not os.environ.get('XDG_RUNTIME_DIR') or not Path('/run/dbus/system_bus_socket').exists():
+        parser.error('Provide a private XDG_RUNTIME_DIR and start the container system D-Bus first')
+    if bool(args.test_binary) != bool(args.fixtures):
+        parser.error('--test-binary and --fixtures must be supplied together')
     installed = subprocess.run(['flatpak', 'info', '--user', REF], capture_output=True)
     if installed.returncode == 0:
         parser.error('This private test installation must not contain the app')
@@ -88,7 +129,9 @@ def main():
     mime.write_text('[Default Applications]\ninode/directory=unrelated.desktop\n')
     untouched = {p: p.read_bytes() for p in [native_config, mime]}
     started = time.monotonic()
-    with tempfile.TemporaryDirectory(prefix='lse-flatpak-smoke-') as temporary:
+    # /tmp is private inside Flatpak; put the disposable folder in the exposed
+    # test user's home so GUI startup actually opens an existing directory.
+    with tempfile.TemporaryDirectory(prefix='lse-flatpak-smoke-', dir=Path.home()) as temporary:
         work = Path(temporary)
         (work / 'folder').mkdir()
         install(args.bundle)
@@ -100,6 +143,7 @@ def main():
             install(args.previous)
             old_version = version().removeprefix('linux-system-explorer ')
             old_commit = run('flatpak', 'info', '--user', '--show-commit', REF)
+            old_origin = run('flatpak', 'info', '--user', '--show-origin', REF)
             assert old_version != metadata['version'] and old_commit != new_commit
             preferences = json.dumps({
                 'language': 'english', 'dark': True, 'restore_tabs': False,
@@ -118,11 +162,13 @@ print((Path(os.environ['XDG_CONFIG_HOME'])/'linux-system-explorer/preferences.js
             install(args.bundle)  # Same origin/ref, in-place bundle update; no uninstall.
             assert version() == expected
             assert run('flatpak', 'info', '--user', '--show-commit', REF) == new_commit
+            assert run('flatpak', 'info', '--user', '--show-origin', REF) == old_origin
             after = app_python('''import os
 from pathlib import Path
 print((Path(os.environ['XDG_CONFIG_HOME'])/'linux-system-explorer/preferences.json').read_text())''')
             assert before == after, 'bundle update must preserve user preferences byte for byte'
             upgraded = gui(work, 'upgraded-install')
+            functional = sandbox_tests(args.test_binary, args.fixtures) if args.test_binary else None
             for path, data in untouched.items():
                 assert path.read_bytes() == data, 'native settings/MIME defaults must remain untouched'
             permissions = run('flatpak', 'info', '--user', '--show-permissions', REF)
@@ -136,10 +182,12 @@ print((Path(os.environ['XDG_CONFIG_HOME'])/'linux-system-explorer/preferences.js
                 'runtime': metadata['runtime'] + '/' + metadata['runtime_branch'],
                 'fresh_install': fresh, 'upgrade': upgraded,
                 'previous_version': old_version, 'previous_commit': old_commit, 'commit': new_commit,
+                'origin': old_origin, 'origin_preserved': True,
                 'preferences_preserved': True, 'native_preferences_and_defaults_unchanged': True,
                 'capabilities': metadata['capabilities'], 'uninstall': True,
                 'duration_seconds': round(time.monotonic() - started, 1),
                 'real_desktop_session_tested': False, 'flathub_submission_ready': False,
+                'sandbox_functional_tests': functional,
             }
         finally:
             subprocess.run(['flatpak', 'uninstall', '--user', '-y', '--noninteractive', REF],
