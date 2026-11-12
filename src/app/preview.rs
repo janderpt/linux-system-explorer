@@ -201,10 +201,34 @@ impl Preview {
                     .paint_at(ui, egui::Rect::from_center_size(rect.center(), shown));
             });
     }
-    fn body(&mut self, ui: &mut egui::Ui, height: f32, ctx: &egui::Context) -> Option<String> {
+    fn paginated(&self) -> bool {
+        matches!(self.kind, Kind::Pdf | Kind::Office(_))
+            || matches!(self.kind, Kind::Html | Kind::Markdown)
+                && self.markup_view == MarkupView::Presentation
+    }
+    fn page_shortcuts(&mut self, ctx: &egui::Context) {
+        if !self.paginated() {
+            return;
+        }
+        for (key, delta) in [(Key::ArrowLeft, -1), (Key::ArrowRight, 1)] {
+            if ctx.input_mut(|i| i.consume_key(egui::Modifiers::NONE, key)) {
+                let page = self.page.saturating_add_signed(delta).clamp(1, self.pages);
+                if page != self.page {
+                    self.load_page(page, ctx);
+                }
+            }
+        }
+    }
+    fn body(
+        &mut self,
+        ui: &mut egui::Ui,
+        height: f32,
+        ctx: &egui::Context,
+        appearance: &icons::Appearance,
+    ) -> Option<String> {
         if matches!(self.kind, Kind::Html | Kind::Markdown) {
             let mut view = self.markup_view;
-            ui.horizontal(|ui| {
+            centered_row(ui, "markup_view", |ui| {
                 ui.selectable_value(&mut view, MarkupView::Source, crate::i18n::tr("Fonte"));
                 ui.selectable_value(
                     &mut view,
@@ -226,6 +250,7 @@ impl Preview {
                     Vec2::new(ui.available_width(), picture_height),
                     Layout::top_down(Align::Center),
                     |ui| {
+                        ui.set_min_height(picture_height);
                         ui.add_space((picture_height * 0.35).max(0.0));
                         ui.label(
                             RichText::new(if self.kind == Kind::Audio {
@@ -243,8 +268,9 @@ impl Preview {
                     },
                 );
             }
+            let seek_width = (ui.available_width() - 440.0).clamp(80.0, 400.0);
             ui.add_enabled_ui(!self.failed, |ui| {
-                ui.horizontal(|ui| {
+                centered_row(ui, "media_controls", |ui| {
                     if ui
                         .button(if playing {
                             crate::i18n::tr("Pausar")
@@ -263,7 +289,7 @@ impl Preview {
                             &mut self.seeking,
                             duration,
                             media,
-                            (ui.available_width() - 180.0).max(80.0),
+                            seek_width,
                         );
                         volume_slider(ui, &mut self.volume, media, Some(90.0));
                     }
@@ -277,17 +303,17 @@ impl Preview {
                         media,
                         ui.available_width(),
                     );
-                    ui.horizontal(|ui| volume_slider(ui, &mut self.volume, media, None));
+                    centered_row(ui, "volume_controls", |ui| {
+                        volume_slider(ui, &mut self.volume, media, Some(90.0));
+                    });
                 }
             });
             ctx.request_repaint_after(std::time::Duration::from_millis(100));
             return error;
         }
-        let paginated = matches!(self.kind, Kind::Pdf | Kind::Office(_))
-            || matches!(self.kind, Kind::Html | Kind::Markdown)
-                && self.markup_view == MarkupView::Presentation;
+        let paginated = self.paginated();
         if paginated || self.texture.is_some() {
-            ui.horizontal(|ui| {
+            centered_row(ui, "page_zoom_controls", |ui| {
                 if paginated {
                     let previous = ui
                         .add_enabled(
@@ -342,7 +368,63 @@ impl Preview {
             });
         }
         if self.texture.is_some() {
-            self.picture(ui, (height - 64.0).max(80.0));
+            self.picture(ui, ui.available_height().max(1.0));
+        } else if let Some(Content::Archive(listing)) = &self.content {
+            ui.weak(crate::i18n::message(
+                "{} itens no arquivo compactado",
+                &[listing.entries.len().to_string()],
+            ));
+            if listing.truncated {
+                ui.weak(crate::i18n::tr(
+                    "Listagem parcial: o limite de itens, tamanho ou tempo foi atingido.",
+                ));
+            }
+            ui.horizontal(|ui| {
+                ui.add_sized(
+                    [ui.available_width() - 130.0, 22.0],
+                    egui::Label::new(crate::i18n::tr("Nome")).halign(Align::Min),
+                );
+                ui.label(crate::i18n::tr("Tamanho"));
+            });
+            ui.separator();
+            egui::ScrollArea::vertical()
+                .id_salt(("archive_entries", &self.path))
+                .auto_shrink([false, false])
+                .max_height(ui.available_height().max(1.0))
+                .show_rows(ui, 24.0, listing.entries.len(), |ui, rows| {
+                    for entry in &listing.entries[rows] {
+                        ui.horizontal(|ui| {
+                            let (rect, _) =
+                                ui.allocate_exact_size(Vec2::splat(20.0), Sense::hover());
+                            icons::paint(
+                                ui.painter(),
+                                rect.shrink(2.0),
+                                if entry.directory {
+                                    Icon::Folder
+                                } else if entry.link {
+                                    Icon::Link
+                                } else {
+                                    Icon::File
+                                },
+                                ui.visuals().text_color(),
+                                appearance,
+                            );
+                            ui.add_sized(
+                                [ui.available_width() - 130.0, 24.0],
+                                egui::Label::new(&entry.path).truncate().halign(Align::Min),
+                            )
+                            .on_hover_text(&entry.path);
+                            ui.label(if entry.directory {
+                                "—".into()
+                            } else {
+                                entry
+                                    .size
+                                    .map(filesystem::format_size)
+                                    .unwrap_or_else(|| "—".into())
+                            });
+                        });
+                    }
+                });
         } else if let Some(Content::Text { text, truncated }) = &self.content {
             if *truncated {
                 ui.weak(crate::i18n::tr("Exibindo apenas o início do arquivo."));
@@ -350,11 +432,12 @@ impl Preview {
             egui::ScrollArea::both()
                 .id_salt("preview_text_scroll")
                 .auto_shrink([false, false])
-                .max_height(height - 24.0)
+                .max_height(ui.available_height().max(1.0))
                 .show(ui, |ui| {
                     ui.add(egui::Label::new(RichText::new(text).monospace()).selectable(true));
                 });
         } else {
+            let height = ui.available_height().max(1.0);
             ui.allocate_ui_with_layout(
                 Vec2::new(ui.available_width(), height),
                 Layout::top_down(Align::Center),
@@ -371,6 +454,27 @@ impl Preview {
         }
         None
     }
+}
+// Retain the measured group width, including translated labels, so controls
+// remain centered without giving individual widgets artificial extra width.
+fn centered_row<R>(ui: &mut egui::Ui, salt: &str, contents: impl FnOnce(&mut egui::Ui) -> R) -> R {
+    let id = ui.make_persistent_id(salt);
+    let width = ui.ctx().data(|d| d.get_temp::<f32>(id)).unwrap_or(0.0);
+    ui.horizontal(|ui| {
+        ui.add_space(if width > 0.0 {
+            ((ui.available_width() - width) / 2.0).max(0.0)
+        } else {
+            0.0
+        });
+        let group = ui.scope(contents);
+        let measured = group.response.rect.width();
+        if (width - measured).abs() > 0.5 {
+            ui.ctx().data_mut(|d| d.insert_temp(id, measured));
+            ui.ctx().request_repaint();
+        }
+        group.inner
+    })
+    .inner
 }
 fn controls_height(width: f32) -> f32 {
     if width < 640.0 { 112.0 } else { 58.0 }
@@ -441,10 +545,53 @@ impl Explorer {
             ctx.request_repaint();
         }
     }
+    fn adjacent_preview(&mut self, preview: &mut Preview, down: bool, ctx: &egui::Context) {
+        let visible = filesystem::visible_entries(
+            &self.entries,
+            &self.query,
+            self.hidden_visible(),
+            self.sort,
+            self.descending,
+        );
+        let files: Vec<_> = visible
+            .iter()
+            .copied()
+            .filter(|&i| !self.entries[i].is_dir)
+            .collect();
+        let Some(index) = files
+            .iter()
+            .position(|&i| self.entries[i].path == preview.path)
+        else {
+            return;
+        };
+        let target = if down {
+            index.checked_add(1)
+        } else {
+            index.checked_sub(1)
+        };
+        let Some(&entry) = target.and_then(|i| files.get(i)) else {
+            return;
+        };
+        let path = self.entries[entry].path.clone();
+        self.select_entry(&path, &visible, egui::Modifiers::NONE);
+        self.reveal_selection = true;
+        *preview = Preview::new(path, ctx);
+    }
     pub(super) fn preview_dialog(&mut self, ctx: &egui::Context) {
         let Some(mut preview) = self.preview.take() else {
             return;
         };
+        if ctx.input_mut(|i| i.consume_key(egui::Modifiers::NONE, Key::Escape))
+            || consume_space(ctx)
+        {
+            return;
+        }
+        for (key, down) in [(Key::ArrowUp, false), (Key::ArrowDown, true)] {
+            if ctx.input_mut(|i| i.consume_key(egui::Modifiers::NONE, key)) {
+                self.adjacent_preview(&mut preview, down, ctx);
+            }
+        }
+        preview.page_shortcuts(ctx);
         if let Some(error) = preview.poll(ctx) {
             if error.kind() == std::io::ErrorKind::Unsupported {
                 self.post_typed_notice(toast::NoticeKind::Warning, error.to_string());
@@ -484,11 +631,7 @@ impl Explorer {
             );
             return;
         }
-        let mut close = ctx.input_mut(|i| i.consume_key(egui::Modifiers::NONE, Key::Escape))
-            || consume_space(ctx);
-        if close {
-            return;
-        }
+        let mut close = false;
         // Probe unclassified files as bounded text before showing any modal.
         // Unsupported binaries must never flash an empty preview popup.
         if preview.kind == Kind::Unknown && preview.job.is_some() {
@@ -534,14 +677,23 @@ impl Explorer {
                     .truncate(),
                 );
                 ui.separator();
-                media_error = preview.body(ui, height, ctx);
+                // Allocate the viewport independently of the content's used size.
+                // Loading, text, zoom and images must never move the footer.
+                let (rect, _) = ui.allocate_exact_size(Vec2::new(width, height), Sense::hover());
+                let mut body = ui.new_child(egui::UiBuilder::new().max_rect(rect));
+                body.set_clip_rect(rect.intersect(ui.clip_rect()));
+                media_error = preview.body(&mut body, height, ctx, &self.appearance);
                 ui.separator();
-                ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
-                    close |= ui.button(crate::i18n::tr("Fechar")).clicked();
-                    open = ui
-                        .button(crate::i18n::tr("Abrir no aplicativo padrão"))
-                        .clicked();
-                });
+                ui.allocate_ui_with_layout(
+                    Vec2::new(width, ui.spacing().interact_size.y),
+                    Layout::right_to_left(Align::Center),
+                    |ui| {
+                        close |= ui.button(crate::i18n::tr("Fechar")).clicked();
+                        open = ui
+                            .button(crate::i18n::tr("Abrir no aplicativo padrão"))
+                            .clicked();
+                    },
+                );
             });
         if let Some(error) = media_error {
             self.report_error(crate::i18n::message(

@@ -282,6 +282,8 @@ mod tests {
             include_str!("native_dnd/x11.rs"),
             include_str!("applications.rs"),
             include_str!("trashbin.rs"),
+            include_str!("app/preview.rs"),
+            include_str!("preview/archive.rs"),
         ];
         for source in sources {
             for function in [

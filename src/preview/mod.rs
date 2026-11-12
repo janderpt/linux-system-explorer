@@ -11,6 +11,7 @@ use std::{
     },
     time::{Duration, Instant},
 };
+pub mod archive;
 mod html;
 pub mod media;
 mod office;
@@ -25,6 +26,7 @@ pub enum Kind {
     Image,
     Svg,
     Pdf,
+    Archive,
     Office(Family),
     Html,
     Markdown,
@@ -43,6 +45,9 @@ impl Kind {
             .as_str()
         {
             "png" | "jpg" | "jpeg" | "gif" | "webp" | "bmp" | "tif" | "tiff" | "ico" => Self::Image,
+            "zip" | "zipx" | "tar" | "gz" | "bz2" | "xz" | "zst" | "lz4" | "lzma" | "lz"
+            | "tgz" | "tbz" | "tbz2" | "txz" | "tzst" | "7z" | "rar" | "cab" | "jar" | "war"
+            | "apk" => Self::Archive,
             "svg" => Self::Svg,
             "pdf" => Self::Pdf,
             "html" | "htm" | "xhtml" => Self::Html,
@@ -67,6 +72,7 @@ pub struct Pixels {
     pub rgba: Vec<u8>,
 }
 pub enum Content {
+    Archive(archive::Listing),
     Image(Pixels),
     Pdf {
         pixels: Pixels,
@@ -86,6 +92,17 @@ pub struct Job {
     cancelled: Arc<AtomicBool>,
 }
 impl Job {
+    #[cfg(test)]
+    pub(crate) fn pending() -> (Self, mpsc::Sender<io::Result<Content>>) {
+        let (send, result) = mpsc::channel();
+        (
+            Self {
+                result,
+                cancelled: Arc::new(AtomicBool::new(false)),
+            },
+            send,
+        )
+    }
     pub fn start(path: PathBuf, page: u32, ctx: &eframe::egui::Context) -> Self {
         Self::spawn(ctx, move |cancel| load(&path, page, cancel))
     }
@@ -188,6 +205,7 @@ fn load(path: &Path, page: u32, cancel: &AtomicBool) -> io::Result<Content> {
     check(cancel)?;
     match Kind::for_path(path) {
         Kind::Pdf => pdf(path, page, cancel),
+        Kind::Archive => archive::load(path, cancel),
         Kind::Office(_) => converted_content(office::convert(path, cancel)?, page, cancel),
         Kind::Image | Kind::Svg => {
             let data = read_limited(path, IMAGE_BYTES, cancel)?;

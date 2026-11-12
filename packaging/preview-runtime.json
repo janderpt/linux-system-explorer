@@ -61,5 +61,17 @@
     "debian": [
       "weasyprint"
     ]
+  },
+  "archive": {
+    "executables": [
+      "python3"
+    ],
+    "libraries": [
+      "libarchive.so.13"
+    ],
+    "debian": [
+      "python3",
+      "libarchive13t64"
+    ]
   }
 }

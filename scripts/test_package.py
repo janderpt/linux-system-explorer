@@ -18,7 +18,7 @@ class PreviewRuntimeTests(unittest.TestCase):
                 depends = PACKAGE.debian_dependencies("test-binary", Path(directory))
         self.assertIn("libc6 (>= 2.39)", depends)
         runtime = json.loads((PACKAGE.ROOT / "packaging/preview-runtime.json").read_text())
-        for section in ["media", "pdf", "office", "html"]:
+        for section in ["media", "pdf", "office", "html", "archive"]:
             for dependency in runtime[section]["debian"]:
                 self.assertIn(dependency, depends.split(", "))
         self.assertIn("gstreamer1.0-libav", depends)

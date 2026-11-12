@@ -2,6 +2,9 @@
 
 ## Unreleased — 0.1.0 experimental
 
+- Anchor preview footers independently of loading/content size and center viewer controls. Add Up/Down file navigation in display order and Left/Right page/slide navigation.
+- Add read-only archive content previews via an isolated libarchive worker, including ZIP, compressed TAR, 7z and RAR; bound listings, declare runtimes and never extract entries.
+
 - Route Office previews by document family, sharing engines across DOC/DOCX/ODT/RTF, XLS/XLSX/ODS, PPT/PPTX/ODP, Draw/Math documents, templates and Flat XML variants.
 - Increase Office preview input capacity to 256 MiB, stream private snapshots with a bounded buffer and allow two minutes for conversion while retaining cancellation. Add legacy/OpenDocument fixtures and runtime dependencies for Draw/Math.
 

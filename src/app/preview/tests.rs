@@ -278,17 +278,25 @@ fn absent_converters_warn_and_leave_markup_source_and_file_navigation_usable() {
     std::fs::write(&file, "<h1>source</h1>").unwrap();
     let docx = root.path().join("document.docx");
     crate::preview::tests::test_docx(&docx);
+    let zip = root.path().join("archive.zip");
+    std::fs::write(
+        &zip,
+        include_bytes!("../../preview/fixtures/two-pages.docx"),
+    )
+    .unwrap();
     let ctx = egui::Context::default();
     let mut app = Explorer::with_context(&ctx, root.path().into());
     complete_navigation(&mut app);
-    app.request_preview(docx, &ctx);
-    wait(&mut app, &ctx);
-    assert!(app.preview.is_none());
-    assert!(!app.has_dialog());
-    assert_eq!(
-        app.notice_toasts.last().unwrap().kind,
-        toast::NoticeKind::Warning
-    );
+    for path in [docx, zip] {
+        app.request_preview(path, &ctx);
+        wait(&mut app, &ctx);
+        assert!(app.preview.is_none());
+        assert!(!app.has_dialog());
+        assert_eq!(
+            app.notice_toasts.last().unwrap().kind,
+            toast::NoticeKind::Warning
+        );
+    }
     app.request_preview(file, &ctx);
     wait(&mut app, &ctx);
     app.preview
@@ -640,4 +648,192 @@ fn video_popup_follows_the_decoded_aspect_and_keeps_controls_within_the_window()
         render(&mut app, &ctx, vec![key(Key::Space)]);
         assert!(app.preview.is_none(), "Space also closes a playing video");
     }
+}
+
+fn tap(app: &mut Explorer, ctx: &egui::Context, pressed: Key) {
+    render(app, ctx, vec![key(pressed)]);
+    let mut release = key(pressed);
+    if let Event::Key { pressed, .. } = &mut release {
+        *pressed = false;
+    }
+    render(app, ctx, vec![release]);
+}
+
+#[test]
+fn preview_arrows_follow_filtered_display_order_skip_folders_and_update_selection() {
+    let root = tempfile::tempdir().unwrap();
+    for name in ["a.txt", "b.txt", "c.txt", ".hidden.txt", "other.csv"] {
+        std::fs::write(root.path().join(name), name).unwrap();
+    }
+    std::fs::create_dir(root.path().join("folder.txt")).unwrap();
+    let ctx = egui::Context::default();
+    let mut app = Explorer::with_context(&ctx, root.path().into());
+    complete_navigation(&mut app);
+    app.sort = Column::Name;
+    app.descending = true;
+    app.query = ".txt".into();
+    app.request_preview(root.path().join("b.txt"), &ctx);
+    wait(&mut app, &ctx);
+    for (key, name) in [
+        (Key::ArrowDown, "a.txt"),
+        (Key::ArrowDown, "a.txt"),
+        (Key::ArrowUp, "b.txt"),
+        (Key::ArrowUp, "c.txt"),
+        (Key::ArrowUp, "c.txt"),
+    ] {
+        tap(&mut app, &ctx, key);
+        wait(&mut app, &ctx);
+        let expected = root.path().join(name);
+        assert_eq!(app.preview.as_ref().unwrap().path, expected);
+        assert_eq!(app.selection_cursor.as_ref(), Some(&expected));
+        assert_eq!(app.selected, BTreeSet::from([expected]));
+    }
+    tap(&mut app, &ctx, Key::ArrowRight);
+    assert_eq!(
+        app.preview.as_ref().unwrap().path,
+        root.path().join("c.txt")
+    );
+    assert_eq!(app.preview.as_ref().unwrap().page, 1);
+}
+
+#[test]
+fn preview_left_right_change_pages_and_up_down_change_documents() {
+    let root = tempfile::tempdir().unwrap();
+    for name in ["a.pdf", "b.pdf"] {
+        crate::preview::tests::test_pdf(&root.path().join(name));
+    }
+    let ctx = egui::Context::default();
+    let mut app = Explorer::with_context(&ctx, root.path().into());
+    complete_navigation(&mut app);
+    app.request_preview(root.path().join("a.pdf"), &ctx);
+    wait(&mut app, &ctx);
+    for (key, page) in [
+        (Key::ArrowRight, 2),
+        (Key::ArrowRight, 2),
+        (Key::ArrowLeft, 1),
+        (Key::ArrowLeft, 1),
+    ] {
+        tap(&mut app, &ctx, key);
+        wait(&mut app, &ctx);
+        assert_eq!(app.preview.as_ref().unwrap().page, page);
+        assert_eq!(
+            app.preview.as_ref().unwrap().path,
+            root.path().join("a.pdf")
+        );
+    }
+    tap(&mut app, &ctx, Key::ArrowDown);
+    wait(&mut app, &ctx);
+    assert_eq!(
+        app.preview.as_ref().unwrap().path,
+        root.path().join("b.pdf")
+    );
+    assert_eq!(app.preview.as_ref().unwrap().page, 1);
+    tap(&mut app, &ctx, Key::ArrowUp);
+    wait(&mut app, &ctx);
+    assert_eq!(
+        app.preview.as_ref().unwrap().path,
+        root.path().join("a.pdf")
+    );
+}
+
+#[test]
+fn archive_preview_lists_contents_inside_the_popup_and_closes_with_space() {
+    let root = tempfile::tempdir().unwrap();
+    let file = root.path().join("sample.zip");
+    std::fs::write(
+        &file,
+        include_bytes!("../../preview/fixtures/two-pages.docx"),
+    )
+    .unwrap();
+    let ctx = egui::Context::default();
+    let mut app = Explorer::with_context(&ctx, root.path().into());
+    complete_navigation(&mut app);
+    app.request_preview(file, &ctx);
+    wait(&mut app, &ctx);
+    let output = render(&mut app, &ctx, vec![]);
+    assert!(text_center(&output, "word/document.xml").is_some());
+    assert!(text_center(&output, "Abrir no aplicativo padrão").is_some());
+    assert!(app.notice_toasts.is_empty());
+    tap(&mut app, &ctx, Key::Space);
+    assert!(app.preview.is_none());
+}
+
+fn shape_rects(shape: &egui::Shape, rectangles: &mut Vec<Rect>) {
+    match shape {
+        egui::Shape::Rect(shape) => rectangles.push(shape.rect),
+        egui::Shape::Vec(shapes) => {
+            for shape in shapes {
+                shape_rects(shape, rectangles);
+            }
+        }
+        _ => (),
+    }
+}
+fn surrounding_rect(output: &egui::FullOutput, point: Pos2) -> Rect {
+    let mut rectangles = vec![];
+    for shape in &output.shapes {
+        shape_rects(&shape.shape, &mut rectangles);
+    }
+    rectangles
+        .into_iter()
+        .filter(|rect| rect.contains(point))
+        .min_by(|a, b| a.area().total_cmp(&b.area()))
+        .unwrap()
+}
+
+#[test]
+fn footer_stays_at_the_bottom_while_loading_and_page_controls_are_centered() {
+    let root = tempfile::tempdir().unwrap();
+    let file = root.path().join("document.pdf");
+    crate::preview::tests::test_pdf(&file);
+    let ctx = egui::Context::default();
+    let mut app = Explorer::with_context(&ctx, root.path().into());
+    complete_navigation(&mut app);
+    app.request_preview(file, &ctx);
+    wait(&mut app, &ctx);
+    for _ in 0..3 {
+        render(&mut app, &ctx, vec![]);
+    }
+    let ready = render(&mut app, &ctx, vec![]);
+    let footer = text_center(&ready, "Fechar").unwrap();
+    let first = surrounding_rect(&ready, text_center(&ready, "Página anterior").unwrap());
+    let last = surrounding_rect(&ready, text_center(&ready, "+").unwrap());
+    assert!(
+        ((first.left() + last.right()) / 2.0 - ctx.content_rect().center().x).abs() < 2.0,
+        "{first:?}..{last:?} must be centered"
+    );
+    let popup = ctx
+        .memory(|memory| memory.area_rect(egui::Id::new(("file_preview", app.tab_id))))
+        .unwrap();
+    assert!(popup.contains(footer));
+    assert!(
+        footer.y > popup.bottom() - 30.0,
+        "footer {footer:?} in modal {popup:?}"
+    );
+    let preview = app.preview.as_mut().unwrap();
+    let (pending, _sender) = Job::pending();
+    preview.job = Some(pending);
+    preview.texture = None;
+    let loading = render(&mut app, &ctx, vec![]);
+    assert!(text_center(&loading, "Carregando pré-visualização…").is_some());
+    assert!(
+        text_center(&loading, "Fechar").unwrap().distance(footer) < 1.0,
+        "loading must not move the footer"
+    );
+    // Long source text uses its own scrolling viewport, without growing the modal.
+    let preview = app.preview.as_mut().unwrap();
+    preview.job = None;
+    preview.kind = Kind::Text;
+    preview.content = Some(Content::Text {
+        text: "long line\n".repeat(1000),
+        truncated: false,
+    });
+    for _ in 0..3 {
+        render(&mut app, &ctx, vec![]);
+    }
+    let text = render(&mut app, &ctx, vec![]);
+    assert!(
+        text_center(&text, "Fechar").unwrap().distance(footer) < 1.0,
+        "scrolling text must not move the footer"
+    );
 }

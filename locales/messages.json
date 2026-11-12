@@ -2206,5 +2206,21 @@
   "O documento excede o limite de {} MiB da pré-visualização.": {
     "pt": "O documento excede o limite de {0} MiB da pré-visualização.",
     "en": "The document exceeds the {0} MiB preview size limit."
+  },
+  "Listagem parcial: o limite de itens, tamanho ou tempo foi atingido.": {
+    "en": "Partial listing: the entry, size or time limit was reached.",
+    "pt": "Listagem parcial: o limite de itens, tamanho ou tempo foi atingido."
+  },
+  "Não foi possível listar o arquivo compactado. Ele pode estar danificado, protegido por senha ou exceder os limites do preview.": {
+    "en": "Unable to list the archive. It may be damaged, password protected or exceed the preview limits.",
+    "pt": "Não foi possível listar o arquivo compactado. Ele pode estar danificado, protegido por senha ou exceder os limites do preview."
+  },
+  "O preview de compactados requer Python 3 e libarchive.": {
+    "en": "Archive previews require Python 3 and libarchive.",
+    "pt": "O preview de compactados requer Python 3 e libarchive."
+  },
+  "{} itens no arquivo compactado": {
+    "en": "{0} entries in the archive",
+    "pt": "{0} itens no arquivo compactado"
   }
 }

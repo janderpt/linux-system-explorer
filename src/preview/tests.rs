@@ -534,3 +534,44 @@ fn missing_preview_tools_only_disable_their_corresponding_renderer() {
             .success()
     );
 }
+
+#[test]
+fn archives_use_header_listing_instead_of_text_probing() {
+    for name in [
+        "data.ZIP",
+        "backup.tar.gz",
+        "backup.tar.xz",
+        "data.7z",
+        "data.rar",
+        "data.tgz",
+        "data.zst",
+    ] {
+        assert_eq!(Kind::for_path(Path::new(name)), Kind::Archive);
+    }
+    // Office files remain formatted documents even though their containers are ZIP.
+    assert_eq!(
+        Kind::for_path(Path::new("data.docx")),
+        Kind::Office(Family::Text)
+    );
+    let root = tempfile::tempdir().unwrap();
+    let file = root.path().join("data.zip");
+    let bytes = include_bytes!("fixtures/two-pages.docx");
+    std::fs::write(&file, bytes).unwrap();
+    let Content::Archive(listing) = load(&file, 1, &AtomicBool::new(false)).unwrap() else {
+        panic!("archive")
+    };
+    assert!(
+        listing
+            .entries
+            .iter()
+            .any(|entry| entry.path == "word/document.xml"
+                && entry.size.is_some_and(|size| size > 0))
+    );
+    assert!(!listing.truncated);
+    assert_eq!(std::fs::read(&file).unwrap(), bytes);
+    assert_eq!(
+        std::fs::read_dir(root.path()).unwrap().count(),
+        1,
+        "no extraction"
+    );
+}
