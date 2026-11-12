@@ -9,6 +9,8 @@
   <description>
     <p>A file manager for Linux with folder navigation, configurable columns, multiple selection, and file operations.</p>
     <p>Choose details, list, or icon views and keep separate layouts and zoom levels for each folder.</p>
+    <p>Use tabs, two independent folder panes, an integrated terminal, network shares and file previews with Space.</p>
+    <p xml:lang="pt">Use abas, dois painéis independentes, terminal integrado, compartilhamentos de rede e previews com Espaço.</p>
     <p xml:lang="pt">Um gerenciador de arquivos para Linux com navegação por pastas, colunas configuráveis, seleção múltipla e operações de arquivos.</p>
     <p xml:lang="pt">Escolha detalhes, lista ou ícones e mantenha a visualização e o zoom de cada pasta.</p>
   </description>

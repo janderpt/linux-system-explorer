@@ -48,7 +48,7 @@ fn setup() -> (tempfile::TempDir, egui::Context, Explorer) {
     let mut share = Share::new(root.path().into());
     share.name = "Saved share".into();
     let mut manager = Manager::new(None);
-    manager.accept(vec![share], vec!["10.1.1.30".into()]);
+    manager.accept(vec![share], vec!["192.0.2.30".into()]);
     app.local_shares = Some(manager);
     render(&mut app, &ctx, vec![]);
     render(&mut app, &ctx, vec![]);
@@ -65,8 +65,8 @@ fn manager_copies_persisted_addresses_instead_of_unsaved_name() {
         .unwrap()
         .name = "Unsaved".into();
     for (button, expected) in [
-        ("Copiar endereço SMB", "smb://10.1.1.30/Saved%20share"),
-        ("Copiar endereço Windows", "\\\\10.1.1.30\\Saved share"),
+        ("Copiar endereço SMB", "smb://192.0.2.30/Saved%20share"),
+        ("Copiar endereço Windows", "\\\\192.0.2.30\\Saved share"),
     ] {
         let output = render(&mut app, &ctx, vec![]);
         let point = text_center(&output, button).unwrap();

@@ -4,8 +4,7 @@ The project is currently experimental. There is no supported stable release or f
 security-update commitment yet. File operations run with the permissions of the user;
 the native package is not a sandbox and should not be run as root.
 
-Report vulnerabilities privately through GitHub Security Advisories when the repository
-has been created and private vulnerability reporting enabled. Until then, contact the
+Report vulnerabilities privately through GitHub Security Advisories if private vulnerability reporting is enabled in the repository. Otherwise, contact the
 maintainer through an established private channel. Do not disclose personal paths,
 file contents, credentials or exploitable details in a public issue.
 

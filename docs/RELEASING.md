@@ -3,19 +3,17 @@
 The current 0.1.0 source is experimental and has no public stable release. Building
 packages does not publish anything. Use GitHub prereleases for initial native testing.
 
-## Before the first public source push
+## Publishing source updates
 
-- Review the tree for personal information and unintended files; `target/`, `build/`
-  and `dist/` must remain ignored.
-- Confirm MIT, the maintainer contact in Cargo.toml, app ID and repository ownership.
-- Create `janderpt/linux-system-explorer` on GitHub, without an automatically generated
-  README or license that would conflict with this existing history.
-- Add the public SSH authentication key to GitHub. Keep private keys on the local host.
-- Confirm `ssh -T git@github.com` identifies `janderpt`. GitHub's successful authentication
-  response normally exits with status 1; verify its message, not just its exit code.
-- Verify `git remote -v`, then perform the first reviewed push with `git push -u origin main`.
-- Enable private vulnerability reporting and review repository settings. Store credentials
-  must use appropriate CI secrets; none belong in source or package artifacts.
+The source repository already exists at `janderpt/linux-system-explorer`. Publishing source commits to `main` is separate from publishing native binaries or submitting to a store.
+
+- Update the Portuguese and English READMEs, dependency instructions, changelog and known limitations for the actual behavior.
+- Review tracked files for credentials, private paths, real network addresses and unintended data. Keep `target/`, `build/` and `dist/` ignored; keep test fixtures synthetic.
+- Run the checks in CONTRIBUTING.md, including the declared preview runtimes and Python tests. Use disposable files and an isolated Trash.
+- Verify the SSH remote and fetch before pushing. Use an ordinary fast-forward push: `git push origin main`; resolve concurrent work without force-pushing shared history.
+- Check the GitHub Actions run for the exact published commit and fix any failing checks.
+- Do not create stable version tags, releases or upload binaries merely because source updates were published. Those use the additional checks below.
+- Store credentials belong in appropriate CI secrets, never in source or package artifacts.
 
 ## Before each binary prerelease
 

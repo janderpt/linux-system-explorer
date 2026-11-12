@@ -181,11 +181,11 @@ mod tests {
                 PathBuf::from(format!("/run/user/{}", rustix::process::getuid().as_raw()))
             });
         let mount = runtime
-            .join("gvfs/smb-share:server=10.1.1.46,share=shared%20folder,user=Admin%2Cistrador");
+            .join("gvfs/smb-share:server=192.0.2.46,share=shared%20folder,user=Admin%2Cistrador");
         let sub = resolve(&mount.join("Relatórios"), &[]).unwrap();
         assert_eq!(
             sub.address,
-            "smb://Admin,istrador@10.1.1.46/shared%20folder/Relat%C3%B3rios"
+            "smb://Admin,istrador@192.0.2.46/shared%20folder/Relat%C3%B3rios"
         );
         assert_eq!(sub.crumbs[1].label, "shared folder");
         assert_eq!(sub.title, "Relatórios");

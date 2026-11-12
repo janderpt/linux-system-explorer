@@ -3,7 +3,7 @@
 [Português](README.md)
 
 A Linux desktop file manager written in Rust with egui/eframe, inspired by familiar
-desktop file explorers. **Currently experimental; no stable release or store approval.**
+desktop file explorers. **Source published on GitHub; version 0.1.0 remains a development build, without a stable release or store approval.**
 
 ## File previews with Space
 
@@ -39,16 +39,21 @@ separate native integration. Flatpak/Snap sandbox compatibility has not been cer
 
 ## Build and run
 
-Use Rust 1.95 or newer and a graphical Linux session with OpenGL. On Ubuntu/Debian:
+Use Rust 1.95 or newer and a graphical Linux session with OpenGL. Install Rust through [rustup](https://rustup.rs/). On Ubuntu 24.04 or newer:
 
 ```sh
-sudo apt install build-essential pkg-config libxkbcommon-dev libwayland-dev libx11-dev libxi-dev libxcursor-dev libxrandr-dev libegl1-mesa-dev xdg-utils libglib2.0-bin
-sudo apt install poppler-utils libgstreamer1.0-0 libgstreamer-plugins-base1.0-0 gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-libav libreoffice-writer libreoffice-calc libreoffice-impress libreoffice-draw libreoffice-math fonts-liberation weasyprint
-cargo run
-cargo run -- /path/to/folder
+sudo apt update
+sudo apt install git python3 desktop-file-utils appstream build-essential pkg-config libxkbcommon-dev libwayland-dev libx11-dev libxi-dev libxcursor-dev libxrandr-dev libegl1-mesa-dev xdg-utils libglib2.0-bin
+sudo apt install poppler-utils libgstreamer1.0-0 libgstreamer-plugins-base1.0-0 gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-libav libreoffice-writer libreoffice-calc libreoffice-impress libreoffice-draw libreoffice-math fonts-liberation weasyprint libarchive13t64
+git clone https://github.com/janderpt/linux-system-explorer.git
+cd linux-system-explorer
+cargo run --locked
+cargo run --locked -- /path/to/folder
 cargo build --locked --release
 ./target/release/linux-system-explorer
 ```
+
+Run Cargo commands from the cloned directory containing `Cargo.toml`. If Rust was just installed, open a new terminal or run `source "$HOME/.cargo/env"`. Other distributions need equivalent packages; see [preview-runtime.json](packaging/preview-runtime.json), including libarchive 3. Network backends and Samba are optional according to the features used. Install `ffmpeg` to run the complete media test suite.
 
 `--help` and `--version` work without opening a window. Use `-- DIRECTORY` for a path
 beginning with a dash. File opening relies on GIO, with xdg-open as the default-opening
@@ -70,10 +75,10 @@ To install a build from this repository for the current user:
 git clone https://github.com/janderpt/linux-system-explorer.git
 cd linux-system-explorer
 cargo build --locked --release
-python3 scripts/install-user.py install --set-default
+python3 scripts/install-user.py install
 ```
 
-Install the build and metadata-validation prerequisites listed below first.
+Install the build, runtime and metadata-validation prerequisites listed above first. To enable the default folder handler and Show in Folder integration, run `python3 scripts/install-user.py install --set-default`.
 The installer uses `~/.local/bin` and the user's XDG data directories, without sudo.
 `--set-default` explicitly changes the `inode/directory` handler. Omit it to install
 without changing defaults. It backs up previous files and records the previous folder
@@ -125,6 +130,18 @@ No store upload or installation is performed automatically.
 See [distribution status](docs/DISTRIBUTION.md), [release checklist](docs/RELEASING.md),
 [contributing](CONTRIBUTING.md), [security](SECURITY.md) and [changelog](CHANGELOG.md).
 
+## Update an existing user installation
+
+From the cloned repository:
+
+```sh
+git pull --ff-only origin main
+cargo build --locked --release
+python3 scripts/install-user.py install
+```
+
+Install newly listed dependencies first. Close and reopen all explorer windows after updating; existing windows keep the older executable. Per-folder preferences, tabs and session data remain in the user's XDG directories. The current default folder association is preserved.
+
 ## Validate
 
 ```sh
@@ -132,6 +149,7 @@ cargo fmt --all --check
 cargo clippy --locked --all-targets -- -D warnings
 cargo test --locked
 python3 scripts/package.py check
+python3 -m unittest discover -s scripts -p 'test_*.py'
 ```
 
 File-operation tests use disposable files and isolated Trash data. Native integration

@@ -203,12 +203,12 @@ fn copy_addresses_use_the_saved_share_name_and_escape_uri_characters() {
     let root = tempfile::tempdir().unwrap();
     let share = fixture(root.path(), "Dados públicos #1");
     assert_eq!(
-        share.address("10.1.1.30"),
-        "smb://10.1.1.30/Dados%20p%C3%BAblicos%20%231"
+        share.address("192.0.2.30"),
+        "smb://192.0.2.30/Dados%20p%C3%BAblicos%20%231"
     );
     assert_eq!(
-        share.windows_address("10.1.1.30"),
-        "\\\\10.1.1.30\\Dados públicos #1"
+        share.windows_address("192.0.2.30"),
+        "\\\\192.0.2.30\\Dados públicos #1"
     );
 }
 #[test]

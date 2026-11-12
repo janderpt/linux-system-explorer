@@ -2,7 +2,7 @@
 
 [English](README.en.md)
 
-**Versão experimental, em preparação para publicação.** O plano por formato e loja está
+**Código-fonte publicado no GitHub — versão 0.1.0 em desenvolvimento.** O plano por formato e loja está
 em [Distribuição](docs/DISTRIBUTION.md), com os passos de revisão em
 [Release](docs/RELEASING.md). Ainda não há aprovação em lojas.
 
@@ -10,22 +10,26 @@ Explorador de arquivos desktop para Linux, escrito em Rust e inspirado na organi
 
 ## Executar
 
-Use Rust **1.95 ou superior**. Instale o Rust estável com [rustup](https://rustup.rs/). Na pasta do projeto:
+Use Rust **1.95 ou superior**. Instale o Rust estável com [rustup](https://rustup.rs/). Instale também as [dependências do sistema](#dependências-do-sistema). Para obter e executar o projeto:
 
 ```bash
-cargo run
+git clone https://github.com/janderpt/linux-system-explorer.git
+cd linux-system-explorer
+cargo run --locked
 ```
+
+Execute os comandos Cargo dentro da pasta que contém `Cargo.toml`. Se acabou de instalar o Rust, abra um novo terminal ou carregue `source "$HOME/.cargo/env"`.
 
 Para abrir uma pasta específica:
 
 ```bash
-cargo run -- /caminho/da/pasta
+cargo run --locked -- /caminho/da/pasta
 ```
 
 Para gerar o executável otimizado:
 
 ```bash
-cargo build --release
+cargo build --locked --release
 ./target/release/linux-system-explorer
 ```
 
@@ -48,27 +52,43 @@ dependem da ABI do sistema usado na compilação; a base do workflow é Ubuntu 2
 A revisão das licenças e dos avisos de terceiros, vulnerabilidades e testes em sistemas
 limpos ainda é necessária antes da redistribuição pública dos binários.
 
-O Git local e o remoto SSH são preparados para `janderpt/linux-system-explorer`.
+O código está em [janderpt/linux-system-explorer](https://github.com/janderpt/linux-system-explorer).
 Consulte [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md) e
 [CHANGELOG.md](CHANGELOG.md).
 
 ## Instalar pelo código do GitHub
 
-Depois de instalar as dependências de compilação, Python 3.11+, `desktop-file-utils`
-e `appstream`, em uma pasta para guardar o código:
+Depois de instalar as [dependências do sistema](#dependências-do-sistema), em uma pasta para guardar o código:
 
 ```bash
 git clone https://github.com/janderpt/linux-system-explorer.git
 cd linux-system-explorer
 cargo build --locked --release
-python3 scripts/install-user.py install --set-default
+python3 scripts/install-user.py install
 ```
 
 A instalação fica em `~/.local/bin` e nos diretórios XDG do seu usuário, sem `sudo`.
-O parâmetro `--set-default` torna o aplicativo o padrão para abrir pastas
-(`inode/directory`). Sem ele, apenas instala. O Dolphin permanece disponível.
+Para torná-lo o padrão para abrir pastas (`inode/directory`) e habilitar **Mostrar na pasta**, execute:
+
+```bash
+python3 scripts/install-user.py install --set-default
+```
+
+Sem `--set-default`, apenas instala. O Dolphin permanece disponível.
 Os arquivos anteriores e as associações são preservados em um backup; o estado fica
 em `~/.local/state/linux-system-explorer/install-state.json`.
+
+### Atualizar uma instalação existente
+
+Na pasta onde clonou o repositório:
+
+```bash
+git pull --ff-only origin main
+cargo build --locked --release
+python3 scripts/install-user.py install
+```
+
+Instale as dependências novas indicadas abaixo antes de atualizar. Feche e reabra todas as janelas do explorador após a instalação: janelas já abertas continuam usando a versão anterior. Preferências por pasta, abas e sessão permanecem nos diretórios XDG do usuário; a atualização não precisa apagar esses arquivos. A associação padrão existente é mantida.
 
 Para retornar ao explorador anterior sem alterar outras associações:
 
@@ -101,12 +121,17 @@ o token de ativação e termina antes de criar outra interface. A seleção, o f
 e o layout da janela são preservados. Abrir o aplicativo sem informar um caminho
 aplica a mesma regra à pasta pessoal. Sem uma janela correspondente, abre normalmente.
 
-É necessário um ambiente gráfico Linux com OpenGL e bibliotecas de X11 ou Wayland. A abertura de arquivos usa `gio open`, das ferramentas GIO, e os aplicativos associados no sistema. Se GIO não estiver instalado, usa `xdg-open`, normalmente fornecido pelo pacote `xdg-utils`. Em um ambiente mínimo Ubuntu/Debian, as dependências de compilação e execução podem ser instaladas com:
+## Dependências do sistema
+
+É necessário um ambiente gráfico Linux com OpenGL e bibliotecas de X11 ou Wayland. A abertura de arquivos usa `gio open`, das ferramentas GIO, e os aplicativos associados no sistema. Se GIO não estiver instalado, usa `xdg-open`, normalmente fornecido pelo pacote `xdg-utils`. No Ubuntu 24.04 ou mais recente, instale as dependências de compilação, instalação local e preview com:
 
 ```bash
-sudo apt install build-essential pkg-config libx11-dev libxi-dev libxcursor-dev libxrandr-dev libxkbcommon-dev libwayland-dev libegl1-mesa-dev xdg-utils libglib2.0-bin
-sudo apt install poppler-utils libgstreamer1.0-0 libgstreamer-plugins-base1.0-0 gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-libav libreoffice-writer libreoffice-calc libreoffice-impress libreoffice-draw libreoffice-math fonts-liberation weasyprint
+sudo apt update
+sudo apt install git python3 desktop-file-utils appstream build-essential pkg-config libx11-dev libxi-dev libxcursor-dev libxrandr-dev libxkbcommon-dev libwayland-dev libegl1-mesa-dev xdg-utils libglib2.0-bin
+sudo apt install poppler-utils libgstreamer1.0-0 libgstreamer-plugins-base1.0-0 gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-libav libreoffice-writer libreoffice-calc libreoffice-impress libreoffice-draw libreoffice-math fonts-liberation weasyprint libarchive13t64
 ```
+
+Em outras distribuições, instale os pacotes equivalentes. Os nomes das bibliotecas, ferramentas e dependências de preview estão em [preview-runtime.json](packaging/preview-runtime.json). O pacote da biblioteca libarchive pode se chamar `libarchive13`, `libarchive13t64` ou `libarchive`, conforme a distribuição. Os módulos de rede GNOME/KDE e o servidor Samba são opcionais, conforme os [recursos de rede](#barra-lateral-e-rede) utilizados. FFmpeg é usado pelos testes de mídia; para executar a suíte completa, instale também `ffmpeg`.
 
 ## Abas, janelas e terminal integrado
 
@@ -186,7 +211,9 @@ A sessão fica em `$XDG_STATE_HOME/linux-system-explorer/session.json` (por padr
 | `Home` / `End` | Ir ao primeiro/último item da ordem exibida |
 | `Shift` + `Page Up` / `Page Down` / `Home` / `End` | Estender ou reduzir a seleção desde a âncora |
 | `Ctrl` + `Shift` + clique | Acrescentar um intervalo à seleção existente |
-| `Espaço` | Pré-visualizar o arquivo selecionado no painel ativo |
+| `Espaço` | Abrir/fechar o preview do arquivo selecionado no painel ativo |
+| `↑` / `↓` no preview | Arquivo anterior/seguinte na ordem visível |
+| `←` / `→` no preview | Página ou slide anterior/seguinte |
 | `F2` | Renomear o único item selecionado |
 | `F5` | Atualizar |
 | `Esc` | Sair da edição do caminho, limpar a pesquisa ou cancelar a criação |
@@ -384,8 +411,10 @@ As colunas incluem nome, tipo, extensão, tamanho, modificação, criação, úl
 
 ```bash
 cargo fmt --all --check
-cargo clippy --all-targets -- -D warnings
-cargo test
+cargo clippy --locked --all-targets -- -D warnings
+cargo test --locked
+python3 scripts/package.py check
+python3 -m unittest discover -s scripts -p 'test_*.py'
 ```
 
 Os testes cobrem histórico, metadados Linux, permissões, links simbólicos, layouts por pasta, seleção múltipla, atalhos e menus de transferência, cópia e recorte de arquivos reais, conflitos, cancelamento, mudança da origem durante a cópia e movimentação entre sistemas de arquivos. Os testes de abertura exercitam duplo clique e menu de contexto com um abridor isolado, incluindo falhas e nomes especiais. Os testes de ícones cobrem as famílias de arquivos e as três visualizações. Os testes de exclusão e restauração usam arquivos temporários e uma lixeira isolada, cobrindo os atalhos, a confirmação, restauração e exclusão permanente de seleções na Lixeira pelo menu, conflitos, falhas parciais, cancelamento, nomes não UTF-8, origem alterada, movimentação entre sistemas de arquivos e preservação dos destinos de links. Também cobrem o menu Esvaziar lixeira, cancelamento da confirmação, exclusão apenas da lista confirmada, preservação de entradas posteriores e da identificação de itens alterados. Também verificam as traduções e os parâmetros das mensagens, a troca de idioma pela interface e sua persistência, a altura das abas, os botões de zoom nos três modos e o registro desktop do ícone. Também verificam o ancestral mais próximo na barra lateral, visibilidade e pastas fixadas persistentes, menus com ícones personalizados, detecção de montagens de rede, nomes não UTF-8, alinhamento vertical e compatibilidade das preferências.

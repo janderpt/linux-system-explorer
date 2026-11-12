@@ -1,6 +1,12 @@
 # Changelog
 
-## Unreleased — 0.1.0 experimental
+## Unreleased
+
+## 0.1.0 development snapshot — 2026-11-12
+
+Source publication on `main`; this snapshot does not introduce a stable binary release or a store submission.
+
+Highlights: independent split panes with session restoration; integrated local Samba share management; network breadcrumbs and SMB browsing; internal Space previews for images, media, PDF, Office/OpenDocument, HTML, Markdown and archives; keyboard preview navigation; consistent toasts and clipboard feedback. Updated installation, update and runtime instructions in Portuguese and English.
 
 - Left-align archive preview names beside their icons and align the Name header with the same column.
 

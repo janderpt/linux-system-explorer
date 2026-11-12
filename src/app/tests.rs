@@ -233,7 +233,7 @@ fn abbreviated_breadcrumb_keeps_current_folder_and_hidden_ancestors_navigable() 
     let ctx = egui::Context::default();
     let mut app = explorer(&ctx);
     app.current = PathBuf::from(
-        "/home/jander/Downloads/PEDIDO DE MEDIDA DE PROTECAO - POC 094-2026 1.odt/media",
+        "/home/example/Downloads/Long document folder used for breadcrumb regression.odt/media",
     );
     let draw = |app: &mut Explorer, ui: &mut egui::Ui| {
         ui.allocate_ui(Vec2::new(300.0, 32.0), |ui| {
@@ -256,10 +256,10 @@ fn abbreviated_breadcrumb_keeps_current_folder_and_hidden_ancestors_navigable() 
     let output = click(&mut app, &ctx, collapsed, draw);
     let downloads = text_center(&output, "Downloads").expect("ancestral disponível no menu");
     click(&mut app, &ctx, downloads, draw);
-    assert_eq!(app.current, Path::new("/home/jander/Downloads"));
+    assert_eq!(app.current, Path::new("/home/example/Downloads"));
 
     app.current = PathBuf::from(format!(
-        "/home/jander/{}",
+        "/home/example/{}",
         "Pasta com acentuação ".repeat(30)
     ));
     let original = app.current.clone();

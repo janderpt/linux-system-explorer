@@ -1,17 +1,16 @@
 # Distribution roadmap
 
-Status: preparation, not store approval. The package is experimental.
+Status: source published on GitHub; native packages remain experimental and store submission is still in preparation.
 
 Repository: https://github.com/janderpt/linux-system-explorer
 Application ID: `io.github.janderpt.linux-system-explorer`.
-The remote URL and metadata identify the planned repository; creating and publishing
-that repository remain separate steps.
+The repository contains the published source, desktop metadata, build scripts and user installation instructions.
 
 ## Channels
 
 | Channel | Current preparation | Remaining gates |
 | --- | --- | --- |
-| GitHub source | Local Git history, SSH remote, MIT license, CI and contribution docs | Create repository, authenticate, review and push |
+| GitHub source | Published repository, MIT license, CI, source installation/update instructions and contribution docs | Maintain reviewed commits and passing CI |
 | GitHub binary downloads | Native tar.gz and DEB builders, checksums and build information | License/security review, clean-system tests and reviewed release |
 | Debian/Ubuntu packages | Experimental DEB with binary-derived libc dependencies and desktop metadata | Install/remove/upgrade tests, maintainer review, repository signing and native distro policy |
 | AppImage | Relocatable archive and shared desktop assets | AppDir, library bundling, older supported build baseline and clean-host tests; not yet an AppImage |
