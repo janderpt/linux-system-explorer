@@ -14,7 +14,7 @@ The repository contains the published source, desktop metadata, build scripts an
 | GitHub binary downloads | First alpha workflow: Ubuntu 24.04 x86_64 DEB/TAR.GZ, checksums, audit/build records, notices and included MPL sources | Continued maintainer review, broader desktop/session tests and stable-release validation |
 | Debian/Ubuntu packages | Experimental DEB with binary-derived libc dependencies and desktop metadata | Install/remove/upgrade tests, maintainer review, repository signing and native distro policy |
 | AppImage | Relocatable archive and shared desktop assets | AppDir, library bundling, older supported build baseline and clean-host tests; not yet an AppImage |
-| Flatpak / Flathub | Shared application identity, desktop launcher, AppStream and icon | Human-authored packaging, sandbox adaptations, upstream support, history, stable releases and review |
+| Flatpak / Flathub | Local experimental bundle builder, runtime/ABI and capability checks, portal file opening, existing metadata/notices and a local-only educational example; see [Flatpak](FLATPAK.md) | Converter modules, host/Trash integration, actual desktop/session tests, stable/history gates, independently human-authored submission and review |
 | Snap Store | Shared application assets and native build | Snapcraft packaging, interface/confinement design and review; classic approval cannot be assumed |
 | Fedora / RPM / COPR | Shared source and desktop metadata | RPM spec, license sources, dependency mapping, clean Fedora build and repository maintenance |
 | openSUSE / OBS | Shared source and desktop metadata | Distribution-specific package review and clean builds |
@@ -89,7 +89,7 @@ grouping selections by parent folder. Its private Quit interface stops only the 
 leaving GUI windows intact. This is independent
 of package-manager installation, which does not change defaults automatically.
 
-GUI windows own versioned private D-Bus names while running. The bridge asks them to
+GUI windows own versioned private D-Bus names while running, derived from bus-assigned unique connection names so separate PID namespaces cannot collide. The bridge asks them to
 accept requests for their current/loading folder before creating another process.
 Selection is refreshed asynchronously and activation uses xdg-activation-v1 on the
 native Wayland surface, or the standard viewport focus request on X11. The supplied
@@ -143,7 +143,7 @@ The current Flathub policy requires stable releases, meaningful project history 
 upstream support for file managers. It also requires disclosure of AI-generated material,
 prohibits AI-generated or AI-assisted Flatpak manifests, and prohibits agents from opening
 or automating submission PRs or generating their submission/review messages. Accordingly,
-this repository does not include an agent-generated Flatpak manifest or submission text.
+this repository does not include an agent-generated Flathub submission manifest or submission text. The educational local-only example in docs/examples is explicitly unsuitable for submission or as its starting point.
 A human maintainer must handle those parts and verify the current policy when submitting.
 
 This project has received substantial AI assistance in source, tests, UI, translations,
@@ -159,7 +159,7 @@ actual extent and disclose it accurately; no independent human review is claimed
 - https://snapcraft.io/docs/explanation/security/snap-confinement/
 - https://www.debian.org/doc/debian-policy/
 
-Policies were checked on 2026-11-11 and must be checked again before submission.
+Policies were checked on 2026-11-12 and must be checked again before submission.
 
 ## Tabs and terminal lifecycle
 

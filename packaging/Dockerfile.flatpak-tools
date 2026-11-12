@@ -1,0 +1,20 @@
+# Local experimental packaging/test tools. Not a Flathub manifest or submission.
+FROM ubuntu:24.04
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    flatpak flatpak-builder ca-certificates git python3 appstream desktop-file-utils \
+    dbus-x11 xvfb xauth curl librsvg2-common \
+    build-essential meson ninja-build pkg-config libglib2.0-dev \
+    && rm -rf /var/lib/apt/lists/*
+# zbus 6 needs the newer proxy protocol; 0.1.9 also contains current filtering fixes.
+# Keep the exact upstream source/license with this local build-tool image.
+RUN curl --fail --location https://github.com/flatpak/xdg-dbus-proxy/releases/download/0.1.9/xdg-dbus-proxy-0.1.9.tar.xz -o /tmp/proxy.tar.xz \
+    && echo '5450dda586ec3bb3ca709d311e845487883faa3b09cf562608d7e84f4311dced  /tmp/proxy.tar.xz' | sha256sum --check - \
+    && tar -xf /tmp/proxy.tar.xz -C /tmp \
+    && meson setup /tmp/proxy-build /tmp/xdg-dbus-proxy-0.1.9 -Dman=disabled --prefix=/usr/local \
+    && ninja -C /tmp/proxy-build install \
+    && install -Dm644 /tmp/xdg-dbus-proxy-0.1.9/COPYING /usr/local/share/licenses/xdg-dbus-proxy/COPYING \
+    && install -Dm644 /tmp/proxy.tar.xz /usr/local/share/src/xdg-dbus-proxy-0.1.9.tar.xz \
+    && rm -rf /tmp/proxy-build /tmp/xdg-dbus-proxy-0.1.9 /tmp/proxy.tar.xz
+ENV FLATPAK_DBUSPROXY=/usr/local/bin/xdg-dbus-proxy
+WORKDIR /source

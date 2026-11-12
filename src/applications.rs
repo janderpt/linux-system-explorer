@@ -201,6 +201,9 @@ fn run(command: &mut Command) -> io::Result<(std::process::ExitStatus, String)> 
 }
 
 pub fn open_default(path: &Path) -> Result<(), String> {
+    if crate::sandbox::active() {
+        return crate::sandbox::open_file(path, false);
+    }
     let mut command = Command::new("gio");
     command.arg("open").arg(path);
     let (tool, result) = match run(&mut command) {

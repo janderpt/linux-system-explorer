@@ -2258,5 +2258,21 @@
   "Calculando tamanho…": {
     "en": "Calculating size…",
     "pt": "Calculando tamanho…"
+  },
+  "Esta integração com o sistema ainda não está disponível no Flatpak experimental.": {
+    "en": "This system integration is not available in the experimental Flatpak yet.",
+    "pt": "Esta integração com o sistema ainda não está disponível no Flatpak experimental."
+  },
+  "Não foi possível abrir o arquivo pelo portal do sistema: {}": {
+    "en": "Could not open the file through the system portal: {}",
+    "pt": "Não foi possível abrir o arquivo pelo portal do sistema: {}"
+  },
+  "O sistema não conseguiu abrir o arquivo selecionado.": {
+    "en": "The system could not open the selected file.",
+    "pt": "O sistema não conseguiu abrir o arquivo selecionado."
+  },
+  "Terminal (Flatpak)": {
+    "en": "Terminal (Flatpak)",
+    "pt": "Terminal (Flatpak)"
   }
 }

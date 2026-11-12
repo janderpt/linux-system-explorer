@@ -65,7 +65,7 @@ impl Explorer {
                     }),
             );
         }
-        if self.sidebar_options.show_local_shares {
+        if self.sidebar_options.show_local_shares && !crate::sandbox::active() {
             entries.extend(self.local_share_entries().into_iter().enumerate().map(
                 |(index, share)| SidebarEntry {
                     id: Location::LocalShare(index),
@@ -133,7 +133,7 @@ impl Explorer {
     }
 
     fn sidebar_body(&mut self, ui: &mut egui::Ui) {
-        if self.sidebar_options.show_local_shares {
+        if self.sidebar_options.show_local_shares && !crate::sandbox::active() {
             self.refresh_local_share_sidebar(ui.ctx());
         }
         let entries = self.sidebar_entries();
@@ -159,7 +159,7 @@ impl Explorer {
                     if self.menu_item(ui,Icon::Pin,crate::i18n::tr("Fixar pasta atual"),"",enabled,false).clicked() {self.pin_folder(self.current.clone());}
                     ui.add_space(12.0);
                 }
-                if self.sidebar_options.show_local_shares {
+                if self.sidebar_options.show_local_shares && !crate::sandbox::active() {
                     self.local_share_heading(ui);
                     let local: Vec<_> = entries.iter().filter(|e| matches!(e.id, Location::LocalShare(_))).collect();
                     for entry in &local { self.sidebar_place(ui,entry,active==Some(entry.id)); }

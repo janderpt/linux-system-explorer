@@ -8,6 +8,8 @@ desktop file explorers. **Source published on GitHub; version 0.1.0-alpha.2 rema
 
 **v0.1.0-alpha.2** prerelease: Ubuntu 24.04+ x86_64 packages, checksums and [installation notes](docs/releases/v0.1.0-alpha.2.md). [GitHub downloads](https://github.com/janderpt/linux-system-explorer/releases/tag/v0.1.0-alpha.2).
 
+A local **experimental Flatpak** and the remaining Flathub work are documented in [Flatpak](docs/FLATPAK.md). It does not yet provide all native-package integrations/renderers.
+
 ## File previews with Space
 
 Select a file and press **Space**, or choose **Preview** from its context menu. The explorer's popup uses the active pane's selection. Pressing Space again, Escape, Close or clicking outside stops playback and closes it. Images and videos fit the available area, centered and preserving their aspect ratio. Video popups follow the decoded landscape, portrait or square format within the window limits, with responsive playback controls. Opening the system default application is a separate explicit action. Space still types normally in text fields and the terminal.

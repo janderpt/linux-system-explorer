@@ -81,7 +81,21 @@ impl Chooser {
 impl Explorer {
     pub(super) fn choose_application(&mut self, entry: &Entry, ctx: &egui::Context) {
         if !entry.is_dir && !self.is_trash() {
-            self.open_with = Some(Chooser::new(entry.path.clone(), ctx));
+            if crate::sandbox::active() {
+                let path = entry.path.clone();
+                let sender = self.event_sender.clone();
+                let context = ctx.clone();
+                let locale = crate::i18n::current();
+                thread::spawn(move || {
+                    crate::i18n::set_locale(locale);
+                    if let Err(error) = crate::sandbox::open_file(&path, true) {
+                        let _ = sender.send(Event::OpenFailed(error));
+                        context.request_repaint();
+                    }
+                });
+            } else {
+                self.open_with = Some(Chooser::new(entry.path.clone(), ctx));
+            }
         }
     }
 

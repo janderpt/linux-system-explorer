@@ -170,6 +170,9 @@ fn connect(input: &str) -> io::Result<PathBuf> {
     connect_cancellable(input, &Cancellation::default())
 }
 pub fn connect_cancellable(input: &str, cancel: &Cancellation) -> io::Result<PathBuf> {
+    if crate::sandbox::active() {
+        return Err(crate::sandbox::host_operation_error());
+    }
     let uri = remote_url(input)?;
     let services = available_services();
     if cancel.is_cancelled() {
@@ -382,6 +385,9 @@ fn shares_from_names(uri: &str, names: Vec<String>) -> io::Result<Vec<ServerShar
     Ok(result)
 }
 pub fn browse_server(uri: &str, cancel: &Cancellation) -> io::Result<Vec<ServerShare>> {
+    if crate::sandbox::active() {
+        return Err(crate::sandbox::host_operation_error());
+    }
     let uri = remote_url(uri)?;
     if !is_smb_server(&uri) {
         return Err(invalid(

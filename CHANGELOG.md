@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Prepare a local experimental Flatpak bundle with Freedesktop 26.08 runtime verification, staged-file hashes, notices/MPL sources, capability reporting and checksums; document unsupported converters/integrations and the independent human Flathub submission path.
+- Use OpenFile portals for Flatpak opening/application choice, preserve writable access when permitted and handle chooser cancellation without errors; label the sandbox terminal, avoid unsupported host share management and derive window endpoints from unique bus names across PID namespaces.
+
 ## 0.1.0-alpha.2 — 2026-11-12
 
 - Extend background icon-view thumbnails to silent video frames and the first page/slide of Office/LibreOffice documents, with bounded conversion, cancellation and file-type fallback when codecs/converters are unavailable.

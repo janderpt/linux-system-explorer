@@ -91,6 +91,10 @@ impl Manager {
 }
 impl Explorer {
     pub(super) fn request_local_shares(&mut self, folder: Option<PathBuf>, ctx: &egui::Context) {
+        if crate::sandbox::active() {
+            self.report_error(crate::sandbox::host_operation_error().to_string());
+            return;
+        }
         let mut manager = Manager::new(folder);
         manager.refresh(ctx);
         self.local_shares = Some(manager);

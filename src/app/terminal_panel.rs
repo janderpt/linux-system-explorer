@@ -78,7 +78,11 @@ impl Panel {
             .max_height((ctx.content_rect().height() * 0.7).max(110.0))
             .show(ctx, |ui| {
                 ui.horizontal(|ui| {
-                    ui.strong(crate::i18n::tr("Terminal"));
+                    ui.strong(crate::i18n::tr(if crate::sandbox::active() {
+                        "Terminal (Flatpak)"
+                    } else {
+                        "Terminal"
+                    }));
                     if self.sessions.len() > 1 {
                         egui::ComboBox::from_id_salt(("terminal_sessions", tab))
                             .selected_text(format!("{}", self.active + 1))

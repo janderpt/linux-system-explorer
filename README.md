@@ -11,6 +11,8 @@ Explorador de arquivos desktop para Linux, escrito em Rust e inspirado na organi
 
 Pré-release **v0.1.0-alpha.2**: pacotes Ubuntu 24.04+ x86_64, checksums e [instruções de instalação](docs/releases/v0.1.0-alpha.2.md). [Downloads no GitHub](https://github.com/janderpt/linux-system-explorer/releases/tag/v0.1.0-alpha.2).
 
+Para o protótipo **Flatpak experimental** e a preparação para o Flathub, consulte [Flatpak](docs/FLATPAK.md). Ele ainda tem diferenças de recursos em relação aos pacotes nativos.
+
 ## Executar
 
 Use Rust **1.95 ou superior**. Instale o Rust estável com [rustup](https://rustup.rs/). Instale também as [dependências do sistema](#dependências-do-sistema). Para obter e executar o projeto:

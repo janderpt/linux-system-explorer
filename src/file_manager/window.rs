@@ -106,28 +106,52 @@ pub struct Window {
 
 impl Window {
     pub fn attach(context: &eframe::egui::Context) -> Result<Self, zbus::Error> {
-        Self::with_name(context, &format!("{PREFIX}{}", std::process::id()))
+        Self::connect(context, None)
     }
 
+    #[cfg(test)]
     pub(super) fn with_name(
         context: &eframe::egui::Context,
         name: &str,
     ) -> Result<Self, zbus::Error> {
+        Self::connect(context, Some(name))
+    }
+
+    fn connect(context: &eframe::egui::Context, name: Option<&str>) -> Result<Self, zbus::Error> {
         let (sender, requests) = mpsc::sync_channel(16);
-        let connection = zbus::block_on(
-            zbus::connection::Builder::session()
+        let connection = zbus::block_on(async {
+            let mut builder = zbus::connection::Builder::session()
                 .allow_name_replacements(false)
                 .replace_existing_names(false)
-                .name(name)
                 .serve_at(
                     PATH,
                     Endpoint {
                         sender,
                         context: context.clone(),
                     },
-                )
-                .build(),
-        )?;
+                );
+            if let Some(name) = name {
+                builder = builder.name(name);
+            }
+            let connection = builder.build().await?;
+            if name.is_none() {
+                // Different Flatpak instances may have the same namespace PID.
+                // A bus-assigned unique name avoids collisions across sandboxes.
+                let suffix = connection
+                    .unique_name()
+                    .unwrap()
+                    .as_str()
+                    .trim_start_matches(':')
+                    .replace('.', "_");
+                connection
+                    .request_name_with_flags(
+                        format!("{PREFIX}{suffix}"),
+                        zbus::fdo::RequestNameFlags::DO_NOT_QUEUE,
+                    )
+                    .await?;
+            }
+            Ok::<_, zbus::Error>(connection)
+        })?;
         Ok(Self {
             _connection: connection,
             requests,

@@ -1,0 +1,28 @@
+{
+  "app-id": "io.github.janderpt.linux-system-explorer",
+  "runtime": "org.freedesktop.Platform",
+  "runtime-version": "26.08",
+  "sdk": "org.freedesktop.Platform",
+  "command": "linux-system-explorer",
+  "branch": "experimental",
+  "finish-args": [
+    "--share=ipc",
+    "--socket=wayland",
+    "--socket=fallback-x11",
+    "--device=dri",
+    "--socket=pulseaudio",
+    "--filesystem=host",
+    "--filesystem=xdg-run/gvfs",
+    "--own-name=io.github.janderpt.LinuxSystemExplorer.Window1.*"
+  ],
+  "modules": [
+    {
+      "name": "local-prebuilt-experiment",
+      "buildsystem": "simple",
+      "build-commands": ["cp -a . /app/"],
+      "sources": [
+        {"type": "dir", "path": "../../build/flatpak-stage/app"}
+      ]
+    }
+  ]
+}

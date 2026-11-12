@@ -32,6 +32,10 @@ The source repository already exists at `janderpt/linux-system-explorer`. Publis
   version tag and a GitHub prerelease only after these checks.
 - Attach reviewed artifacts, checksums and notices. The alpha workflow publishes a GitHub prerelease only after its build, tests, audit, source/notices checks and clean-container smoke test pass. It does not submit to stores.
 
+## Experimental Flatpak
+
+See [FLATPAK.md](FLATPAK.md) for the local bundle builder, capability differences, installation/removal and remaining store gates. Do not attach this prototype to a native alpha tag as if its sandbox behavior were already certified. The local educational manifest is not a Flathub submission manifest and may not be used as its starting point. Keep experimental artifacts and their metadata/checksums separate. A human must independently author the eventual offline source-build manifest and handle Flathub submission/review interactions.
+
 ## Stable releases and stores
 
 Complete the channel-specific gates in DISTRIBUTION.md. Do not mark this build stable

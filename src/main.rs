@@ -17,6 +17,7 @@ mod navigation;
 mod network;
 mod preview;
 mod renames;
+mod sandbox;
 mod session;
 mod settings;
 mod sidebar;
