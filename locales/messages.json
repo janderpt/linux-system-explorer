@@ -2302,5 +2302,29 @@
   "A lista de aplicativos do sistema ainda não está disponível no Flatpak experimental.": {
     "en": "The system application list is not yet available in the experimental Flatpak.",
     "pt": "A lista de aplicativos do sistema ainda não está disponível no Flatpak experimental."
+  },
+  "Identificador do aplicativo": {
+    "en": "Application ID",
+    "pt": "Identificador do aplicativo"
+  },
+  "Abrir no gerenciador de software": {
+    "en": "Open in software manager",
+    "pt": "Abrir no gerenciador de software"
+  },
+  "Gerenciador de software": {
+    "en": "Software manager",
+    "pt": "Gerenciador de software"
+  },
+  "Aplicativo sem registro AppStream. O gerenciador foi aberto com uma busca pelo nome.": {
+    "en": "This application has no AppStream record. The software manager was opened with a name search.",
+    "pt": "Aplicativo sem registro AppStream. O gerenciador foi aberto com uma busca pelo nome."
+  },
+  "Nenhum gerenciador de software compatível foi encontrado. Instale o GNOME Software ou o KDE Discover.": {
+    "en": "No compatible software manager was found. Install GNOME Software or KDE Discover.",
+    "pt": "Nenhum gerenciador de software compatível foi encontrado. Instale o GNOME Software ou o KDE Discover."
+  },
+  "Não foi possível abrir o gerenciador de software: {}": {
+    "en": "Could not open the software manager: {0}",
+    "pt": "Não foi possível abrir o gerenciador de software: {0}"
   }
 }

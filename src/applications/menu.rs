@@ -1,5 +1,6 @@
 //! Menu applications are launchers, never file entries or a directory hierarchy.
 use super::*;
+pub mod software;
 mod theme;
 
 pub fn location() -> PathBuf {

@@ -9,6 +9,7 @@ use std::{
 #[serde(rename_all = "snake_case")]
 pub enum Icon {
     Applications,
+    SoftwareManager,
     Home,
     Desktop,
     Download,
@@ -93,8 +94,9 @@ pub enum Icon {
 }
 
 impl Icon {
-    pub const ALL: [Self; 82] = [
+    pub const ALL: [Self; 83] = [
         Self::Applications,
+        Self::SoftwareManager,
         Self::Home,
         Self::Desktop,
         Self::Download,
@@ -181,6 +183,7 @@ impl Icon {
     pub fn label(self) -> &'static str {
         match self {
             Self::Applications => crate::i18n::tr("Aplicativos"),
+            Self::SoftwareManager => crate::i18n::tr("Gerenciador de software"),
             Self::Home => crate::i18n::tr("Pasta pessoal"),
             Self::Desktop => crate::i18n::tr("Área de trabalho"),
             Self::Download => crate::i18n::tr("Downloads"),
@@ -268,6 +271,7 @@ impl Icon {
     pub fn default_name(self) -> &'static str {
         match self {
             Self::Applications => "shapes",
+            Self::SoftwareManager => "store",
             Self::Home => "house",
             Self::Desktop => "desktop",
             Self::Download => "download",

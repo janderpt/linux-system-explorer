@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Enable Details, List and Icons for Applications, with sortable application metadata columns, a zoomable icon grid, keyboard navigation and saved location view/zoom; add a configurable software-manager context action for Discover/GNOME Software, including XFCE availability-based selection, AppStream-to-desktop mapping, name-search fallback and startup error toasts.
+
 - Add Applications as the configurable first sidebar item in native installations, with a flat localized launcher list, installed icons, name filtering, double-click/Enter launching, asynchronous catalog/icon loading and tab/history/session support; exclude file operations and explicitly report the experimental Flatpak host-menu limitation.
 
 - Prepare a local experimental Flatpak bundle with Freedesktop 26.08 runtime verification, staged-file hashes, notices/MPL sources, capability reporting and checksums; document unsupported converters/integrations and the independent human Flathub submission path.

@@ -56,6 +56,7 @@ enum Event {
         Navigation,
     ),
     OpenFailed(String),
+    SoftwareOpened(Result<bool, String>),
     TransferProgress(file_ops::Progress),
     TransferConflict(Box<transfers::ConflictPrompt>),
     TransferFinished(file_ops::Report),
@@ -399,6 +400,11 @@ impl Explorer {
                     self.applications.replace(items, error);
                 }
                 Event::OpenFailed(message) => self.report_error(message),
+                Event::SoftwareOpened(result) => match result {
+                    Ok(true) => self.post_typed_notice(toast::NoticeKind::Warning, crate::i18n::tr("Aplicativo sem registro AppStream. O gerenciador foi aberto com uma busca pelo nome.").into()),
+                    Ok(false) => {},
+                    Err(error) => self.report_error(error),
+                },
                 Event::TransferProgress(progress) => {
                     if let Some(transfer) = &mut self.active_transfer {
                         transfer.progress = progress;

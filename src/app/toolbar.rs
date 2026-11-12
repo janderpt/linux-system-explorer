@@ -141,7 +141,14 @@ impl Explorer {
         let enabled = !self.loading
             && !self.current.as_os_str().is_empty()
             && (!self.is_applications()
-                || matches!(action, FolderAction::ZoomOut | FolderAction::ZoomIn))
+                || matches!(
+                    action,
+                    FolderAction::ZoomOut
+                        | FolderAction::ZoomIn
+                        | FolderAction::Details
+                        | FolderAction::List
+                        | FolderAction::Icons
+                ))
             && match action {
                 FolderAction::NewFolder | FolderAction::Hidden if self.is_trash() => false,
                 FolderAction::Copy | FolderAction::Cut => {

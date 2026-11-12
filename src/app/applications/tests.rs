@@ -22,6 +22,17 @@ fn applications_sidebar_filter_double_click_launch_and_session_are_integrated() 
         ] {
             fs::write(data.join(file), format!("[Desktop Entry]\nType=Application\nName={name}\nExec=/bin/true\nIcon={}\nCategories=Utility;Development;\nComment=Uma descrição sem relação com o nome\n", root.path().join("app.svg").display())).unwrap();
         }
+        fs::create_dir(root.path().join("data/metainfo")).unwrap();
+        fs::write(root.path().join("data/metainfo/alpha.xml"), "<component><id>org.test.Alpha</id><launchable type='desktop-id'>nested-tool.desktop</launchable></component>").unwrap();
+        for program in ["plasma-discover", "gnome-software"] {
+            let program = root.path().join("bin").join(program);
+            fs::write(
+                &program,
+                "#!/bin/sh\nprintf '%s\\0' \"$@\" > \"$LSE_SOFTWARE_CAPTURE\"\n",
+            )
+            .unwrap();
+            fs::set_permissions(program, fs::Permissions::from_mode(0o755)).unwrap();
+        }
         let gio = root.path().join("bin/gio");
         fs::write(
             &gio,
@@ -33,6 +44,8 @@ fn applications_sidebar_filter_double_click_launch_and_session_are_integrated() 
             .args(["--exact", "app::applications::tests::applications_sidebar_filter_double_click_launch_and_session_are_integrated", "--nocapture"])
             .env("LSE_APPLICATIONS_TEST_ROOT", root.path())
             .env("LSE_MENU_CAPTURE", root.path().join("launched"))
+            .env("LSE_SOFTWARE_CAPTURE", root.path().join("software-opened"))
+            .env("XDG_CURRENT_DESKTOP", "XFCE")
             .env("HOME", root.path()).env("XDG_CONFIG_HOME", root.path().join("config"))
             .env("XDG_DATA_HOME", root.path().join("data"))
             .env("XDG_DATA_DIRS", root.path().join("empty-system-data"))
@@ -132,6 +145,108 @@ fn applications_sidebar_filter_double_click_launch_and_session_are_integrated() 
         );
         std::thread::sleep(Duration::from_millis(5));
     }
+    let output = folder_frame(&mut app, &ctx, vec![]);
+    let point = text_center(&output, "Ferramenta Alpha").unwrap();
+    let output = folder_frame(
+        &mut app,
+        &ctx,
+        vec![
+            Input::PointerMoved(point),
+            Input::PointerButton {
+                pos: point,
+                button: PointerButton::Secondary,
+                pressed: true,
+                modifiers: Modifiers::NONE,
+            },
+            Input::PointerButton {
+                pos: point,
+                button: PointerButton::Secondary,
+                pressed: false,
+                modifiers: Modifiers::NONE,
+            },
+        ],
+    );
+    let output = if text_center(&output, "Abrir no gerenciador de software").is_none() {
+        folder_frame(&mut app, &ctx, vec![])
+    } else {
+        output
+    };
+    let point =
+        text_center(&output, "Abrir no gerenciador de software").expect("menu inclui gerenciador");
+    for pressed in [true, false] {
+        folder_frame(
+            &mut app,
+            &ctx,
+            vec![
+                Input::PointerMoved(point),
+                Input::PointerButton {
+                    pos: point,
+                    button: PointerButton::Primary,
+                    pressed,
+                    modifiers: Modifiers::NONE,
+                },
+            ],
+        );
+    }
+    let deadline = Instant::now() + Duration::from_secs(3);
+    let captured = loop {
+        app.poll();
+        if let Ok(bytes) = fs::read(root.join("software-opened"))
+            && !bytes.is_empty()
+        {
+            break bytes;
+        }
+        assert!(
+            Instant::now() < deadline,
+            "opção do menu deve abrir o gerenciador instalado no XFCE"
+        );
+        std::thread::sleep(Duration::from_millis(5));
+    };
+    assert_eq!(captured, b"--details=org.test.Alpha\0");
+    fs::remove_file(root.join("software-opened")).unwrap();
+    let beta = app
+        .applications
+        .items
+        .iter()
+        .find(|item| item.application.id == "beta.desktop")
+        .unwrap()
+        .application
+        .clone();
+    app.manage_application(beta, &ctx);
+    let deadline = Instant::now() + Duration::from_secs(3);
+    while app.notice_toasts.is_empty() && Instant::now() < deadline {
+        app.poll();
+        std::thread::sleep(Duration::from_millis(5));
+    }
+    assert_eq!(
+        fs::read(root.join("software-opened")).unwrap(),
+        b"--search=Editor Beta\0"
+    );
+    assert_eq!(
+        app.notice_toasts.len(),
+        1,
+        "busca alternativa é informada por toast"
+    );
+    app.notice_toasts.clear();
+    fs::write(
+        root.join("bin/gnome-software"),
+        "#!/bin/sh\necho Falha-do-gerenciador >&2\nexit 1\n",
+    )
+    .unwrap();
+    app.manage_application(app.applications.items[0].application.clone(), &ctx);
+    let deadline = Instant::now() + Duration::from_secs(3);
+    while app.notice_toasts.is_empty() && Instant::now() < deadline {
+        app.poll();
+        std::thread::sleep(Duration::from_millis(5));
+    }
+    assert!(
+        app.error
+            .as_deref()
+            .is_some_and(|error| error.contains("Falha-do-gerenciador"))
+    );
+    app.notice_toasts.clear();
+    app.error = None;
+    // No direct package update/removal command is ever executed.
     fs::write(
         root.join("bin/gio"),
         "#!/bin/sh\necho Falha-do-launcher >&2\nexit 1\n",
@@ -192,4 +307,143 @@ fn applications_sidebar_filter_double_click_launch_and_session_are_integrated() 
             .iter()
             .any(|entry| entry.id == sidebar::Location::Applications)
     );
+}
+
+#[test]
+fn applications_support_toolbar_views_details_sorting_grid_navigation_and_saved_layout() {
+    let root = tempfile::tempdir().unwrap();
+    let ctx = egui::Context::default();
+    let mut app = Explorer::with_context(&ctx, root.path().to_owned());
+    complete_navigation(&mut app);
+    app.current = menu::location();
+    app.applications.replace(
+        (0..20)
+            .map(|i| Launcher {
+                application: crate::applications::Application {
+                    id: format!("example-{i:02}.desktop"),
+                    path: root.path().join(format!("example-{i:02}.desktop")),
+                    name: format!("App {i:02}"),
+                    description: format!("Descrição {i:02}"),
+                    recommended: false,
+                    is_default: false,
+                },
+                icon: None,
+            })
+            .collect(),
+        None,
+    );
+    app.entries.clear();
+    for dark in [false, true] {
+        ctx.set_visuals(if dark {
+            egui::Visuals::dark()
+        } else {
+            egui::Visuals::light()
+        });
+        for (view, icon) in [
+            (View::List, Icon::List),
+            (View::Details, Icon::Details),
+            (View::Icons, Icon::Grid),
+        ] {
+            folder_frame(&mut app, &ctx, vec![]);
+            let output = folder_frame(&mut app, &ctx, vec![]);
+            let glyph = icons::glyph(icon.default_name())
+                .unwrap()
+                .character()
+                .to_string();
+            let point = text_center(&output, &glyph).unwrap();
+            for pressed in [true, false] {
+                folder_frame(
+                    &mut app,
+                    &ctx,
+                    vec![
+                        Input::PointerMoved(point),
+                        Input::PointerButton {
+                            pos: point,
+                            button: PointerButton::Primary,
+                            pressed,
+                            modifiers: Modifiers::NONE,
+                        },
+                    ],
+                );
+            }
+            assert_eq!(app.view, view, "botão da toolbar habilitado em Aplicativos");
+            let output = folder_frame(&mut app, &ctx, vec![]);
+            assert!(text_center(&output, "App 00").is_some());
+            if view == View::Details {
+                assert!(text_center(&output, "Descrição").is_some());
+                assert!(text_center(&output, "Identificador do aplicativo").is_some());
+                assert!(text_center(&output, "example-00.desktop").is_some());
+            } else if view == View::Icons {
+                let first = text_center(&output, "App 00").unwrap();
+                let next = text_center(&output, "App 01").unwrap();
+                assert!(
+                    (first.y - next.y).abs() < 1.0 && next.x > first.x,
+                    "ícones lado a lado"
+                );
+                assert!(app.applications.columns > 1);
+            }
+        }
+    }
+    app.applications.selected = Some("example-00.desktop".into());
+    let columns = app.applications.columns;
+    let key = |key, pressed| Input::Key {
+        key,
+        physical_key: None,
+        pressed,
+        repeat: false,
+        modifiers: Modifiers::NONE,
+    };
+    for pressed in [true, false] {
+        crate::app::tests::frame(
+            &mut app,
+            &ctx,
+            1180.0,
+            vec![key(Key::ArrowDown, pressed)],
+            |app, ui| {
+                app.application_shortcuts(ui.ctx());
+                ui.min_rect()
+            },
+        );
+    }
+    assert_eq!(
+        app.applications.selected,
+        Some(format!("example-{columns:02}.desktop"))
+    );
+    app.view = View::Details;
+    folder_frame(&mut app, &ctx, vec![]);
+    let output = folder_frame(&mut app, &ctx, vec![]);
+    let point = text_center(&output, "Nome ↑").unwrap();
+    for pressed in [true, false] {
+        folder_frame(
+            &mut app,
+            &ctx,
+            vec![
+                Input::PointerMoved(point),
+                Input::PointerButton {
+                    pos: point,
+                    button: PointerButton::Primary,
+                    pressed,
+                    modifiers: Modifiers::NONE,
+                },
+            ],
+        );
+    }
+    assert_eq!(
+        app.applications.items[app.applications.visible("")[0]]
+            .application
+            .name,
+        "App 19"
+    );
+    app.query = "App 03".into();
+    assert_eq!(app.applications.visible(&app.query).len(), 1);
+    app.view = View::Icons;
+    app.item_scale = 1.5;
+    let stored = app.stored_preferences(&app.preferences());
+    let restored: Preferences =
+        serde_json::from_str(&serde_json::to_string(&stored).unwrap()).unwrap();
+    let layout = restored.layout_for(&menu::location());
+    assert_eq!(layout.view, View::Icons);
+    assert_eq!(layout.item_scale, 1.5);
+    assert!(!app.can_paste());
+    assert!(app.entries.is_empty());
 }

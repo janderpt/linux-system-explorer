@@ -12,9 +12,11 @@ A local **experimental Flatpak** and the remaining Flathub work are documented i
 
 ## System applications
 
-**Applications** is the first sidebar item. It shows menu launchers in one flat, name-sorted list with installed icons, without folders or categories. Filter by name using the search field or **Ctrl+F**. A single click selects; double-click or **Enter** launches. **F5** refreshes the list after installing or removing programs. Catalog loading and icon decoding run in the background, with a generic icon when necessary.
+**Applications** is the first sidebar item. It shows menu launchers in a flat collection without folders or categories, using the toolbar’s **Details**, **List** and **Icons** modes. Details has sortable Name, Description and Application ID columns; Icons displays a grid with installed application icons. View mode and zoom are saved for this location independently of folders. Filter by name using the search field or **Ctrl+F**. A single click selects; double-click or **Enter** launches. **F5** refreshes the list after installing or removing programs. Catalog loading and icon decoding run in the background, with a generic icon when necessary.
 
 Native installations read XDG `.desktop` entries, respect hidden/desktop visibility rules and user overrides, check available executables, and launch through GIO with the launcher's arguments. This location works with tabs and navigation history and excludes file operations. Hide its shortcut in **Settings → Sidebar**, or customize its icon in **Appearance and icons**. Host application discovery and launching are not yet available in the experimental Flatpak.
+
+Application context menus offer **Open in software manager**. KDE prefers Discover; GNOME prefers GNOME Software. XFCE and other desktops use whichever of those compatible managers is installed, with GNOME Software preferred when both exist. Linked AppStream metadata opens the application's details page; otherwise a name search opens and a toast explains the fallback. Updates, removal and authorization remain in the manager's UI and depend on its plugins, configured sources and the installation's origin. Manually installed applications may not be manageable there. Missing managers and startup failures are reported through toasts. Metadata lookup and startup run in the background.
 
 ## File previews with Space
 
