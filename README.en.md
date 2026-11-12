@@ -3,10 +3,10 @@
 [Português](README.md)
 
 A Linux desktop file manager written in Rust with egui/eframe, inspired by familiar
-desktop file explorers. **Source published on GitHub; version 0.1.0-alpha.1 remains a development build, without a stable release or store approval.**
+desktop file explorers. **Source published on GitHub; version 0.1.0-alpha.2 remains a development build, without a stable release or store approval.**
 
 
-**v0.1.0-alpha.1** prerelease: Ubuntu 24.04+ x86_64 packages, checksums and [installation notes](docs/releases/v0.1.0-alpha.1.md). [GitHub downloads](https://github.com/janderpt/linux-system-explorer/releases/tag/v0.1.0-alpha.1).
+**v0.1.0-alpha.2** prerelease: Ubuntu 24.04+ x86_64 packages, checksums and [installation notes](docs/releases/v0.1.0-alpha.2.md). [GitHub downloads](https://github.com/janderpt/linux-system-explorer/releases/tag/v0.1.0-alpha.2).
 
 ## File previews with Space
 
