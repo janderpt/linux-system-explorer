@@ -444,8 +444,9 @@ fn tab_widget(
     } else {
         visuals.weak_text_color()
     };
-    icons::paint(
+    tab.paint_folder_icon(
         ui.painter(),
+        tab.location(),
         egui::Rect::from_center_size(rect.left_center() + Vec2::new(19.0, 0.0), Vec2::splat(16.0)),
         if crate::applications::menu::is_location(tab.location()) {
             Icon::Applications
@@ -455,7 +456,6 @@ fn tab_widget(
             Icon::Folder
         },
         color,
-        &tab.appearance,
     );
     let title = tab_title(tab);
     response.widget_info(|| {

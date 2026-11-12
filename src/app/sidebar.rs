@@ -287,15 +287,15 @@ impl Explorer {
                 } else {
                     ui.visuals().text_color()
                 };
-                icons::paint(
+                self.paint_folder_icon(
                     ui.painter(),
+                    &entry.path,
                     egui::Rect::from_center_size(
                         rect.left_center() + Vec2::new(16.0, 0.0),
                         Vec2::splat(20.0),
                     ),
                     entry.icon,
                     color,
-                    &self.appearance,
                 );
                 let clip = egui::Rect::from_min_max(
                     egui::pos2(rect.left() + 33.0, rect.top()),

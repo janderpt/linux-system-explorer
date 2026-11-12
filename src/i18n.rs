@@ -294,6 +294,7 @@ mod tests {
             include_str!("trashbin.rs"),
             include_str!("app/preview.rs"),
             include_str!("app/properties.rs"),
+            include_str!("app/folder_appearance.rs"),
             include_str!("preview/archive.rs"),
         ];
         for source in sources {

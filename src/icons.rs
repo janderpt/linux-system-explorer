@@ -40,6 +40,7 @@ pub enum Icon {
     Sun,
     Moon,
     Folder,
+    CustomizeFolder,
     File,
     Link,
     Back,
@@ -100,7 +101,7 @@ pub enum Icon {
 }
 
 impl Icon {
-    pub const ALL: [Self; 89] = [
+    pub const ALL: [Self; 90] = [
         Self::Applications,
         Self::SoftwareManager,
         Self::Print,
@@ -137,6 +138,7 @@ impl Icon {
         Self::Sun,
         Self::Moon,
         Self::Folder,
+        Self::CustomizeFolder,
         Self::File,
         Self::Link,
         Self::Open,
@@ -194,6 +196,7 @@ impl Icon {
 
     pub fn label(self) -> &'static str {
         match self {
+            Self::CustomizeFolder => crate::i18n::tr("Personalizar pasta…"),
             Self::Applications => crate::i18n::tr("Aplicativos"),
             Self::SoftwareManager => crate::i18n::tr("Gerenciador de software"),
             Self::Print => crate::i18n::tr("Imprimir…"),
@@ -320,6 +323,7 @@ impl Icon {
             Self::Sun => "sun",
             Self::Moon => "moon",
             Self::Folder => "folder",
+            Self::CustomizeFolder => "palette",
             Self::File => "file",
             Self::Link => "link",
             Self::Back => "arrow-left",

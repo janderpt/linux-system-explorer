@@ -18,6 +18,7 @@ impl Explorer {
     }
 
     pub(super) fn folder_actions_menu(&mut self, ui: &mut egui::Ui, path: &Path) {
+        self.customize_folder_menu(ui, path);
         if self
             .menu_item(
                 ui,

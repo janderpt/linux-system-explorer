@@ -215,6 +215,7 @@ pub struct Preferences {
     pub columns: Vec<Column>,
     pub column_widths: BTreeMap<Column, f32>,
     pub folders: BTreeMap<String, FolderLayout>,
+    pub folder_styles: crate::folder_style::Styles,
     pub appearance: Appearance,
     pub sidebar: sidebar::Preferences,
     pub dark: bool,
@@ -236,6 +237,7 @@ impl Default for Preferences {
             columns: Column::DEFAULT.to_vec(),
             column_widths: BTreeMap::new(),
             folders: BTreeMap::new(),
+            folder_styles: BTreeMap::new(),
             appearance: Appearance::default(),
             sidebar: sidebar::Preferences::default(),
             dark: false,
@@ -264,6 +266,7 @@ impl Preferences {
         for layout in self.folders.values_mut() {
             layout.normalize();
         }
+        crate::folder_style::normalize(&mut self.folder_styles);
         self.appearance.normalize();
         self.sidebar.normalize();
         self.toast.normalize();

@@ -370,7 +370,7 @@ A operação usa a lista confirmada: itens enviados à lixeira depois dessa list
 
 ## Configurações e metadados Linux
 
-A engrenagem abre as abas **Geral**, **Barra lateral**, **Colunas** e **Aparência e ícones**, nessa ordem, começando por **Geral**. Todas mantêm a mesma altura, com rolagem independente no conteúdo de cada aba e botões em posições estáveis. Os elementos são centralizados verticalmente em suas linhas. **Aplicar** salva as alterações e mantém a janela aberta; **Salvar e fechar** também fecha a janela. **Cancelar** descarta as alterações ainda não aplicadas. O catálogo permite buscar pelo nome Font Awesome (por exemplo, `house`, `folder` ou `gear`) e escolher o ícone de cada uma das 89 ações, locais e notificações configuráveis. São 1.407 ícones do estilo Free Solid, incorporados ao executável e disponíveis sem conexão. A licença e a origem estão em [assets/fontawesome](assets/fontawesome/README.md). Os menus de contexto usam essas mesmas escolhas para Abrir, Abrir com, Copiar, Recortar, Colar, Renomear, Copiar caminho, Propriedades, Fixar, Desafixar e as duas ações de exclusão.
+A engrenagem abre as abas **Geral**, **Barra lateral**, **Colunas** e **Aparência e ícones**, nessa ordem, começando por **Geral**. Todas mantêm a mesma altura, com rolagem independente no conteúdo de cada aba e botões em posições estáveis. Os elementos são centralizados verticalmente em suas linhas. **Aplicar** salva as alterações e mantém a janela aberta; **Salvar e fechar** também fecha a janela. **Cancelar** descarta as alterações ainda não aplicadas. O catálogo permite buscar pelo nome Font Awesome (por exemplo, `house`, `folder` ou `gear`) e escolher o ícone de cada uma das 90 ações, locais e notificações configuráveis. São 1.407 ícones do estilo Free Solid, incorporados ao executável e disponíveis sem conexão. A licença e a origem estão em [assets/fontawesome](assets/fontawesome/README.md). Os menus de contexto usam essas mesmas escolhas para Abrir, Abrir com, Copiar, Recortar, Colar, Renomear, Copiar caminho, Propriedades, Fixar, Desafixar e as duas ações de exclusão.
 
 ### Ícones de arquivos e abertura no aplicativo padrão
 
@@ -439,6 +439,10 @@ As colunas incluem nome, tipo, extensão, tamanho, modificação, criação, úl
 - Os metadados de um **link simbólico** descrevem o próprio link, como em `lstat`. A navegação em links para pastas segue o destino. Proprietários e grupos desconhecidos aparecem pelo identificador numérico.
 
 ## Tamanho nas propriedades
+
+Nas propriedades de uma pasta, a aba **Aparência** permite escolher uma cor e um ícone Font Awesome. O menu de contexto **Personalizar pasta…** abre diretamente essa aba. **Aplicar** salva mantendo a janela aberta; **Salvar e fechar** salva e fecha; **Cancelar** descarta o que ainda não foi aplicado. **Restaurar padrão** prepara a remoção apenas da aparência dessa pasta; confirme com Aplicar ou Salvar e fechar. Essa restauração preserva as demais pastas, suas colunas, visualização e zoom.
+
+A cor e o ícone personalizados aparecem nas três visualizações, nas abas e nos atalhos da barra lateral, com prioridade sobre os temas claro/escuro e o modo colorido/preto e branco. A escolha fica salva nas preferências do explorador, associada ao caminho absoluto, sem modificar os arquivos da pasta nem o tema do sistema. Renomear uma pasta pelo explorador atualiza também as personalizações dela e de suas subpastas.
 
 **Propriedades** mostra o tamanho lógico e **Tamanho em disco**, incluindo os valores em bytes. Para pastas reais, calcula os totais e a quantidade de arquivos/links e subpastas em segundo plano, incluindo itens ocultos. Fechar a janela cancela a leitura; reabrir recalcula. Links simbólicos não são percorridos: suas propriedades descrevem o próprio link.
 

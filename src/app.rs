@@ -20,6 +20,7 @@ mod deletions;
 mod drag_drop;
 mod empty_trash;
 mod folder_actions;
+mod folder_appearance;
 mod folder_picker;
 mod image_actions;
 mod local_shares;
@@ -115,6 +116,8 @@ pub struct Explorer {
     default_layout: FolderLayout,
     folder_layouts: BTreeMap<String, FolderLayout>,
     appearance: icons::Appearance,
+    folder_styles: crate::folder_style::Styles,
+    folder_editor: Option<folder_appearance::Editor>,
     settings_editor: Option<settings::Editor>,
     settings_path: Option<PathBuf>,
     last_attempted_preferences: Preferences,
@@ -271,6 +274,8 @@ impl Explorer {
             default_layout: FolderLayout::default(),
             folder_layouts: BTreeMap::new(),
             appearance: icons::Appearance::default(),
+            folder_styles: BTreeMap::new(),
+            folder_editor: None,
             settings_editor: None,
             settings_path: None,
             last_attempted_preferences: Preferences::default(),
@@ -888,6 +893,7 @@ impl Explorer {
             columns: self.visible_columns.clone(),
             column_widths: self.column_widths.clone(),
             folders: self.folder_layouts.clone(),
+            folder_styles: self.folder_styles.clone(),
             appearance: self.appearance.clone(),
             sidebar: self.sidebar_options.clone(),
             dark: self.dark,
@@ -924,6 +930,7 @@ impl Explorer {
     fn apply_global_preferences(&mut self, preferences: &Preferences, ctx: &egui::Context) {
         self.places = locations::available_places();
         self.appearance = preferences.appearance.clone();
+        self.folder_styles = preferences.folder_styles.clone();
         self.sidebar_options = preferences.sidebar.clone();
         self.dark = preferences.dark;
         self.show_hidden = preferences.show_hidden;
@@ -1848,13 +1855,23 @@ impl Explorer {
     fn paint_file_icon(&self, painter: &egui::Painter, rect: egui::Rect, entry: &Entry) {
         let visuals = &painter.ctx().style().visuals;
         let size = rect.width();
-        icons::paint(
-            painter,
-            rect.shrink(1.0),
-            crate::filetypes::icon(entry),
-            visuals.text_color(),
-            &self.appearance,
-        );
+        if entry.is_dir {
+            self.paint_folder_icon(
+                painter,
+                entry.display_path(),
+                rect.shrink(1.0),
+                Icon::Folder,
+                visuals.text_color(),
+            );
+        } else {
+            icons::paint(
+                painter,
+                rect.shrink(1.0),
+                crate::filetypes::icon(entry),
+                visuals.text_color(),
+                &self.appearance,
+            );
+        }
         if entry.is_symlink {
             let badge = egui::Rect::from_min_size(
                 rect.left_bottom() - Vec2::new(0.0, size * 0.45),

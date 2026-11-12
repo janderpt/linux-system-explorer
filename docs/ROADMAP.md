@@ -1,5 +1,9 @@
 # Próximos recursos de interface
 
+## Aparência das pastas
+
+Implementado: cor e ícone por pasta em **Propriedades → Aparência**, com atalho no menu de contexto, persistência independente do tema e restauração individual do padrão.
+
 ## Aplicativos
 
 Implementado para instalações nativas. A integração do menu do host no Flatpak permanece pendente.

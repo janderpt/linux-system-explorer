@@ -237,6 +237,9 @@ impl Workspace {
         for (index, tab) in self.tabs.iter_mut().enumerate() {
             if index != self.active {
                 tab.default_layout = self.shared.layout();
+                if tab.folder_styles != self.shared.folder_styles {
+                    tab.folder_styles = self.shared.folder_styles.clone();
+                }
                 if tab.folder_layouts != self.shared.folders {
                     tab.folder_layouts = self.shared.folders.clone();
                 }

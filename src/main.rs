@@ -9,6 +9,7 @@ mod disk_usage;
 mod file_manager;
 mod filesystem;
 mod filetypes;
+mod folder_style;
 mod i18n;
 mod icons;
 mod image_ops;

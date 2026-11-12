@@ -453,3 +453,57 @@ fn tabs_share_one_local_share_sidebar_and_observe_renames_and_removals() {
     app.tabs[0].publish_local_share_sidebar(vec![]);
     assert!(app.tabs[1].local_share_entries().is_empty());
 }
+
+#[test]
+fn folder_styles_are_shared_between_tabs_and_split_panes_without_changing_their_layouts() {
+    let root = tempfile::tempdir().unwrap();
+    let folder = root.path().join("styled");
+    std::fs::create_dir(&folder).unwrap();
+    let ctx = egui::Context::default();
+    let mut app = workspace(&ctx, root.path().to_owned());
+    app.add_tab(folder.clone(), &ctx);
+    complete_navigation(&mut app.tabs[1]);
+    let style = crate::folder_style::Style {
+        icon: "star".into(),
+        color: [22, 166, 99],
+    };
+    let layouts: Vec<_> = app.tabs.iter().map(|t| t.current_layout()).collect();
+    assert!(app.tabs[1].save_folder_style(&folder, Some(style.clone())));
+    app.share();
+    for (tab, layout) in app.tabs.iter().zip(&layouts) {
+        assert_eq!(
+            tab.folder_styles.get(&settings::folder_key(&folder)),
+            Some(&style)
+        );
+        assert!(tab.current_layout() == *layout);
+    }
+    for _ in 0..2 {
+        let _ = ctx.run(
+            egui::RawInput {
+                screen_rect: Some(egui::Rect::from_min_size(
+                    egui::Pos2::ZERO,
+                    Vec2::new(1180.0, 760.0),
+                )),
+                ..Default::default()
+            },
+            |ctx| app.tab_bar(ctx),
+        );
+    }
+    app.toggle_split(&ctx);
+    assert!(app.split.is_some());
+    assert!(
+        app.tabs
+            .iter()
+            .all(|tab| tab.folder_styles.get(&settings::folder_key(&folder)) == Some(&style))
+    );
+    app.activate(0, &ctx);
+    assert_eq!(
+        app.tabs[0]
+            .folder_styles
+            .get(&settings::folder_key(&folder)),
+        Some(&style)
+    );
+    assert!(app.tabs[0].save_folder_style(&folder, None));
+    app.share();
+    assert!(app.tabs.iter().all(|t| t.folder_styles.is_empty()));
+}

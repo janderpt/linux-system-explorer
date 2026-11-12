@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add per-folder Font Awesome icons and exact colors through Properties → Appearance and a Customize folder context shortcut; save atomically, share across tabs/panes, preserve overrides across theme/icon-mode changes and folder renames, and restore only the chosen folder with Apply/Cancel support.
+
 - Fix KDE printing by obtaining fresh settings/confirmation with PreparePrint before Print; reject missing/malformed tokens, never reuse earlier printer configuration and ensure cancellation or preparation failure sends no document. Add a safe manual settings-only smoke test for the actual desktop portal.
 
 - Add built-in image rotation, aspect-preserving/exact resizing and PNG/JPEG/WebP/BMP/TIFF conversion, including batch processing, EXIF orientation, transparency handling, cancellable workers and numbered atomic no-replace output; preserve originals and reject animated/multipage input instead of silently flattening it.

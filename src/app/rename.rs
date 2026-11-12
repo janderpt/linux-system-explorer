@@ -242,6 +242,7 @@ impl Explorer {
             }
         }
         if entry.is_dir {
+            crate::folder_style::rename(&mut self.folder_styles, old, destination);
             for shortcut in self
                 .sidebar_options
                 .pinned

@@ -2626,5 +2626,33 @@
   "O sistema não conseguiu abrir a configuração de impressão.": {
     "pt": "O sistema não conseguiu abrir a configuração de impressão.",
     "en": "The system could not open the print settings."
+  },
+  "Personalizar pasta…": {
+    "pt": "Personalizar pasta…",
+    "en": "Customize folder…"
+  },
+  "Aparência": {
+    "pt": "Aparência",
+    "en": "Appearance"
+  },
+  "Escolha a cor e o ícone desta pasta.": {
+    "pt": "Escolha a cor e o ícone desta pasta.",
+    "en": "Choose the color and icon for this folder."
+  },
+  "A personalização tem prioridade sobre o tema e o modo de cores dos ícones.": {
+    "pt": "A personalização tem prioridade sobre o tema e o modo de cores dos ícones.",
+    "en": "Customization takes precedence over the theme and icon color mode."
+  },
+  "Cor da pasta": {
+    "pt": "Cor da pasta",
+    "en": "Folder color"
+  },
+  "Cores sugeridas": {
+    "pt": "Cores sugeridas",
+    "en": "Suggested colors"
+  },
+  "Não foi possível salvar a aparência da pasta: {}": {
+    "pt": "Não foi possível salvar a aparência da pasta: {0}",
+    "en": "Could not save folder appearance: {0}"
   }
 }
