@@ -1,6 +1,6 @@
 # Flatpak experimental e preparação para o Flathub
 
-Este pacote é um **protótipo local**, separado da alpha.2 nativa e ainda sem publicação no Flathub. A branch é `experimental`, com o mesmo ID `io.github.janderpt.linux-system-explorer`. A aplicação usa Freedesktop Platform **26.08**. A instalação nativa continua sendo a referência com todos os conversores e integrações do sistema.
+Este pacote é um **protótipo local**, separado da alpha.3 nativa e ainda sem publicação no Flathub. A branch é `experimental`, com o mesmo ID `io.github.janderpt.linux-system-explorer`. A aplicação usa Freedesktop Platform **26.08**. A instalação nativa continua sendo a referência com todos os conversores e integrações do sistema.
 
 ## Instalar e remover o protótipo
 
@@ -10,7 +10,7 @@ Com esses componentes instalados pela sua distribuição, adicione o repositóri
 
 ```sh
 flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
-flatpak install --user ./linux-system-explorer-0.1.0-alpha.2-flatpak-experimental-x86_64.flatpak
+flatpak install --user ./linux-system-explorer-0.1.0-alpha.3-flatpak-experimental-x86_64.flatpak
 flatpak run --branch=experimental io.github.janderpt.linux-system-explorer
 ```
 

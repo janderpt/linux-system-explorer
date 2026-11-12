@@ -1,4 +1,4 @@
-# Third-party distribution record — 0.1.0-alpha.2
+# Third-party distribution record — 0.1.0-alpha.3
 
 Technical review date: 2026-11-12. This records the packaging work for the Linux x86_64 alpha, not a legal certification or a claim of independent human review. The package inventory is generated from the exact Cargo.lock and active normal/build dependency graph; its lock hash is recorded in THIRD_PARTY.json and BUILD-INFO.json. It deliberately retains `review_required: true` for ongoing maintainer review.
 
@@ -22,7 +22,7 @@ Reference: https://www.mozilla.org/en-US/MPL/2.0/FAQ/ and https://www.mozilla.or
 
 ## External runtime packages
 
-GStreamer/codecs, Poppler, LibreOffice, WeasyPrint, libarchive, GIO and desktop services are system dependencies, not copied into these archives. Their packages supply their own notices/source mechanisms. The DEB declares them for installation through the distribution package manager; tar users install the equivalent runtime packages. Other packaging formats that bundle these components require a new review.
+GStreamer/codecs, Poppler, LibreOffice, WeasyPrint, libarchive, GIO, UDisks2/Polkit and desktop portal services are system dependencies, not copied into these archives. Their packages supply their own notices/source mechanisms. The DEB declares them for installation through the distribution package manager; tar users install the equivalent runtime packages. Other packaging formats that bundle these components require a new review.
 
 ## Security review
 

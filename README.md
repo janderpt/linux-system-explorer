@@ -2,14 +2,14 @@
 
 [English](README.en.md)
 
-**Código-fonte publicado no GitHub — versão 0.1.0-alpha.2 em desenvolvimento.** O plano por formato e loja está
+**Código-fonte publicado no GitHub — versão 0.1.0-alpha.3 em desenvolvimento.** O plano por formato e loja está
 em [Distribuição](docs/DISTRIBUTION.md), com os passos de revisão em
 [Release](docs/RELEASING.md). Ainda não há aprovação em lojas.
 
 Explorador de arquivos desktop para Linux, escrito em Rust e inspirado na organização e na experiência do Windows Explorer. A primeira versão usa [egui/eframe](https://github.com/emilk/egui) com renderização OpenGL e suporte a Wayland e X11.
 
 
-Pré-release **v0.1.0-alpha.2**: pacotes Ubuntu 24.04+ x86_64, checksums e [instruções de instalação](docs/releases/v0.1.0-alpha.2.md). [Downloads no GitHub](https://github.com/janderpt/linux-system-explorer/releases/tag/v0.1.0-alpha.2).
+Pré-release **v0.1.0-alpha.3**: pacotes Ubuntu 24.04+ x86_64, checksums e [instruções de instalação](docs/releases/v0.1.0-alpha.3.md). [Downloads no GitHub](https://github.com/janderpt/linux-system-explorer/releases/tag/v0.1.0-alpha.3).
 
 Para o protótipo **Flatpak experimental** e a preparação para o Flathub, consulte [Flatpak](docs/FLATPAK.md). Ele ainda tem diferenças de recursos em relação aos pacotes nativos.
 

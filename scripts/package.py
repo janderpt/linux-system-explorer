@@ -261,7 +261,7 @@ def build(output, binary, formats):
                 f"Section: utils\nPriority: optional\nInstalled-Size: {size}\n"
                 f"Maintainer: {PACKAGE['metadata']['distribution']['maintainer']}\n"
                 f"Homepage: {PACKAGE['homepage']}\nDepends: {depends}\n"
-                "Recommends: udisks2, polkitd\n"
+                "Recommends: udisks2, polkitd, xdg-desktop-portal\n"
                 "Description: Experimental file manager for Linux\n"
                 " Configurable views, per-folder layouts, file operations and Trash support.\n"
                 " Experimental build; not yet approved for store distribution.\n"

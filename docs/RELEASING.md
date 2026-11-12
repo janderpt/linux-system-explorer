@@ -1,6 +1,6 @@
 # Release checklist
 
-The current 0.1.0-alpha.2 source is experimental and has no public stable release. Building
+The current 0.1.0-alpha.3 source is experimental and has no public stable release. Building
 packages does not publish anything. Use GitHub prereleases for initial native testing.
 
 ## Publishing source updates
@@ -53,4 +53,4 @@ parts of Flathub's current AI policy. Acceptance is the store's decision.
 
 The `Publish alpha prerelease` workflow handles `v*-alpha.*` tags. Cargo/tag versions must match; Debian converts `-alpha` to `~alpha` so it sorts before the final release. It uses Rust 1.99.1 and Ubuntu 24.04, records the exact source/lockfile, audits RustSec, includes MPL-covered sources, and tests DEB install/reinstall/removal and X11 startup in a clean Ubuntu container. It publishes only the validated artifact from its read-only build job; the final job alone has release-write permission.
 
-Review docs/releases/v0.1.0-alpha.2.md and docs/THIRD_PARTY_REVIEW.md, commit the source, run local checks and optionally use packaging/Dockerfile.prerelease for Ubuntu validation. Then create and push an annotated matching tag. Do not move published tags. Failed runs leave the version unpublished; fix/review failures before retrying. The alpha release notes document the incomplete GNOME/KDE and Wayland/X11 matrix rather than claiming certification.
+Review docs/releases/v0.1.0-alpha.3.md and docs/THIRD_PARTY_REVIEW.md, commit the source, run local checks and optionally use packaging/Dockerfile.prerelease for Ubuntu validation. Then create and push an annotated matching tag. Do not move published tags. Failed runs leave the version unpublished; fix/review failures before retrying. The alpha release notes document the incomplete GNOME/KDE and Wayland/X11 matrix rather than claiming certification.

@@ -11,7 +11,7 @@ The repository contains the published source, desktop metadata, build scripts an
 | Channel | Current preparation | Remaining gates |
 | --- | --- | --- |
 | GitHub source | Published repository, MIT license, CI, source installation/update instructions and contribution docs | Maintain reviewed commits and passing CI |
-| GitHub binary downloads | First alpha workflow: Ubuntu 24.04 x86_64 DEB/TAR.GZ, checksums, audit/build records, notices and included MPL sources | Continued maintainer review, broader desktop/session tests and stable-release validation |
+| GitHub binary downloads | Native alpha workflow: Ubuntu 24.04 x86_64 DEB/TAR.GZ, checksums, audit/build records, notices and included MPL sources | Continued maintainer review, broader desktop/session tests and stable-release validation |
 | Debian/Ubuntu packages | Experimental DEB with binary-derived libc dependencies and desktop metadata | Install/remove/upgrade tests, maintainer review, repository signing and native distro policy |
 | AppImage | Relocatable archive and shared desktop assets | AppDir, library bundling, older supported build baseline and clean-host tests; not yet an AppImage |
 | Flatpak / Flathub | Local experimental bundle builder, runtime/ABI and capability checks, portal file opening, existing metadata/notices and a local-only educational example; see [Flatpak](FLATPAK.md) | Converter modules, host/Trash integration, actual desktop/session tests, stable/history gates, independently human-authored submission and review |
