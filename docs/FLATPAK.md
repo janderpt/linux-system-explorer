@@ -1,6 +1,6 @@
 # Flatpak experimental e preparação para o Flathub
 
-Este pacote é um **protótipo local**, separado da alpha.3 nativa e ainda sem publicação no Flathub. A branch é `experimental`, com o mesmo ID `io.github.janderpt.linux-system-explorer`. A aplicação usa Freedesktop Platform **26.08**. A instalação nativa continua sendo a referência com todos os conversores e integrações do sistema.
+Este pacote é um **protótipo local da alpha.4**, separado dos pacotes nativos e ainda sem publicação no Flathub. A branch é `experimental`, com o mesmo ID `io.github.janderpt.linux-system-explorer`. A aplicação usa Freedesktop Platform **26.08**. A instalação nativa continua sendo a referência com todos os conversores e integrações do sistema.
 
 ## Instalar e remover o protótipo
 
@@ -10,13 +10,24 @@ Com esses componentes instalados pela sua distribuição, adicione o repositóri
 
 ```sh
 flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
-flatpak install --user ./linux-system-explorer-0.1.0-alpha.3-flatpak-experimental-x86_64.flatpak
+flatpak install --user ./linux-system-explorer-0.1.0-alpha.4-flatpak-experimental-x86_64.flatpak
 flatpak run --branch=experimental io.github.janderpt.linux-system-explorer
 ```
 
 O repositório fornece o runtime; o aplicativo acima vem do arquivo local, **não da loja**. O bundle não inclui o runtime e precisa de rede na primeira instalação. Os checksums acompanham o arquivo em `SHA256SUMS`; `FLATPAK-BUILD-INFO.json` identifica fonte, binário, runtime, permissões e recursos detectados. Este protótipo não tem assinatura GPG nem atualização automática por um repositório próprio.
 
-Para atualizar, feche as janelas Flatpak e repita a instalação com o novo arquivo. Para remover somente este protótipo:
+Para atualizar o protótipo anterior (alpha.2), feche suas janelas e instale o novo bundle **sem desinstalar a versão anterior**:
+
+```sh
+flatpak install --user ./linux-system-explorer-0.1.0-alpha.4-flatpak-experimental-x86_64.flatpak
+flatpak info --user io.github.janderpt.linux-system-explorer//experimental
+```
+
+A origem e a branch `experimental` permanecem as mesmas, e as preferências do sandbox são preservadas. A alpha.3 foi distribuída como pacote nativo; o bundle experimental anterior disponível para o teste de atualização é a alpha.2. Não use `--delete-data` ao atualizar.
+
+Para verificar apenas os arquivos Flatpak, execute `sha256sum --check SHA256SUMS` dentro da pasta de saída deles. O manifesto de checksums é separado dos pacotes nativos.
+
+Para remover somente este protótipo:
 
 ```sh
 flatpak uninstall --user io.github.janderpt.linux-system-explorer//experimental
@@ -59,6 +70,19 @@ python3 scripts/flatpak.py build
 Saída: `dist/flatpak-experimental/`. Os destinos devem estar vazios; não reutilize staging de outra revisão. `--binary`, `--destdir`, `--stage`, `--work-dir` e `--output` permitem separar ambientes de compilação/staging/exportação. O script não instala o aplicativo, muda padrões, cria tags ou publica arquivos. A ferramenta `flatpak-builder` não é necessária para esse caminho por comandos `flatpak build-*`.
 
 O registro identifica alterações não commitadas. Para distribuir builds de teste rastreáveis, faça o staging de uma revisão limpa. O teste de ABI recusa bibliotecas não encontradas ou uma versão diferente do executável; isto não substitui testes funcionais dos codecs/portais.
+
+## Testar instalação e atualização
+
+O teste automatizado `scripts/smoke-flatpak.py` exige um container descartável com Flatpak, runtime, proxy atualizado, D-Bus isolado e Xvfb. Ele instala a alpha.4 do zero, verifica a versão e a abertura gráfica, remove o app, instala o bundle anterior e atualiza **no mesmo ref**, conferindo o commit e a preservação exata das preferências. Também verifica a remoção e que os padrões MIME e as configurações nativas não foram alterados. Exemplo dentro desse ambiente, com os caminhos adaptados aos volumes montados:
+
+```sh
+dbus-run-session -- xvfb-run -a python3 scripts/smoke-flatpak.py \
+  /pacotes/linux-system-explorer-0.1.0-alpha.4-flatpak-experimental-x86_64.flatpak \
+  --previous /anterior/linux-system-explorer-0.1.0-alpha.2-flatpak-experimental-x86_64.flatpak \
+  --report /pacotes/FLATPAK-VALIDATION.json
+```
+
+O relatório identifica a versão realmente atualizada, o commit OSTree e as capacidades presentes. Testes com Xvfb/software OpenGL validam o sandbox e o ciclo de instalação; a sessão real KDE/GNOME e Wayland continua sendo uma validação separada. O relatório e suas instruções podem ser incluídos no `SHA256SUMS` do bundle após o teste.
 
 ## Ferramentas em container (opcional)
 
@@ -120,7 +144,7 @@ Políticas consultadas em 2026-11-12. Esta é documentação técnica do projeto
 
 ## English summary
 
-This is a local **experimental Flatpak**, not a Flathub release. Install the bundle with `flatpak install --user FILE.flatpak`, run `flatpak run --branch=experimental io.github.janderpt.linux-system-explorer`, and uninstall that branch with `flatpak uninstall --user io.github.janderpt.linux-system-explorer//experimental`. The Freedesktop 26.08 runtime is downloaded separately. Use a maintained Flatpak installation with xdg-dbus-proxy 0.1.9 or newer; the original Ubuntu 24.04 proxy 0.1.5 cannot handle the zbus 6 protocol, regardless of runtime version. Preferences are sandbox-specific and neither installation nor removal changes the default file manager. The unsigned local bundle has no automatic repository updates.
+This is a local **experimental Flatpak**, not a Flathub release. Install the bundle with `flatpak install --user FILE.flatpak`, run `flatpak run --branch=experimental io.github.janderpt.linux-system-explorer`, and uninstall that branch with `flatpak uninstall --user io.github.janderpt.linux-system-explorer//experimental`. The Freedesktop 26.08 runtime is downloaded separately. Use a maintained Flatpak installation with xdg-dbus-proxy 0.1.9 or newer; the original Ubuntu 24.04 proxy 0.1.5 cannot handle the zbus 6 protocol, regardless of runtime version. Preferences are sandbox-specific and neither installation nor removal changes the default file manager. The unsigned local bundle has no automatic repository updates. To upgrade the previous alpha.2 prototype to alpha.4, close its windows and install the new bundle on the same experimental branch without uninstalling or deleting data. The automated disposable-container smoke test covers fresh installation, same-ref upgrade, exact preference preservation, Xvfb startup and removal; this does not certify a real desktop session.
 
 Images/text, GStreamer media and libarchive use embedded/runtime components. PDF, Office and formatted HTML/Markdown converters remain to be packaged. Opening files uses the desktop portal; terminal commands run inside the sandbox. New remote connections, local Samba management, UDisks2 volume discovery/mount/unmount/eject and FileManager1 host registration are not enabled. Trash parity, mounted paths, DND and both desktop/window-system combinations require real-session validation. The build report records actual runtime capabilities and permissions. Keep the native package for full existing integrations.
 
