@@ -15,6 +15,7 @@ use x11rb::{
     rust_connection::RustConnection,
     wrapper::ConnectionExt as _,
 };
+mod drag_window;
 
 x11rb::atom_manager! {
     Atoms: AtomsCookie {
@@ -25,7 +26,7 @@ x11rb::atom_manager! {
 }
 
 enum Command {
-    Arm(Vec<PathBuf>),
+    Arm(Vec<PathBuf>, Option<super::visual::Image>),
     Cancel,
     Accept(bool),
     Scale(f32),
@@ -56,8 +57,8 @@ impl Bridge {
             worker: Some(worker),
         }
     }
-    pub fn arm(&self, paths: Vec<PathBuf>) {
-        let _ = self.commands.send(Command::Arm(paths));
+    pub fn arm(&self, paths: Vec<PathBuf>, image: Option<super::visual::Image>) {
+        let _ = self.commands.send(Command::Arm(paths, image));
     }
     pub fn cancel(&self) {
         let _ = self.commands.send(Command::Cancel);
@@ -93,6 +94,8 @@ struct Outgoing {
     dropped: Option<Instant>,
     released: Option<Instant>,
     requested: Action,
+    image: Option<super::visual::Image>,
+    badge: Option<drag_window::DragWindow>,
 }
 struct Incoming {
     source: Window,
@@ -312,9 +315,13 @@ impl Worker {
         (0, 0)
     }
     fn outgoing_end(&mut self) {
-        if let Some(output) = self.outgoing.take()
-            && output.started
-        {
+        if let Some(output) = self.outgoing.take() {
+            if let Some(badge) = output.badge {
+                badge.destroy(&self.conn);
+            }
+            if !output.started {
+                return;
+            }
             if output.target != 0 && output.dropped.is_none() {
                 self.target_message(
                     output.receiver,
@@ -385,7 +392,22 @@ impl Worker {
                 x11rb::CURRENT_TIME,
             );
             self.outgoing.as_mut().unwrap().started = true;
+            if let Some(image) = self.outgoing.as_mut().unwrap().image.take() {
+                self.outgoing.as_mut().unwrap().badge =
+                    drag_window::DragWindow::new(&self.conn, self.root, &image, self.scale);
+            }
             self.emit(AppEvent::Started);
+        }
+        if let Some(badge) = &self.outgoing.as_ref().unwrap().badge {
+            badge.follow(&self.conn, pointer.root_x, pointer.root_y);
+        }
+        if !held
+            && let Some(badge) = self
+                .outgoing
+                .as_mut()
+                .and_then(|output| output.badge.take())
+        {
+            badge.destroy(&self.conn);
         }
         let requested = if pointer.mask.contains(KeyButMask::CONTROL) {
             Action::Copy
@@ -791,7 +813,7 @@ fn run(
                     }
                 }
                 Command::Cancel => worker.outgoing_end(),
-                Command::Arm(paths) => {
+                Command::Arm(paths, image) => {
                     worker.outgoing_end();
                     if let Some(bytes) = uri_list(&paths) {
                         worker.outgoing = Some(Outgoing {
@@ -803,6 +825,8 @@ fn run(
                             dropped: None,
                             released: None,
                             requested: Action::Copy,
+                            image,
+                            badge: None,
                         });
                     } else {
                         worker.emit(AppEvent::Error(
@@ -1167,6 +1191,8 @@ mod tests {
                 dropped: None,
                 released: None,
                 requested: Action::Copy,
+                image: None,
+                badge: None,
             }),
             chunks: BTreeMap::new(),
             finishes: BTreeMap::new(),

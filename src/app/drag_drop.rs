@@ -1,5 +1,6 @@
 use super::*;
 use crate::native_dnd::{Action, Completion, Event as NativeEvent, Native, modifier_action};
+use std::sync::Arc;
 
 struct PendingDrop {
     position: egui::Pos2,
@@ -24,6 +25,8 @@ pub(super) struct DragDrop {
     pub native: Option<Native>,
     pub trash_prepare: Option<Receiver<std::io::Result<Vec<Entry>>>>,
     paths: Vec<PathBuf>,
+    preview: Option<(Entry, String)>,
+    mounts: Option<Arc<crate::native_dnd::policy::Mounts>>,
     native_active: bool,
     refresh_native: bool,
     hover: Option<egui::Pos2>,
@@ -281,12 +284,71 @@ impl Explorer {
                 .map(|&i| self.entries[i].path.clone())
                 .filter(|path| self.selected.contains(path))
                 .collect();
+            self.dnd.mounts = Some(Arc::new(crate::native_dnd::policy::Mounts::read()));
+            let label = if self.dnd.paths.len() == 1 {
+                entry.name.clone()
+            } else {
+                crate::i18n::message(
+                    "{} itens sendo arrastados",
+                    &[self.dnd.paths.len().to_string()],
+                )
+            };
+            self.dnd.preview = Some((entry.clone(), label.clone()));
+            let image = self.native_drag_image(entry, &label, ui.ctx());
             if let Some(native) = &mut self.dnd.native {
-                native.arm(self.dnd.paths.clone(), response.ctx.content_rect().size());
+                native.arm(
+                    self.dnd.paths.clone(),
+                    response.ctx.content_rect().size(),
+                    image,
+                );
             }
         }
     }
+    fn native_drag_image(
+        &self,
+        entry: &Entry,
+        label: &str,
+        ctx: &egui::Context,
+    ) -> Option<crate::native_dnd::visual::Image> {
+        let visuals = ctx.style().visuals.clone();
+        let icon = if entry.is_dir {
+            Icon::Folder
+        } else {
+            crate::filetypes::icon(entry)
+        };
+        let custom = entry
+            .is_dir
+            .then(|| {
+                self.folder_styles
+                    .get(&settings::folder_key(entry.display_path()))
+            })
+            .flatten();
+        let name = custom
+            .map(|style| style.icon.as_str())
+            .unwrap_or_else(|| self.appearance.name(icon));
+        let glyph = icons::glyph(name).or_else(|| icons::glyph(icon.default_name()))?;
+        let color = custom
+            .map(|style| Color32::from_rgb(style.color[0], style.color[1], style.color[2]))
+            .unwrap_or_else(|| {
+                if self.appearance.mode == icons::IconMode::Colored {
+                    icon.color(visuals.dark_mode)
+                } else {
+                    visuals.text_color()
+                }
+            });
+        crate::native_dnd::visual::image(
+            label,
+            glyph.character(),
+            color,
+            visuals.window_fill(),
+            visuals.text_color(),
+            visuals.window_stroke().color,
+        )
+    }
     pub(super) fn finish_drag_drop(&mut self, ctx: &egui::Context) {
+        if !self.dnd.paths.is_empty() && self.dnd.mounts.is_none() {
+            self.dnd.mounts = Some(Arc::new(crate::native_dnd::policy::Mounts::read()));
+        }
         let escape =
             ctx.input(|input| input.key_pressed(Key::Escape) || input.viewport().close_requested());
         if escape {
@@ -341,13 +403,7 @@ impl Explorer {
         if let Some(pending) = self.dnd.pending.take() {
             let mut started = false;
             let expected = pending.paths.len();
-            let action = if pending.internal {
-                modifier_action(ctx.input(|input| input.modifiers)).unwrap_or(Action::Move)
-            } else {
-                pending.action.unwrap_or_else(|| {
-                    modifier_action(ctx.input(|input| input.modifiers)).unwrap_or(Action::Copy)
-                })
-            };
+            let mut action = Action::Copy;
             if let Some((_, destination)) = self
                 .dnd
                 .targets
@@ -356,6 +412,28 @@ impl Explorer {
                 .find(|(rect, _)| rect.contains(pending.position))
                 .cloned()
             {
+                // A native drop must keep its negotiated action, even if this
+                // app was also its source (e.g. leaving and re-entering a window).
+                action = if pending.internal && pending.completion.is_none() {
+                    self.dnd
+                        .mounts
+                        .as_deref()
+                        .map(|mounts| {
+                            mounts.action(
+                                &pending.paths,
+                                Some(&destination),
+                                ctx.input(|input| input.modifiers),
+                            )
+                        })
+                        .unwrap_or_else(|| {
+                            modifier_action(ctx.input(|input| input.modifiers))
+                                .unwrap_or(Action::Copy)
+                        })
+                } else {
+                    pending.action.unwrap_or_else(|| {
+                        modifier_action(ctx.input(|input| input.modifiers)).unwrap_or(Action::Copy)
+                    })
+                };
                 let mode = if action == Action::Move {
                     file_ops::Mode::Cut
                 } else {
@@ -387,7 +465,21 @@ impl Explorer {
             self.refresh_after_transfer = true;
             ctx.request_repaint();
         }
-        if !self.dnd.paths.is_empty() && (!self.dnd.native_active || self.dnd.hover.is_some()) {
+        let predicted = self
+            .dnd
+            .mounts
+            .as_deref()
+            .map(|mounts| {
+                mounts.action(
+                    &self.dnd.paths,
+                    hovered.as_deref(),
+                    ctx.input(|input| input.modifiers),
+                )
+            })
+            .unwrap_or_else(|| {
+                modifier_action(ctx.input(|input| input.modifiers)).unwrap_or(Action::Copy)
+            });
+        if !self.dnd.paths.is_empty() && !self.dnd.native_active {
             ctx.request_repaint_after(std::time::Duration::from_millis(16));
             if let Some(position) = position {
                 ctx.set_cursor_icon(
@@ -395,9 +487,7 @@ impl Explorer {
                         .as_ref()
                         .is_some_and(|path| self.drop_destination_allowed(path, &self.dnd.paths))
                     {
-                        match modifier_action(ctx.input(|input| input.modifiers))
-                            .unwrap_or(Action::Move)
-                        {
+                        match predicted {
                             Action::Copy => egui::CursorIcon::Copy,
                             Action::Move => egui::CursorIcon::Default,
                         }
@@ -410,13 +500,44 @@ impl Explorer {
                     .interactable(false)
                     .order(egui::Order::Tooltip)
                     .show(ctx, |ui| {
-                        egui::Frame::popup(ui.style()).show(ui, |ui| {
-                            ui.label(crate::i18n::plural(
-                                "{} item",
-                                "{} itens",
-                                self.dnd.paths.len(),
-                            ));
-                        });
+                        egui::Frame::popup(ui.style())
+                            .corner_radius(8)
+                            .inner_margin(egui::Margin::symmetric(12, 8))
+                            .show(ui, |ui| {
+                                ui.set_max_width(280.0);
+                                ui.horizontal(|ui| {
+                                    if let Some((entry, _)) = &self.dnd.preview {
+                                        let (rect, _) = ui
+                                            .allocate_exact_size(Vec2::splat(38.0), Sense::hover());
+                                        ui.painter().rect_filled(
+                                            rect,
+                                            6.0,
+                                            ui.visuals().selection.bg_fill.linear_multiply(0.14),
+                                        );
+                                        self.paint_file_icon(ui.painter(), rect.shrink(5.0), entry);
+                                    }
+                                    ui.vertical(|ui| {
+                                        let label = self
+                                            .dnd
+                                            .preview
+                                            .as_ref()
+                                            .map(|(_, label)| label.clone())
+                                            .unwrap_or_else(|| {
+                                                crate::i18n::plural(
+                                                    "{} item",
+                                                    "{} itens",
+                                                    self.dnd.paths.len(),
+                                                )
+                                            });
+                                        ui.add(egui::Label::new(label).truncate());
+                                        ui.small(crate::i18n::tr(if predicted == Action::Copy {
+                                            "Copiar"
+                                        } else {
+                                            "Mover"
+                                        }));
+                                    });
+                                });
+                            });
                     });
             }
         }
@@ -425,9 +546,7 @@ impl Explorer {
                 hovered
                     .as_ref()
                     .filter(|path| self.drop_destination_allowed(path, &self.dnd.paths))
-                    .map(|_| {
-                        modifier_action(ctx.input(|input| input.modifiers)).unwrap_or(Action::Move)
-                    })
+                    .and_then(|_| self.dnd.feedback.unwrap_or(Some(predicted)))
             } else {
                 self.dnd.feedback.unwrap_or_else(|| {
                     Some(
@@ -440,6 +559,10 @@ impl Explorer {
                 Some(Action::Move) => egui::CursorIcon::Default,
                 None => egui::CursorIcon::NoDrop,
             });
+        }
+        if self.dnd.paths.is_empty() {
+            self.dnd.preview = None;
+            self.dnd.mounts = None;
         }
     }
     pub(super) fn drop_files(

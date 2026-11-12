@@ -3,6 +3,8 @@
 use eframe::egui::{self, Pos2};
 use raw_window_handle::{HasWindowHandle, RawWindowHandle};
 use std::path::PathBuf;
+pub(crate) mod policy;
+pub(crate) mod visual;
 mod x11;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -85,13 +87,16 @@ impl Native {
         })
     }
 
-    pub fn arm(&mut self, paths: Vec<PathBuf>, size: egui::Vec2) {
+    pub fn arm(&mut self, paths: Vec<PathBuf>, size: egui::Vec2, image: Option<visual::Image>) {
         self.outgoing = paths.clone();
         match &self.backend {
             Backend::Wayland(bridge) => {
-                bridge.arm_drag(paths, None, (size.x as f64, size.y as f64))
+                let icon = image.and_then(|image| {
+                    guth_wayland_dnd::DragIcon::new(image.width, image.height, image.rgba)
+                });
+                bridge.arm_drag(paths, icon, (size.x as f64, size.y as f64))
             }
-            Backend::X11(bridge) => bridge.arm(paths),
+            Backend::X11(bridge) => bridge.arm(paths, image),
         }
     }
     pub fn cancel(&self) {

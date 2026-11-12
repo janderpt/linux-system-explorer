@@ -2119,6 +2119,14 @@
     "pt": "Espaço",
     "en": "Space"
   },
+  "{} itens sendo arrastados": {
+    "pt": "{0} itens sendo arrastados",
+    "en": "Dragging {0} items"
+  },
+  "Mover": {
+    "pt": "Mover",
+    "en": "Move"
+  },
   "Não foi possível pré-visualizar o arquivo: {}": {
     "pt": "Não foi possível pré-visualizar o arquivo: {0}",
     "en": "Could not preview the file: {0}"

@@ -94,6 +94,8 @@ The **Local shares** sidebar section lists this computer's Samba user shares by 
 currently tracks transfers inside this app and exports path text. Drag and drop is a
 separate native integration. Flatpak/Snap sandbox compatibility has not been certified.
 
+Internal file drags move by default between local folders on the same volume, and copy across volumes, network locations (including FTP) and virtual mounts. Ctrl forces copying; Shift forces moving; Ctrl wins when both are held. A theme-aware card follows the pointer with the item icon and name or selection count, plus the predicted operation inside the explorer. Wayland and X11 use a native icon/name/count badge outside the window; the X11 badge has an empty input region so it cannot intercept a drop. Native protocol drops retain the negotiated action, including when returning to this application. Escape cancels the gesture.
+
 ## Build and run
 
 Use Rust 1.95 or newer and a graphical Linux session with OpenGL. Install Rust through [rustup](https://rustup.rs/). On Ubuntu 24.04 or newer:

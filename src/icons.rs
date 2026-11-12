@@ -400,7 +400,7 @@ impl Icon {
         }
     }
 
-    fn color(self, dark: bool) -> Color32 {
+    pub(crate) fn color(self, dark: bool) -> Color32 {
         let color = match self {
             Self::Folder | Self::NewFolder => Color32::from_rgb(205, 146, 24),
             Self::Music | Self::Video => Color32::from_rgb(150, 85, 194),
