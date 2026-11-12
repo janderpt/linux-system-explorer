@@ -54,6 +54,55 @@ fn settle(app: &mut Workspace) {
 }
 
 #[test]
+fn filter_arrows_enter_only_the_active_panes_results_and_keep_navigating() {
+    let root = tempfile::tempdir().unwrap();
+    for name in ["match-a.txt", "match-b.txt", "unrelated.txt"] {
+        std::fs::write(root.path().join(name), name).unwrap();
+    }
+    let ctx = egui::Context::default();
+    let mut app = workspace(&ctx, root.path().into());
+    app.toggle_split(&ctx);
+    settle(&mut app);
+    let [left, right] = app.split_indices().unwrap();
+    app.activate(right, &ctx);
+    app.tabs[right].focus_search = true;
+    render(&mut app, &ctx, vec![], Modifiers::NONE);
+    render(
+        &mut app,
+        &ctx,
+        vec![Event::Text("match".into())],
+        Modifiers::NONE,
+    );
+    let arrow = |key, pressed| Event::Key {
+        key,
+        physical_key: None,
+        pressed,
+        repeat: false,
+        modifiers: Modifiers::NONE,
+    };
+    for name in ["match-b.txt", "match-a.txt"] {
+        let key = Key::ArrowUp;
+        render(&mut app, &ctx, vec![arrow(key, true)], Modifiers::NONE);
+        render(&mut app, &ctx, vec![arrow(key, false)], Modifiers::NONE);
+        assert_eq!(
+            app.tabs[right].selection_cursor,
+            Some(root.path().join(name))
+        );
+        assert!(!ctx.wants_keyboard_input());
+    }
+    assert_eq!(
+        app.tabs[right].selection_cursor,
+        Some(root.path().join("match-a.txt"))
+    );
+    assert_eq!(app.tabs[right].query, "match");
+    assert!(app.tabs[left].selected.is_empty());
+    assert!(app.tabs[left].query.is_empty());
+    assert_eq!(app.active, right);
+    assert_eq!(app.tabs[left].current, root.path());
+    assert_eq!(app.tabs[right].current, root.path());
+}
+
+#[test]
 fn session_restores_pane_folders_active_side_and_resized_ratio_after_reordering() {
     let root = tempfile::tempdir().unwrap();
     let folders = ["Left", "Right", "Hidden"].map(|name| root.path().join(name));

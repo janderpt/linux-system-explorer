@@ -32,6 +32,8 @@ The folder search field (**Ctrl+F**) matches file and folder names throughout th
 
 Search starts after a 250 ms typing pause using one worker per tab and bounded result batches. New text, hidden-item changes and navigation cancel obsolete work. Clearing the field, **Escape** while the field is focused, or **Clear search** restores the direct listing; **F5** refreshes and reruns the search. Tabs and panes search independently. Applications and Trash keep their existing filters.
 
+While the search field is focused, **Up** selects the last displayed result and **Down** selects the first. Further arrows navigate the results and reveal the selected item without clearing the search. Only the active pane is affected. With no results, focus stays in the field; Shift+arrows still selects text.
+
 Hidden directories are excluded unless hidden items are enabled. Descendant directory symlinks are not followed, preventing cycles; an explicitly opened root may itself be a symlink. Search reads names and metadata. Unreadable/changed entries yield partial results with a toast. Limits are 20,000 matches, one million examined entries and 128 levels; reaching a limit reports partial results and asks for a narrower query.
 
 ## Drives

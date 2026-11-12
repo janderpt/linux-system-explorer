@@ -68,6 +68,22 @@ impl AppColumn {
     }
 }
 impl Explorer {
+    pub(super) fn select_application_endpoint(&mut self, last: bool) -> bool {
+        let visible = self.applications.visible(&self.query);
+        let index = if last {
+            visible.last()
+        } else {
+            visible.first()
+        };
+        if let Some(&index) = index {
+            self.applications.selected =
+                Some(self.applications.items[index].application.id.clone());
+            self.applications.reveal = true;
+            true
+        } else {
+            false
+        }
+    }
     pub(super) fn is_applications(&self) -> bool {
         menu::is_location(&self.current)
     }
@@ -88,7 +104,7 @@ impl Explorer {
         });
     }
     pub(super) fn application_shortcuts(&mut self, ctx: &egui::Context) {
-        if ctx.wants_keyboard_input() || self.loading {
+        if ctx.wants_keyboard_input() || self.loading || egui::Popup::is_any_open(ctx) {
             return;
         }
         let visible = self.applications.visible(&self.query);
@@ -120,6 +136,7 @@ impl Explorer {
             Key::PageDown,
         ] {
             if ctx.input_mut(|i| i.consume_key(egui::Modifiers::NONE, key)) {
+                ctx.memory_mut(|memory| memory.move_focus(egui::FocusDirection::None));
                 let current = selected.unwrap_or(0);
                 let page = self.navigation_page.max(1);
                 let columns = if self.view == View::Icons {

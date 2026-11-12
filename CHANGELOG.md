@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Let notification toasts grow with their content up to the available window height, removing the fixed/percentage height cap; scroll overflowing stacks and keep dismissal controls accessible.
+- Move from the focused filter to the last visible result with Up or the first with Down, preserve recursive search text/results and continue arrow navigation in the active pane; retain text focus for empty results and modified arrows.
+
 - Open the focused selected visible item with Enter in the active pane, including folders selected by typing on local and FTP mounts; reuse standard folder navigation/default file opening, ignore key repeat/modifiers and retain text-field, dialog and terminal Enter behavior.
 
 - Add name-prefix keyboard selection in Details/List/Icons, including remote folders, with displayed-order matching, selection reveal, a one-second reset, repeated-initial cycling, Backspace/Escape and independent pane/tab behavior; preserve text fields, dialogs, terminal input and the immediate Space preview shortcut.

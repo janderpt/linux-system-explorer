@@ -86,6 +86,55 @@ fn applications_sidebar_filter_double_click_launch_and_session_are_integrated() 
         "busca somente pelo nome"
     );
     app.query.clear();
+    for view in [View::Details, View::List, View::Icons] {
+        for key in [Key::ArrowUp, Key::ArrowDown] {
+            app.view = view;
+            app.query = "e".into();
+            app.focus_search = true;
+            for events in [
+                vec![],
+                vec![Input::Key {
+                    key,
+                    physical_key: None,
+                    pressed: true,
+                    repeat: false,
+                    modifiers: Modifiers::NONE,
+                }],
+                vec![Input::Key {
+                    key,
+                    physical_key: None,
+                    pressed: false,
+                    repeat: false,
+                    modifiers: Modifiers::NONE,
+                }],
+            ] {
+                let _ = ctx.run(
+                    egui::RawInput {
+                        screen_rect: Some(egui::Rect::from_min_size(
+                            egui::Pos2::ZERO,
+                            Vec2::new(1180.0, 760.0),
+                        )),
+                        events,
+                        ..Default::default()
+                    },
+                    |ctx| app.show(ctx),
+                );
+            }
+            assert_eq!(
+                app.applications.selected.as_deref(),
+                Some(if key == Key::ArrowUp {
+                    "nested-tool.desktop"
+                } else {
+                    "beta.desktop"
+                })
+            );
+            assert_eq!(app.query, "e");
+            assert!(!ctx.wants_keyboard_input());
+        }
+    }
+    app.query.clear();
+    app.applications.selected = None;
+    app.view = View::List;
     folder_frame(&mut app, &ctx, vec![]);
     let output = folder_frame(&mut app, &ctx, vec![]);
     let point = text_center(&output, "Ferramenta Alpha").unwrap();

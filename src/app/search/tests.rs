@@ -296,3 +296,149 @@ fn result_location_handles_same_folder_directories_hidden_raw_names_and_failed_n
     assert!(!app.notice_toasts.is_empty());
     assert_eq!(fs::read_to_string(raw).unwrap(), "raw");
 }
+
+fn interaction_frame(
+    app: &mut Explorer,
+    ctx: &egui::Context,
+    events: Vec<egui::Event>,
+) -> egui::FullOutput {
+    ctx.run(
+        egui::RawInput {
+            screen_rect: Some(egui::Rect::from_min_size(
+                egui::Pos2::ZERO,
+                Vec2::new(1180.0, 760.0),
+            )),
+            time: Some(ctx.input(|input| input.time) + 0.1),
+            events,
+            ..Default::default()
+        },
+        |ctx| app.show(ctx),
+    )
+}
+fn arrow(key: Key, pressed: bool) -> egui::Event {
+    egui::Event::Key {
+        key,
+        physical_key: None,
+        pressed,
+        repeat: false,
+        modifiers: egui::Modifiers::NONE,
+    }
+}
+
+#[test]
+fn filter_arrows_enter_the_first_or_last_recursive_result_then_navigate_in_all_views() {
+    for view in [View::Details, View::List, View::Icons] {
+        for key in [Key::ArrowUp, Key::ArrowDown] {
+            let root = tempfile::tempdir().unwrap();
+            fs::create_dir(root.path().join("nested")).unwrap();
+            for name in ["match-a.txt", "match-b.txt", "match-c.txt"] {
+                fs::write(root.path().join("nested").join(name), name).unwrap();
+            }
+            fs::write(root.path().join("unrelated.txt"), "untouched").unwrap();
+            let ctx = egui::Context::default();
+            let mut app = Explorer::with_context(&ctx, root.path().into());
+            complete_navigation(&mut app);
+            app.view = view;
+            app.query = "match".into();
+            finish(&mut app);
+            app.focus_search = true;
+            interaction_frame(&mut app, &ctx, vec![]);
+            assert!(ctx.wants_keyboard_input());
+            interaction_frame(&mut app, &ctx, vec![arrow(key, true)]);
+            interaction_frame(&mut app, &ctx, vec![arrow(key, false)]);
+            let expected = root.path().join("nested").join(if key == Key::ArrowUp {
+                "match-c.txt"
+            } else {
+                "match-a.txt"
+            });
+            assert_eq!(app.selection_cursor, Some(expected.clone()));
+            assert_eq!(app.selected, BTreeSet::from([expected]));
+            assert!(!ctx.wants_keyboard_input());
+            assert_eq!(app.query, "match");
+            assert_eq!(app.current, root.path());
+            assert!(app.recursive_search.active());
+            let next = if key == Key::ArrowUp {
+                Key::ArrowUp
+            } else {
+                Key::ArrowDown
+            };
+            interaction_frame(&mut app, &ctx, vec![arrow(next, true)]);
+            assert_eq!(
+                app.selection_cursor,
+                Some(root.path().join("nested/match-b.txt"))
+            );
+            assert_eq!(app.query, "match");
+        }
+    }
+}
+
+#[test]
+fn filter_handoff_applies_new_text_in_the_same_frame_and_keeps_empty_results_focused() {
+    let root = tempfile::tempdir().unwrap();
+    for name in ["match-a.txt", "match-b.txt", "other.txt"] {
+        fs::write(root.path().join(name), name).unwrap();
+    }
+    let ctx = egui::Context::default();
+    let mut app = Explorer::with_context(&ctx, root.path().into());
+    complete_navigation(&mut app);
+    app.focus_search = true;
+    interaction_frame(&mut app, &ctx, vec![]);
+    interaction_frame(
+        &mut app,
+        &ctx,
+        vec![
+            egui::Event::Text("match".into()),
+            arrow(Key::ArrowDown, true),
+        ],
+    );
+    interaction_frame(&mut app, &ctx, vec![arrow(Key::ArrowDown, false)]);
+    assert_eq!(app.query, "match");
+    assert_eq!(app.selection_cursor, Some(root.path().join("match-a.txt")));
+    assert!(!ctx.wants_keyboard_input());
+    app.query = "no-results".into();
+    finish(&mut app);
+    app.focus_search = true;
+    interaction_frame(&mut app, &ctx, vec![]);
+    interaction_frame(&mut app, &ctx, vec![arrow(Key::ArrowUp, true)]);
+    interaction_frame(&mut app, &ctx, vec![arrow(Key::ArrowUp, false)]);
+    assert!(ctx.wants_keyboard_input());
+    assert_eq!(app.query, "no-results");
+    assert!(app.selection_cursor.is_none());
+    interaction_frame(&mut app, &ctx, vec![arrow(Key::End, true)]);
+    interaction_frame(&mut app, &ctx, vec![egui::Event::Text("-more".into())]);
+    assert_eq!(app.query, "no-results-more");
+}
+
+#[test]
+fn modified_arrows_keep_text_focus_and_endpoint_selection_is_revealed_when_scrolled() {
+    let root = tempfile::tempdir().unwrap();
+    for i in 0..100 {
+        fs::write(root.path().join(format!("match-{i:03}.txt")), "text").unwrap();
+    }
+    let ctx = egui::Context::default();
+    let mut app = Explorer::with_context(&ctx, root.path().into());
+    complete_navigation(&mut app);
+    app.query = "match".into();
+    finish(&mut app);
+    app.focus_search = true;
+    interaction_frame(&mut app, &ctx, vec![]);
+    let mut modified = arrow(Key::ArrowUp, true);
+    if let egui::Event::Key { modifiers, .. } = &mut modified {
+        *modifiers = egui::Modifiers::SHIFT;
+    }
+    interaction_frame(&mut app, &ctx, vec![modified]);
+    assert!(ctx.wants_keyboard_input() && app.selected.is_empty());
+    interaction_frame(&mut app, &ctx, vec![arrow(Key::ArrowUp, false)]);
+    interaction_frame(&mut app, &ctx, vec![arrow(Key::ArrowUp, true)]);
+    for _ in 0..12 {
+        interaction_frame(&mut app, &ctx, vec![]);
+    }
+    let output = interaction_frame(&mut app, &ctx, vec![]);
+    assert_eq!(
+        app.selection_cursor,
+        Some(root.path().join("match-099.txt"))
+    );
+    let position = text_center(&output, "match-099.txt").expect("selected last result is visible");
+    assert!((0.0..760.0).contains(&position.y));
+    assert_eq!(app.query, "match");
+}

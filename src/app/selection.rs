@@ -159,7 +159,7 @@ impl Explorer {
     }
 
     pub(super) fn selection_shortcuts(&mut self, ctx: &egui::Context) {
-        if self.loading || ctx.wants_keyboard_input() {
+        if self.loading || ctx.wants_keyboard_input() || egui::Popup::is_any_open(ctx) {
             return;
         }
         let keys: Vec<_> = ctx.input(|input| {
@@ -178,8 +178,7 @@ impl Explorer {
                         pressed: true,
                         modifiers,
                         ..
-                    } if (modifiers.shift || !matches!(key, Key::ArrowUp | Key::ArrowDown))
-                        && !modifiers.ctrl
+                    } if !modifiers.ctrl
                         && !modifiers.command
                         && !modifiers.alt
                         && !modifiers.mac_cmd =>
@@ -209,6 +208,7 @@ impl Explorer {
             ctx.input_mut(|input| {
                 input.consume_key(modifiers, key);
             });
+            ctx.memory_mut(|memory| memory.move_focus(egui::FocusDirection::None));
             if visible.is_empty() {
                 continue;
             }
@@ -237,6 +237,49 @@ impl Explorer {
             let path = self.entries[visible[next]].path.clone();
             self.select_entry(&path, &visible, modifiers);
             self.reveal_selection = true;
+        }
+    }
+
+    pub(super) fn enter_filtered_results(&mut self, ctx: &egui::Context) {
+        let Some((id, key)) = self.filter_navigation.take() else {
+            return;
+        };
+        if self.loading
+            || self.has_dialog()
+            || self.drag_blocks_tabs()
+            || egui::Popup::is_any_open(ctx)
+            || !ctx.memory(|memory| memory.has_focus(id))
+        {
+            return;
+        }
+        let selected = if self.is_applications() {
+            self.select_application_endpoint(key == Key::ArrowUp)
+        } else {
+            let visible = filesystem::visible_entries(
+                &self.entries,
+                &self.query,
+                self.hidden_visible(),
+                self.sort,
+                self.descending,
+            );
+            let index = if key == Key::ArrowUp {
+                visible.last()
+            } else {
+                visible.first()
+            };
+            if let Some(&index) = index {
+                let path = self.entries[index].path.clone();
+                self.select_entry(&path, &visible, egui::Modifiers::NONE);
+                self.reveal_selection = true;
+                true
+            } else {
+                false
+            }
+        };
+        if selected {
+            self.focus_search = false;
+            ctx.memory_mut(|memory| memory.surrender_focus(id));
+            ctx.request_repaint();
         }
     }
 

@@ -110,6 +110,7 @@ pub struct Explorer {
     query: String,
     recursive_search: search::Search,
     focus_search: bool,
+    filter_navigation: Option<(egui::Id, Key)>,
     show_hidden: bool,
     confirm_trash: bool,
     restore_tabs: bool,
@@ -277,6 +278,7 @@ impl Explorer {
             query: String::new(),
             recursive_search: search::Search::new(ctx),
             focus_search: false,
+            filter_navigation: None,
             show_hidden: false,
             confirm_trash: true,
             restore_tabs: true,
@@ -348,6 +350,7 @@ impl Explorer {
             return;
         }
         self.type_ahead = Default::default();
+        self.filter_navigation = None;
         self.recursive_search.cancel();
         let loading_path = if crate::trashbin::is_location(&path)
             || crate::applications::menu::is_location(&path)
@@ -796,9 +799,36 @@ impl Explorer {
             Layout::right_to_left(Align::Center),
             |ui| {
                 let escape = ui.input(|i| i.key_pressed(Key::Escape));
+                let id = ui.make_persistent_id(("folder_filter", self.tab_id));
+                let enter_results = if (ui.memory(|memory| memory.has_focus(id))
+                    || self.focus_search)
+                    && !self.loading
+                    && !self.has_dialog()
+                    && !self.drag_blocks_tabs()
+                    && !egui::Popup::is_any_open(ui.ctx())
+                {
+                    ui.input_mut(|input| {
+                        let key = input.events.iter().find_map(|event| match event {
+                            egui::Event::Key {
+                                key: key @ (Key::ArrowUp | Key::ArrowDown),
+                                pressed: true,
+                                modifiers,
+                                ..
+                            } if *modifiers == egui::Modifiers::NONE => Some(*key),
+                            _ => None,
+                        });
+                        if let Some(key) = key {
+                            input.consume_key(egui::Modifiers::NONE, key);
+                        }
+                        key
+                    })
+                } else {
+                    None
+                };
                 let response = ui.add_sized(
                     [search_width, 32.0],
                     egui::TextEdit::singleline(&mut self.query)
+                        .id(id)
                         .vertical_align(Align::Center)
                         .hint_text(crate::i18n::tr(if applications {
                             "Pesquisar aplicativos · Ctrl+F"
@@ -813,8 +843,24 @@ impl Explorer {
                     response.request_focus();
                     self.focus_search = false;
                 }
+                if response.has_focus()
+                    && !self.has_dialog()
+                    && !egui::Popup::is_any_open(ui.ctx())
+                    && (enter_results.is_some()
+                        || ui.input(|input| {
+                            input.key_pressed(Key::ArrowUp) || input.key_pressed(Key::ArrowDown)
+                        }))
+                {
+                    // The result list or text selection owns these arrows,
+                    // rather than egui's directional widget-focus navigation.
+                    ui.memory_mut(|memory| memory.move_focus(egui::FocusDirection::None));
+                }
                 if escape && (response.has_focus() || response.lost_focus()) {
                     self.query.clear();
+                    ui.ctx().request_repaint();
+                }
+                if let Some(key) = enter_results {
+                    self.filter_navigation = Some((id, key));
                     ui.ctx().request_repaint();
                 }
                 response
@@ -1687,6 +1733,7 @@ impl Explorer {
         self.handle_transfer_close(ctx);
         self.process_transfer_refresh();
         self.update_search();
+        self.enter_filtered_results(ctx);
     }
 
     fn visible_for_display(&mut self) -> Vec<usize> {

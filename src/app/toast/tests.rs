@@ -271,6 +271,64 @@ fn hovering_one_notification_does_not_extend_the_lifetime_of_another() {
 }
 
 #[test]
+fn a_long_notice_grows_to_fit_and_only_scrolls_when_the_window_is_too_short() {
+    let ctx = egui::Context::default();
+    let mut app = Explorer::with_context(&ctx, PathBuf::from("/tmp"));
+    let message = (0..34)
+        .map(|line| format!("Detail {line:02}\n"))
+        .collect::<String>();
+    app.post_typed_notice(NoticeKind::Error, message.clone());
+    let mut output = None;
+    for _ in 0..3 {
+        output = Some(draw(&mut app, &ctx, 0.0, true).0);
+    }
+    let area = ctx
+        .memory(|memory| memory.area_rect(egui::Id::new("operation_notice_stack")))
+        .unwrap();
+    assert!(
+        area.height() > 420.0 && area.top() >= 16.0 && area.bottom() <= 760.0,
+        "{area:?}"
+    );
+    let output = output.unwrap();
+    let text = output
+        .shapes
+        .iter()
+        .find_map(|shape| match &shape.shape {
+            egui::Shape::Text(text) if text.galley.text() == message => Some((
+                egui::Rect::from_min_size(text.pos, text.galley.size()),
+                shape.clip_rect,
+            )),
+            _ => None,
+        })
+        .unwrap();
+    assert!(area.contains_rect(text.0), "entire message fits the toast");
+    assert!(text.1.contains_rect(text.0), "message is not clipped");
+    assert!(area.contains(text_center(&output, "×").unwrap()));
+    for height in [300.0, 900.0] {
+        for _ in 0..3 {
+            let _ = ctx.run(
+                RawInput {
+                    screen_rect: Some(Rect::from_min_size(Pos2::ZERO, Vec2::new(1100.0, height))),
+                    ..Default::default()
+                },
+                |ctx| app.show_notice_toast(ctx),
+            );
+        }
+        let area = ctx
+            .memory(|memory| memory.area_rect(egui::Id::new("operation_notice_stack")))
+            .unwrap();
+        assert!(
+            area.top() >= 15.0 && area.bottom() <= height,
+            "{area:?}, window {height}"
+        );
+        assert!(area.height() <= height - 53.0);
+        if height > 420.0 {
+            assert!(area.height() > 420.0);
+        }
+    }
+}
+
+#[test]
 fn a_large_manual_stack_is_bounded_and_older_notifications_remain_accessible() {
     let ctx = egui::Context::default();
     let mut app = Explorer::with_context(&ctx, PathBuf::from("/tmp"));
@@ -285,7 +343,7 @@ fn a_large_manual_stack_is_bounded_and_older_notifications_remain_accessible() {
         .memory(|memory| memory.area_rect(egui::Id::new("operation_notice_stack")))
         .unwrap();
     assert!(
-        area.height() <= 420.0 && area.top() > 0.0 && area.bottom() <= 760.0,
+        area.height() > 600.0 && area.top() >= 16.0 && area.bottom() <= 760.0,
         "{area:?}"
     );
     let latest = text_center(&output, "Notice 29").unwrap();

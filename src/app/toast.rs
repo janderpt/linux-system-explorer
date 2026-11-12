@@ -136,7 +136,9 @@ impl Explorer {
         }
         let now = ctx.input(|input| input.time);
         let width = (ctx.content_rect().width() - 64.0).clamp(180.0, 360.0);
-        let max_height = ((ctx.content_rect().height() - 100.0) * 0.6).clamp(80.0, 420.0);
+        // Let notices use the window height, reserving only the outer margin
+        // and the existing offset above the status bar.
+        let max_height = (ctx.content_rect().height() - 16.0 - 38.0).max(1.0);
         let mut dismissed = Vec::new();
         let mut close_all = false;
         let mut next_expiry: Option<f64> = None;
@@ -149,6 +151,7 @@ impl Explorer {
             .interactable(true)
             .show(ctx, |ui| {
                 ui.set_width(width + 24.0);
+                ui.set_max_height(max_height);
                 ui.spacing_mut().item_spacing.y = 8.0;
                 let actions_height = if self.notice_toasts.len() > 1 {
                     // Keep the stack action accessible even when older notices are scrolled away.
