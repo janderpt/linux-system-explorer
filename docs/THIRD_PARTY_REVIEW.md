@@ -37,3 +37,10 @@ The build produces **FLATPAK-PREVIEW-SOURCES.tar**, containing the exact LibreOf
 cargo-audit 0.23.0 against the RustSec database on 2026-11-12 reported no known vulnerable locked crates. It reports the informational unmaintained notice RUSTSEC-2026-0192 for `ttf-parser` 0.25.1, pulled by egui → epaint → ab_glyph → owned_ttf_parser. This alpha records that upstream maintenance issue; it does not suppress advisories. The release workflow audits again and attaches the current report; any vulnerability failure prevents publication. This is not a full application or native-runtime security audit.
 
 Reference: https://rustsec.org/advisories/RUSTSEC-2026-0192.html
+
+
+## D-Bus compatibility variant: informational maintenance advisories
+
+The alpha.4 `flatpak-previews-dbus` variant uses zbus 5.19.0 to retain sequential Flatpak authentication with distribution xdg-dbus-proxy 0.1.5. RustSec reports no known vulnerable locked crates, but additionally reports informational unmaintained notices for the standalone crates `zvariant` 5.15.1 (RUSTSEC-2026-0370), `zbus_names` 4.3.5 (RUSTSEC-2026-0371) and `zvariant_derive` 5.15.1 (RUSTSEC-2026-0372), which upstream merged into zbus 6. These are in addition to the existing `ttf-parser` notice. The full, unsuppressed report accompanies this experimental variant as `FLATPAK-DBUS-RUSTSEC-AUDIT.json`.
+
+This alpha explicitly retains the older dependency family for tested host-proxy compatibility. A maintained long-term D-Bus dependency/compatibility strategy needs review before a stable/store release; the proxy transport regression tests must continue to pass during that migration. A clean RustSec vulnerability result does not mean every dependency is maintained or that native preview engines have been audited.

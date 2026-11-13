@@ -6,6 +6,8 @@ Não é necessário substituir manualmente o proxy do sistema para executar um *
 
 A adaptação mantém os serviços e as assinaturas D-Bus existentes. Não amplia as permissões do Flatpak, não desabilita o filtro do proxy, não remove a passagem de descritores e não altera as associações de aplicativos do host. As integrações nativas FileManager1, KIO, preferências de aparência e UDisks2 também usam a biblioteca adaptada; as limitações dessas integrações no Flatpak continuam documentadas em [FLATPAK.md](FLATPAK.md).
 
+Os componentes independentes `zbus_names`, `zvariant` e `zvariant_derive` desta linha receberam avisos informativos de manutenção após sua incorporação ao zbus 6. Não há vulnerabilidade conhecida reportada no lock atual; os avisos não são suprimidos. A [revisão de terceiros](THIRD_PARTY_REVIEW.md) registra essa limitação da alpha e a necessidade de rever a estratégia de manutenção antes da versão estável/loja.
+
 ## Regressão com proxy real e barramento privado
 
 Compile o executável de testes e obtenha seu caminho a partir do Cargo:
