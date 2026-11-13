@@ -1,6 +1,6 @@
 # Release checklist
 
-The current 0.1.0-alpha.4 source is experimental and has no public stable release. Building
+The current 0.1.0-alpha.5 source is experimental and has no public stable release. Building
 packages does not publish anything. Use GitHub prereleases for initial native testing.
 
 ## Publishing source updates
@@ -16,6 +16,8 @@ The source repository already exists at `janderpt/linux-system-explorer`. Publis
 - Store credentials belong in appropriate CI secrets, never in source or package artifacts.
 
 ## Before each binary prerelease
+
+- Set `packaging/release-date` to the version’s actual publication date (ISO `YYYY-MM-DD`). The About dialog and AppStream metadata share this value; rebuilding does not change it. Update it alongside `Cargo.toml` for each new release.
 
 - Run formatting, Clippy, all tests and metadata validation.
 - Review RustSec advisories and native runtime dependencies; document remaining issues. Verify the vendored zbus source/patch with `python3 scripts/check-vendored-zbus.py`, preserve its modified sources/license/provenance, and repeat the proxy 0.1.5/0.1.9 and authentication-peer regressions when updating it.
@@ -42,6 +44,8 @@ A D-Bus compatibility rebuild uses distinct `flatpak-previews-dbus` and `FLATPAK
 
 The zbus 6.2.1 compatibility publication uses `flatpak-previews-dbus6` and `FLATPAK-DBUS6-*`, with `INSTALL-FLATPAK-DBUS6.md`. Its exact application-source archive includes the full upstream zbus crate, original MIT license, reviewed patch and provenance. The bundle includes that modified dependency source with notices. Reuse the unchanged converter-source asset and preserve all previous assets and the native tag.
 
+The alpha.5 publication uses `flatpak-previews`, `FLATPAK-*` and `INSTALL-FLATPAK.md` within its own release. Attach the unchanged corresponding converter sources to that release too; test upgrading the latest alpha.4 zbus 6 bundle. Native packages and Flatpak must identify the same clean alpha.5 commit.
+
 ## Stable releases and stores
 
 Complete the channel-specific gates in DISTRIBUTION.md. Do not mark this build stable
@@ -59,4 +63,4 @@ parts of Flathub's current AI policy. Acceptance is the store's decision.
 
 The `Publish alpha prerelease` workflow handles `v*-alpha.*` tags. Cargo/tag versions must match; Debian converts `-alpha` to `~alpha` so it sorts before the final release. It uses Rust 1.99.1 and Ubuntu 24.04, records the exact source/lockfile, audits RustSec, includes MPL-covered sources, and tests DEB install/reinstall/removal and X11 startup in a clean Ubuntu container. It publishes only the validated artifact from its read-only build job; the final job alone has release-write permission.
 
-Review docs/releases/v0.1.0-alpha.4.md and docs/THIRD_PARTY_REVIEW.md, commit the source, run local checks and optionally use packaging/Dockerfile.prerelease for Ubuntu validation. Then create and push an annotated matching tag. Do not move published tags. Failed runs leave the version unpublished; fix/review failures before retrying. The alpha release notes document the incomplete GNOME/KDE and Wayland/X11 matrix rather than claiming certification.
+Review docs/releases/v0.1.0-alpha.5.md and docs/THIRD_PARTY_REVIEW.md, commit the source, run local checks and optionally use packaging/Dockerfile.prerelease for Ubuntu validation. Then create and push an annotated matching tag. Do not move published tags. Failed runs leave the version unpublished; fix/review failures before retrying. The alpha release notes document the incomplete GNOME/KDE and Wayland/X11 matrix rather than claiming certification.

@@ -1,12 +1,12 @@
 # Compatibilidade D-Bus do Flatpak
 
-A variante alpha.4 **flatpak-previews-dbus6** usa **zbus 6.2.1**, com um backport local da autenticação sequencial exigida por `xdg-dbus-proxy` **0.1.5**. Não depende mais dos componentes aposentados `zbus_names`, `zvariant` e `zvariant_derive`, e os três avisos D-Bus desapareceram da auditoria sem serem suprimidos. O aviso independente de `ttf-parser` continua registrado.
+A alpha.5 **flatpak-previews** e a variante alpha.4 **flatpak-previews-dbus6** usa **zbus 6.2.1**, com um backport local da autenticação sequencial exigida por `xdg-dbus-proxy` **0.1.5**. Não depende mais dos componentes aposentados `zbus_names`, `zvariant` e `zvariant_derive`, e os três avisos D-Bus desapareceram da auditoria sem serem suprimidos. O aviso independente de `ttf-parser` continua registrado.
 
 O upstream zbus 6 removeu o suporte ao proxy antigo. Por isso o projeto preserva uma cópia completa do crate oficial em [vendor/zbus](../vendor/zbus/README.lse.md), com a licença MIT original, origem/commit/SHA-256 e um [patch reproduzível](../packaging/patches/zbus-flatpak-auth.patch). Apenas `src/connection/handshake/client.rs` é alterado. O verificador [check-vendored-zbus.py](../scripts/check-vendored-zbus.py) recusa mudanças adicionais e hashes divergentes; roda no CI e antes do inventário de empacotamento. O pacote também inclui o fonte modificado, a licença, a proveniência e o diff junto dos avisos de terceiros.
 
 No Linux Flatpak, AUTH aguarda sua resposta, depois NEGOTIATE_UNIX_FD aguarda a resposta do servidor; BEGIN/Hello continuam pelo fluxo upstream. As mesmas rotinas upstream validam autenticação, GUID e capacidade de descritores. Conexões nativas mantêm o pipelining original. Não há execução de proxy substituto nem autenticação própria no explorador. A passagem de descritores permanece necessária para OpenFile e Print.
 
-O Flatpak **alpha.4 flatpak-previews-dbus já publicado** usa zbus 5.19 e continua com os avisos informativos registrados no seu relatório original. Seus binários, fontes, checksums e requisitos não foram substituídos. Para obter zbus 6.2.1, instale a [variante flatpak-previews-dbus6](releases/v0.1.0-alpha.4-flatpak-dbus6.md) na mesma branch, preservando as preferências.
+O Flatpak **alpha.4 flatpak-previews-dbus já publicado** usa zbus 5.19 e continua com os avisos informativos registrados no seu relatório original. Seus binários, fontes, checksums e requisitos não foram substituídos. Para obter a versão atual com zbus 6.2.1, instale o [Flatpak alpha.5](releases/v0.1.0-alpha.5-flatpak.md) na mesma branch, preservando as preferências.
 
 A alteração não amplia permissões, não desativa a filtragem D-Bus, não reduz a validação do servidor e não modifica as associações do host. FileManager1, KIO, preferências de aparência e UDisks2 usam a API mantida. As limitações dessas integrações no Flatpak continuam em [FLATPAK.md](FLATPAK.md).
 

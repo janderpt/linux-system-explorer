@@ -31,6 +31,7 @@ pub enum Icon {
     Removable,
     Edit,
     Settings,
+    About,
     NewFolder,
     Copy,
     Cut,
@@ -105,7 +106,7 @@ pub enum Icon {
 }
 
 impl Icon {
-    pub const ALL: [Self; 94] = [
+    pub const ALL: [Self; 95] = [
         Self::Applications,
         Self::SoftwareManager,
         Self::Print,
@@ -142,6 +143,7 @@ impl Icon {
         Self::List,
         Self::Grid,
         Self::Settings,
+        Self::About,
         Self::Sun,
         Self::Moon,
         Self::Folder,
@@ -229,6 +231,7 @@ impl Icon {
             Self::Removable => crate::i18n::tr("Mídias removíveis"),
             Self::Edit => crate::i18n::tr("Editar caminho"),
             Self::Settings => crate::i18n::tr("Configurações"),
+            Self::About => crate::i18n::tr("Sobre"),
             Self::NewFolder => crate::i18n::tr("Nova pasta"),
             Self::Copy => crate::i18n::tr("Copiar arquivos"),
             Self::Cut => crate::i18n::tr("Recortar arquivos"),
@@ -358,7 +361,7 @@ impl Icon {
             Self::OpenWith => "window-restore",
             Self::Rename => "file-pen",
             Self::CopyPath => "link",
-            Self::Properties => "circle-info",
+            Self::Properties | Self::About => "circle-info",
             Self::Pin => "thumbtack",
             Self::Unpin => "minus",
             Self::Network => "network-wired",

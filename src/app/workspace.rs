@@ -377,6 +377,7 @@ impl Explorer {
         self.new_folder.is_some()
             || self.properties.is_some()
             || self.settings_editor.is_some()
+            || self.about.is_some()
             || self.transfer_conflict.is_some()
             || self.delete_confirmation.is_some()
             || self.empty_trash_prompt.is_some()

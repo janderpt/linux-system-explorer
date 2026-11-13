@@ -1,4 +1,8 @@
 fn main() {
+    println!("cargo:rerun-if-changed=packaging/release-date");
+    let release_date =
+        std::fs::read_to_string("packaging/release-date").expect("missing publication date");
+    println!("cargo:rustc-env=LSE_RELEASE_DATE={}", release_date.trim());
     println!("cargo:rerun-if-changed=packaging/app-id");
     let id = std::fs::read_to_string("packaging/app-id").expect("missing application ID");
     let id = id.trim();

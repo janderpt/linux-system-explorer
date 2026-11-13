@@ -1,6 +1,12 @@
 # Changelog
 
-## Unreleased
+## 0.1.0-alpha.5 — 2026-11-13
+
+- Add a translated About dialog from the toolbar, with the application icon, author, package version, publication date, MIT license and project/download/issue links. Share the explicit publication date with AppStream metadata instead of inferring it from build time.
+
+- Publish matching alpha.5 DEB, TAR.GZ and experimental Flatpak builds, corresponding sources, SHA-256 checksums and Portuguese/English installation/upgrade instructions. Retain bundled preview converters and zbus 6.2.1 compatibility with proxies 0.1.5/0.1.9; preserve previous releases.
+
+## Packaging updates after alpha.4
 
 - Publish the alpha.4 `flatpak-previews-dbus6` variant with zbus 6.2.1, verified old-proxy compatibility, bundled preview converters, complete modified dependency/application sources, refreshed checksums and install/upgrade notes. Preserve earlier Flatpak/native assets and the native tag.
 

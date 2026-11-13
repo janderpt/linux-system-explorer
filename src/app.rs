@@ -14,6 +14,7 @@ use std::{
     thread,
 };
 
+mod about;
 mod applications;
 mod breadcrumbs;
 mod deletions;
@@ -128,6 +129,7 @@ pub struct Explorer {
     folder_styles: crate::folder_style::Styles,
     folder_editor: Option<folder_appearance::Editor>,
     settings_editor: Option<settings::Editor>,
+    about: Option<about::Dialog>,
     settings_path: Option<PathBuf>,
     last_attempted_preferences: Preferences,
     view: View,
@@ -297,6 +299,7 @@ impl Explorer {
             folder_styles: BTreeMap::new(),
             folder_editor: None,
             settings_editor: None,
+            about: None,
             settings_path: None,
             last_attempted_preferences: Preferences::default(),
             view: View::Details,
@@ -545,6 +548,7 @@ impl Explorer {
         if self.new_folder.is_some()
             || self.properties.is_some()
             || self.settings_editor.is_some()
+            || self.about.is_some()
             || self.transfer_conflict.is_some()
             || self.delete_confirmation.is_some()
             || self.empty_trash_prompt.is_some()
@@ -740,7 +744,7 @@ impl Explorer {
                 }
                 ui.add_space(10.0);
                 let controls_width =
-                    ((self.appearance.size + 14.0).max(32.0) + ui.spacing().item_spacing.x) * 3.0;
+                    ((self.appearance.size + 14.0).max(32.0) + ui.spacing().item_spacing.x) * 4.0;
                 ui.allocate_ui_with_layout(
                     Vec2::new((ui.available_width() - controls_width).max(1.0), height),
                     Layout::left_to_right(Align::Center),
@@ -773,6 +777,7 @@ impl Explorer {
             });
         }
         self.column_settings(ui);
+        self.about_button(ui);
         if ui
             .add_enabled_ui(!self.has_dialog() && !self.drag_blocks_tabs(), |ui| {
                 self.icon_toggle(
@@ -1825,6 +1830,7 @@ impl Explorer {
     fn view_overlays(&mut self, ctx: &egui::Context) {
         self.dialogs(ctx);
         self.settings_dialog(ctx);
+        self.about_dialog(ctx);
         self.transfer_dialog(ctx);
         self.drop_choice_dialog(ctx);
         self.deletion_dialog(ctx);

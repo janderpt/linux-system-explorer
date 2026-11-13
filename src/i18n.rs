@@ -249,6 +249,7 @@ mod tests {
     fn all_static_translation_calls_have_catalog_entries() {
         let sources = [
             include_str!("app.rs"),
+            include_str!("app/about.rs"),
             include_str!("main.rs"),
             include_str!("sandbox.rs"),
             include_str!("network.rs"),

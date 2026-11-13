@@ -2830,5 +2830,45 @@
   "O arquivo mudou durante a leitura. Tente novamente.": {
     "pt": "O arquivo mudou durante a leitura. Tente novamente.",
     "en": "The file changed while it was being read. Please try again."
+  },
+  "Autoria": {
+    "en": "Author",
+    "pt": "Autoria"
+  },
+  "Código-fonte": {
+    "en": "Source code",
+    "pt": "Código-fonte"
+  },
+  "Licença": {
+    "en": "License",
+    "pt": "Licença"
+  },
+  "Licença do projeto": {
+    "en": "Project license",
+    "pt": "Licença do projeto"
+  },
+  "Publicado em": {
+    "en": "Published on",
+    "pt": "Publicado em"
+  },
+  "Relatar um problema": {
+    "en": "Report an issue",
+    "pt": "Relatar um problema"
+  },
+  "Sobre": {
+    "en": "About",
+    "pt": "Sobre"
+  },
+  "Um explorador de arquivos para Linux inspirado no Windows Explorer": {
+    "en": "A file explorer for Linux inspired by Windows Explorer",
+    "pt": "Um explorador de arquivos para Linux inspirado no Windows Explorer"
+  },
+  "Versão": {
+    "en": "Version",
+    "pt": "Versão"
+  },
+  "Versões e downloads": {
+    "en": "Releases and downloads",
+    "pt": "Versões e downloads"
   }
 }

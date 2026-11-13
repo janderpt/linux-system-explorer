@@ -4,7 +4,6 @@ import argparse
 import datetime
 import hashlib
 import json
-import os
 from pathlib import Path
 import platform
 import re
@@ -46,10 +45,9 @@ def render_metadata(prefix):
     replacements = {
         "@APP_ID@": APP_ID,
         "@VERSION@": VERSION,
-        "@RELEASE_DATE@": datetime.datetime.fromtimestamp(
-            int(os.environ.get("SOURCE_DATE_EPOCH", "0")) or int((ROOT / "Cargo.toml").stat().st_mtime),
-            datetime.timezone.utc,
-        ).date().isoformat(),
+        "@RELEASE_DATE@": datetime.date.fromisoformat(
+            (ROOT / "packaging/release-date").read_text().strip()
+        ).isoformat(),
     }
     for source, destination in [
         ("linux-system-explorer.desktop.in", f"share/applications/{APP_ID}.desktop"),
