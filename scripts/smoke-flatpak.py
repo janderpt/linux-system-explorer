@@ -78,6 +78,7 @@ def sandbox_tests(binary, fixtures, converters=False):
             '--filesystem=' + str(binary.parent) + ':ro',
             '--filesystem=' + str(fixtures) + ':ro',
             '--env=LSE_FLATPAK_FIXTURES=' + str(fixtures),
+            '--env=LSE_WINDOW_BUS_TEST=1', '--env=LSE_TEST_FILTERED_DBUS=1',
             '--command=' + str(binary), APP]
     filters = [
         'transfers::tests::', 'terminal::tests::', 'app::toast::tests::',
@@ -87,6 +88,7 @@ def sandbox_tests(binary, fixtures, converters=False):
         'app::workspace::split::tests::enter_opens_',
         'app::type_ahead::tests::enter_opens_the_folder_',
         'app::sidebar::tests::navigation_reveals_',
+        'file_manager::window::tests::window_reuse_preserves_selection_and_proxy_restricts_ungranted_names',
     ]
     results = []
     for selection in filters:

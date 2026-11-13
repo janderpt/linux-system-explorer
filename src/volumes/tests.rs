@@ -1,6 +1,6 @@
 use super::*;
 use std::sync::{Arc, Mutex, mpsc};
-use zbus::OwnedObjectPath;
+use zbus::zvariant::OwnedObjectPath;
 fn value<'a>(v: impl Into<Variant<'a>>) -> OwnedVariant {
     OwnedVariant::try_from(v.into()).unwrap()
 }
@@ -27,7 +27,7 @@ fn fixture() -> ManagedObjects {
             ),
             (
                 "Drive".into(),
-                value(zbus::ObjectPath::try_from(drive.as_str()).unwrap()),
+                value(zbus::zvariant::ObjectPath::try_from(drive.as_str()).unwrap()),
             ),
             ("IdUsage".into(), value("filesystem")),
             ("IdType".into(), value("ext4")),
@@ -145,7 +145,7 @@ impl Filesystem {
             header
                 .primary()
                 .flags()
-                .contains(zbus::message::Flags::ALLOW_INTERACTIVE_AUTH)
+                .contains(zbus::message::Flags::AllowInteractiveAuth)
         );
         assert!(options.is_empty());
         self.calls
@@ -166,7 +166,7 @@ impl Filesystem {
             header
                 .primary()
                 .flags()
-                .contains(zbus::message::Flags::ALLOW_INTERACTIVE_AUTH)
+                .contains(zbus::message::Flags::AllowInteractiveAuth)
         );
         assert!(
             options.is_empty(),
@@ -212,8 +212,9 @@ fn mount_open_unmount_eject_revalidate_and_stop_on_busy_or_denial_on_a_private_b
     let worker = std::thread::spawn(move || {
         let connection = zbus::block_on(async {
             let connection = zbus::connection::Builder::session()
-                .name(DESTINATION)
-                .serve_at(ROOT, Manager(o))
+                .unwrap()
+                .name(DESTINATION)?
+                .serve_at(ROOT, Manager(o))?
                 .build()
                 .await?;
             for id in ["sdb1", "sdb2"] {

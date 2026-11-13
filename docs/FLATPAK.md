@@ -1,31 +1,33 @@
 # Flatpak experimental e preparação para o Flathub
 
-O projeto oferece um **Flatpak experimental**, ainda sem publicação no Flathub. A [variante alpha.4 com previews](releases/v0.1.0-alpha.4-flatpak-preview.md) inclui **Poppler, LibreOffice e WeasyPrint**, com fontes correspondentes e instruções de atualização próprias na [release do GitHub](https://github.com/janderpt/linux-system-explorer/releases/tag/v0.1.0-alpha.4). O bundle original sem conversores permanece inalterado como histórico. Veja [conversores e reprodução](FLATPAK-PREVIEW.md). A branch é `experimental`, com ID `io.github.janderpt.linux-system-explorer`, e a aplicação usa Freedesktop Platform **26.08**. A instalação nativa continua sendo a referência para as integrações do sistema ainda pendentes.
+O projeto oferece um **Flatpak experimental**, ainda sem publicação no Flathub. A [variante alpha.4 com previews](releases/v0.1.0-alpha.4-flatpak-dbus.md) inclui **Poppler, LibreOffice e WeasyPrint**, com fontes correspondentes e instruções de atualização próprias na [release do GitHub](https://github.com/janderpt/linux-system-explorer/releases/tag/v0.1.0-alpha.4). O bundle original sem conversores permanece inalterado como histórico. Veja [conversores e reprodução](FLATPAK-PREVIEW.md). A branch é `experimental`, com ID `io.github.janderpt.linux-system-explorer`, e a aplicação usa Freedesktop Platform **26.08**. A instalação nativa continua sendo a referência para as integrações do sistema ainda pendentes.
 
 ## Instalar e remover o protótipo
 
-Use Flatpak atualizado e `xdg-dbus-proxy` **0.1.9 ou posterior**, mantidos pela sua distribuição. A biblioteca zbus 6 precisa do protocolo do proxy 0.1.6+, e o teste deste pacote usa 0.1.9 com correções atuais. O proxy 0.1.5 da imagem Ubuntu 24.04 original não funciona para as chamadas D-Bus do aplicativo; instalar um runtime novo não atualiza esse componente do host. Referências: [zbus 6](https://z-galaxy.github.io/zbus/upgrading-to-6.html) e [proxy 0.1.9](https://github.com/flatpak/xdg-dbus-proxy/releases/tag/0.1.9).
+A variante recomendada **flatpak-previews-dbus** usa zbus 5.19, com autenticação sequencial no Flatpak, e funciona também com `xdg-dbus-proxy` **0.1.5** fornecido pelo Ubuntu 24.04. Foi validada com proxies **0.1.5 e 0.1.9**, sem compilar ou substituir manualmente o proxy da distribuição. As variantes alpha.4 anteriores continuam disponíveis com seus requisitos e checksums originais; baixe o arquivo com **previews-dbus** para obter esta correção.
+
+Use Flatpak e os componentes D-Bus mantidos pela distribuição, com as atualizações normais do sistema. O runtime não atualiza o proxy do host. Veja [compatibilidade e testes D-Bus](DBUS-COMPATIBILITY.md).
 
 Com esses componentes instalados pela sua distribuição, adicione o repositório de runtimes e instale o arquivo recebido:
 
 ```sh
 flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
-flatpak install --user ./linux-system-explorer-0.1.0-alpha.4-flatpak-previews-x86_64.flatpak
+flatpak install --user ./linux-system-explorer-0.1.0-alpha.4-flatpak-previews-dbus-x86_64.flatpak
 flatpak run --branch=experimental io.github.janderpt.linux-system-explorer
 ```
 
-O repositório fornece o runtime; o aplicativo acima vem do arquivo local, **não da loja**. O bundle não inclui o runtime e precisa de rede na primeira instalação. Na release, use `FLATPAK-PREVIEW-SHA256SUMS` e `FLATPAK-PREVIEW-BUILD-INFO.json`; builds locais usam `SHA256SUMS` e `FLATPAK-BUILD-INFO.json`. Esses relatórios identificam fonte, binário, runtime, permissões e recursos detectados. Este protótipo não tem assinatura GPG nem atualização automática por um repositório próprio.
+O repositório fornece o runtime; o aplicativo acima vem do arquivo local, **não da loja**. O bundle não inclui o runtime e precisa de rede na primeira instalação. Na release, use `FLATPAK-DBUS-SHA256SUMS` e `FLATPAK-DBUS-BUILD-INFO.json`; builds locais usam `SHA256SUMS` e `FLATPAK-BUILD-INFO.json`. Esses relatórios identificam fonte, binário, runtime, permissões e recursos detectados. Este protótipo não tem assinatura GPG nem atualização automática por um repositório próprio.
 
-Para atualizar o protótipo anterior (alpha.4 sem conversores ou alpha.2), feche suas janelas e instale o novo bundle **sem desinstalar a versão anterior**:
+Para atualizar o protótipo anterior (alpha.4 com ou sem conversores, ou alpha.2), feche suas janelas e instale o novo bundle **sem desinstalar a versão anterior**:
 
 ```sh
-flatpak install --user ./linux-system-explorer-0.1.0-alpha.4-flatpak-previews-x86_64.flatpak
+flatpak install --user ./linux-system-explorer-0.1.0-alpha.4-flatpak-previews-dbus-x86_64.flatpak
 flatpak info --user io.github.janderpt.linux-system-explorer//experimental
 ```
 
-A origem e a branch `experimental` permanecem as mesmas, e as preferências do sandbox são preservadas. A alpha.3 foi distribuída como pacote nativo. O teste da variante atual verifica diretamente a atualização da alpha.4 sem conversores; o pacote anterior verificou alpha.2 → alpha.4. Não use `--delete-data` ao atualizar.
+A origem e a branch `experimental` permanecem as mesmas, e as preferências do sandbox são preservadas. A alpha.3 foi distribuída como pacote nativo. O teste da variante atual verifica diretamente a atualização da alpha.4 com previews anterior; o pacote anterior verificou alpha.2 → alpha.4. Não use `--delete-data` ao atualizar.
 
-Para verificar os anexos publicados, execute `sha256sum --check FLATPAK-PREVIEW-SHA256SUMS`; dentro da saída local de build, use `sha256sum --check SHA256SUMS`. O manifesto de checksums é separado dos pacotes nativos.
+Para verificar os anexos publicados, execute `sha256sum --check FLATPAK-DBUS-SHA256SUMS`; dentro da saída local de build, use `sha256sum --check SHA256SUMS`. O manifesto de checksums é separado dos pacotes nativos.
 
 Para remover somente este protótipo:
 
@@ -43,7 +45,7 @@ As preferências ficam em `~/.var/app/io.github.janderpt.linux-system-explorer/`
 | Imagens, SVG e texto | Decodificação incorporada, miniaturas e edição de imagens estáticas gerando novas cópias | Conferir limites e imagens grandes em máquinas limpas |
 | Áudio e vídeo | GStreamer do runtime e extensão de codecs; sem dependência do player do host | Validar codecs e áudio na sessão real |
 | Compactados | Preview com Python e libarchive do runtime; extração pelo gerenciador do host indisponível | Conferir ZIP, TAR, 7z e RAR; projetar integração de extração apropriada ao sandbox |
-| PDF, Office e HTML/Markdown formatado | Build atual inclui Poppler, LibreOffice e WeasyPrint; previews, páginas e miniaturas usam motores do pacote | Conferir a sessão real e manter versões/licenças/fontes; o bundle alpha.4 publicado anteriormente ainda não inclui esses motores |
+| PDF, Office e HTML/Markdown formatado | Build atual inclui Poppler, LibreOffice e WeasyPrint; previews, páginas e miniaturas usam motores do pacote | Conferir a sessão real e manter versões/licenças/fontes; o primeiro bundle alpha.4 sem conversores continua como histórico |
 | Imprimir | Portal Print; conversores e `pdfunite` incluídos no build atual preparam outros tipos e seleções | Validar o diálogo de impressão nos backends KDE/GNOME/GTK |
 | Abrir e Abrir com | OpenFile do portal, passando descritor do arquivo; o seletor e as associações ficam com o desktop | Conferir o backend de portal KDE/GNOME e cancelamento |
 | Associação padrão de tipos de arquivo | A escolha fica com o portal; não há gravação direta no registro MIME do host | Avaliar o fluxo oferecido por cada backend |
@@ -58,7 +60,7 @@ O protótipo pede leitura/escrita no filesystem `host` porque é um gerenciador 
 
 ## Reproduzir o pacote local
 
-Requer Python 3.12+, Rust, `dpkg-deb`, ferramentas de validação de metadados, Flatpak e o proxy D-Bus atualizado descrito acima. O script reutiliza o staging nativo com licenças/fontes MPL, importa o payload verificado dos conversores e testa os programas sob o runtime antes de exportar. O LibreOffice é reempacotado de binários upstream; isto não representa uma compilação completa de fontes para a loja.
+Requer Python 3.12+, Rust, `dpkg-deb`, ferramentas de validação de metadados, Flatpak e o proxy D-Bus fornecido pela distribuição. O script reutiliza o staging nativo com licenças/fontes MPL, importa o payload verificado dos conversores e testa os programas sob o runtime antes de exportar. O LibreOffice é reempacotado de binários upstream; isto não representa uma compilação completa de fontes para a loja.
 
 ```sh
 flatpak install --user flathub org.freedesktop.Platform//26.08 org.freedesktop.Sdk//26.08
@@ -75,7 +77,7 @@ O registro identifica alterações não commitadas. Para distribuir builds de te
 
 ## Testar instalação e atualização
 
-O teste automatizado `scripts/smoke-flatpak.py` exige um container descartável com Flatpak, runtime, proxy atualizado, D-Bus isolado e Xvfb. Ele instala a alpha.4 do zero, verifica a versão e a abertura gráfica, remove o app, instala o bundle anterior e atualiza **no mesmo ref**, conferindo o commit e a preservação exata das preferências. Também verifica a remoção e que os padrões MIME e as configurações nativas não foram alterados. Exemplo dentro desse ambiente, com os caminhos adaptados aos volumes montados:
+O teste automatizado `scripts/smoke-flatpak.py` exige um container descartável com Flatpak, runtime, proxy da distribuição, D-Bus isolado e Xvfb. Ele instala a alpha.4 do zero, verifica a versão e a abertura gráfica, remove o app, instala o bundle anterior e atualiza **no mesmo ref**, conferindo o commit e a preservação exata das preferências. Também verifica a remoção e que os padrões MIME e as configurações nativas não foram alterados. Exemplo dentro desse ambiente, com os caminhos adaptados aos volumes montados:
 
 ```sh
 mkdir -p /run/dbus /run/user/0
@@ -111,7 +113,7 @@ docker run --rm --privileged \
   '
 ```
 
-A imagem inclui o loader SVG exigido para exportar o ícone. Estes comandos exportam o bundle, sem instalar o aplicativo no host. Os testes gráficos em container usam D-Bus e Xvfb próprios; não substituem testes na sua sessão KDE/GNOME.
+A imagem usa o proxy D-Bus da distribuição e inclui o loader SVG exigido para exportar o ícone. Estes comandos exportam o bundle, sem instalar o aplicativo no host. Os testes gráficos em container usam D-Bus e Xvfb próprios; não substituem testes na sua sessão KDE/GNOME.
 
 ## Exemplo didático de manifesto — somente local
 
@@ -152,8 +154,8 @@ Políticas consultadas em 2026-11-12. Esta é documentação técnica do projeto
 
 ## English summary
 
-This is an **experimental Flatpak** distributed as a separate GitHub release asset, not a Flathub release. Install the bundle with `flatpak install --user FILE.flatpak`, run `flatpak run --branch=experimental io.github.janderpt.linux-system-explorer`, and uninstall that branch with `flatpak uninstall --user io.github.janderpt.linux-system-explorer//experimental`. The Freedesktop 26.08 runtime is downloaded separately. Use a maintained Flatpak installation with xdg-dbus-proxy 0.1.9 or newer; the original Ubuntu 24.04 proxy 0.1.5 cannot handle the zbus 6 protocol, regardless of runtime version. Preferences are sandbox-specific and neither installation nor removal changes the default file manager. The unsigned local bundle has no automatic repository updates. To upgrade the previous alpha.4 converter-less build or alpha.2 prototype, close its windows and install the new bundle on the same experimental branch without uninstalling or deleting data. The automated disposable-container smoke test covers fresh installation, same-ref upgrade, exact preference preservation, Xvfb startup and removal; this does not certify a real desktop session.
+This is an **experimental Flatpak** distributed as a separate GitHub release asset, not a Flathub release. Install the bundle with `flatpak install --user FILE.flatpak`, run `flatpak run --branch=experimental io.github.janderpt.linux-system-explorer`, and uninstall that branch with `flatpak uninstall --user io.github.janderpt.linux-system-explorer//experimental`. The Freedesktop 26.08 runtime is downloaded separately. The recommended flatpak-previews-dbus bundle uses zbus 5.19 with sequential Flatpak authentication, supporting the Ubuntu 24.04 distribution proxy 0.1.5 without manually replacing it. Both proxies 0.1.5 and 0.1.9 were tested. Earlier alpha.4 variants remain available with their original requirements and checksums. Use distribution-maintained Flatpak/D-Bus packages and normal system updates; the runtime does not update the host proxy. See DBUS-COMPATIBILITY.md for reproducible tests. Preferences are sandbox-specific and neither installation nor removal changes the default file manager. The unsigned local bundle has no automatic repository updates. To upgrade the previous alpha.4 converter-less build or alpha.2 prototype, close its windows and install the new bundle on the same experimental branch without uninstalling or deleting data. The automated disposable-container smoke test covers fresh installation, same-ref upgrade, exact preference preservation, Xvfb startup and removal; this does not certify a real desktop session.
 
-Images/text, GStreamer media and libarchive use embedded/runtime components. The current development build also bundles Poppler, LibreOffice and WeasyPrint, with pinned inputs, preserved notices and a separate corresponding-source archive. The original converter-less alpha.4 bundle remains unchanged as a historical asset; use the new **flatpak-previews** variant and **FLATPAK-PREVIEW-SHA256SUMS**. See FLATPAK-PREVIEW.md for the offline SDK build and sandbox renderer tests. Opening files uses the desktop portal; terminal commands run inside the sandbox. New remote connections, local Samba management, UDisks2 volume discovery/mount/unmount/eject and FileManager1 host registration are not enabled. Trash parity, mounted paths, DND and both desktop/window-system combinations require real-session validation. The build report records actual runtime capabilities and permissions. Keep the native package for full existing integrations.
+Images/text, GStreamer media and libarchive use embedded/runtime components. The current development build also bundles Poppler, LibreOffice and WeasyPrint, with pinned inputs, preserved notices and a separate corresponding-source archive. The original converter-less alpha.4 bundle remains unchanged as a historical asset; use the new **flatpak-previews-dbus** variant and **FLATPAK-DBUS-SHA256SUMS**. See FLATPAK-PREVIEW.md for the offline SDK build and sandbox renderer tests. Opening files uses the desktop portal; terminal commands run inside the sandbox. New remote connections, local Samba management, UDisks2 volume discovery/mount/unmount/eject and FileManager1 host registration are not enabled. Trash parity, mounted paths, DND and both desktop/window-system combinations require real-session validation. The build report records actual runtime capabilities and permissions. Keep the native package for full existing integrations.
 
 The local JSON example is AI-assisted educational material, repackaging an existing staging directory, and is explicitly unsuitable for a Flathub submission or its starting point. The eventual store manifest and submission/review interactions must be independently human-authored. A stable, maintained release, a source/offline SDK build, complete converters, portal/desktop tests, metadata/screenshots, license review and manual store review are still required. See the linked official documentation rather than copying this local example into a submission.

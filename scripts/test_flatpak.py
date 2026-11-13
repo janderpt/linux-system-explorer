@@ -78,14 +78,13 @@ class FlatpakStagingTests(unittest.TestCase):
             self.assertNotIn('socket=system-bus', permission)
             self.assertNotIn('share=network', permission)
 
-    def test_obsolete_dbus_proxy_is_rejected_before_building_a_broken_bundle(self):
-        for version, allowed in [('0.1.5', False), ('0.1.6', False), ('0.1.9', True), ('0.2.0', True)]:
+    def test_distro_dbus_proxy_is_recorded_without_requiring_manual_replacement(self):
+        for version in ['0.1.5', '0.1.6', '0.1.9', '0.2.0']:
             with patch.object(FLATPAK, 'run', return_value=SimpleNamespace(stdout='xdg-dbus-proxy ' + version)):
-                if allowed:
-                    self.assertTrue(FLATPAK.proxy_version().endswith(version))
-                else:
-                    with self.assertRaisesRegex(RuntimeError, 'old proxies'):
-                        FLATPAK.proxy_version()
+                self.assertTrue(FLATPAK.proxy_version().endswith(version))
+        with patch.object(FLATPAK, 'run', return_value=SimpleNamespace(stdout='unknown')):
+            with self.assertRaisesRegex(RuntimeError, 'Cannot identify'):
+                FLATPAK.proxy_version()
 
     def test_converter_payload_rejects_changed_binaries_sources_and_file_collisions(self):
         payload = self.install.parent / 'converters'

@@ -55,7 +55,7 @@ impl Portal {
             }
             connection
                 .emit_signal(
-                    Some(sender),
+                    Some(sender.as_str()),
                     path.as_str(),
                     "org.freedesktop.portal.Request",
                     "Response",
@@ -91,7 +91,7 @@ impl Portal {
         if title == "invalid-token" {
             results.insert(
                 "token".into(),
-                OwnedVariant::from(zbus::Str::from("invalid")),
+                OwnedVariant::from(zbus::zvariant::Str::from("invalid")),
             );
         } else if !matches!(title, "missing-token" | "cancel" | "failure" | "hold") {
             let token = self.serial.fetch_add(1, Ordering::Relaxed) as u32;
@@ -108,7 +108,7 @@ impl Portal {
         &self,
         _parent: &str,
         title: &str,
-        fd: zbus::OwnedFd,
+        fd: zbus::zvariant::OwnedFd,
         options: HashMap<String, OwnedVariant>,
         #[zbus(header)] header: zbus::message::Header<'_>,
         #[zbus(connection)] connection: &zbus::Connection,
@@ -162,9 +162,11 @@ fn print_portal_requires_confirmation_passes_read_only_pdf_and_handles_cancellat
     };
     let worker = std::thread::spawn(move || {
         let connection = zbus::block_on(
-            zbus::connection::Builder::session()
+            crate::sandbox::tests::portal_service_builder()
                 .name("org.freedesktop.portal.Desktop")
+                .unwrap()
                 .serve_at("/org/freedesktop/portal/desktop", service)
+                .unwrap()
                 .build(),
         )
         .unwrap();
@@ -294,6 +296,7 @@ fn native_print_dialog_prepares_without_sending_document() {
     let file = tempfile::tempfile().unwrap();
     let result = zbus::block_on(async {
         let connection = zbus::connection::Builder::session()
+            .unwrap()
             .method_timeout(Duration::from_secs(15))
             .build()
             .await?;

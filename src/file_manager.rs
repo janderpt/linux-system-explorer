@@ -205,21 +205,22 @@ impl Control {
 
 fn start(executable: &Path) -> Result<(zbus::Connection, Receiver<()>), String> {
     let (stop, stopped) = mpsc::channel();
-    let connection = zbus::block_on(
-        zbus::connection::Builder::session()
+    let connection = zbus::block_on(async {
+        zbus::connection::Builder::session()?
             .method_timeout(Duration::from_secs(3))
             .allow_name_replacements(false)
             .replace_existing_names(false)
-            .name(BUS_NAME)
+            .name(BUS_NAME)?
             .serve_at(
                 OBJECT_PATH,
                 FileManager {
                     executable: executable.to_owned(),
                 },
-            )
-            .serve_at(OBJECT_PATH, Control { stop })
-            .build(),
-    )
+            )?
+            .serve_at(OBJECT_PATH, Control { stop })?
+            .build()
+            .await
+    })
     .map_err(|e| {
         format!("Could not activate FileManager1 (another file manager may own it): {e}")
     })?;

@@ -1,6 +1,6 @@
 # Conversores de preview no Flatpak experimental
 
-A [variante experimental alpha.4 com previews](releases/v0.1.0-alpha.4-flatpak-preview.md) inclui os conversores no próprio pacote. Na release do GitHub, escolha o arquivo **flatpak-previews** e os anexos com prefixo `FLATPAK-PREVIEW`; o primeiro bundle alpha.4 sem conversores continua disponível para histórico. Os pacotes nativos e a tag original permanecem inalterados.
+A [variante experimental alpha.4 com previews](releases/v0.1.0-alpha.4-flatpak-dbus.md) inclui os conversores no próprio pacote. Na release do GitHub, escolha o arquivo **flatpak-previews-dbus** e os anexos com prefixo `FLATPAK-DBUS`; o primeiro bundle alpha.4 sem conversores continua disponível para histórico. Os pacotes nativos e a tag original permanecem inalterados.
 
 | Componente incluído | Versão | Uso |
 | --- | --- | --- |
@@ -15,6 +15,8 @@ As dependências Python completas, incluindo Pillow, CFFI, fontes WOFF e hifeniz
 O motor LibreOffice vem do arquivo binário oficial relocável, sem alterações no código. São extraídos apenas os pacotes de conversão, fontes e recursos necessários, sem executar scripts Debian, instalar lançadores do Office ou fornecer Java/extensões. Poppler, Kerberos e extensões Python nativas são compilados no SDK; pacotes Python puros usam wheels universais. Este reempacotamento experimental **não é uma compilação completa de fontes para submissão à loja**.
 
 Os limites, o cancelamento e as proteções existentes do explorador continuam ativos: perfil temporário separado para Office, macros/conteúdo ativo desativados, originais preservados e apresentação HTML sem JavaScript ou recursos remotos. Arquivos inválidos ou não suportados continuam usando os toasts e ícones de fallback. A paginação pode variar conforme as fontes disponíveis.
+
+A variante **flatpak-previews-dbus** inclui a [correção D-Bus](DBUS-COMPATIBILITY.md), testada com os proxies 0.1.5 e 0.1.9. Os bundles anteriores permanecem disponíveis como histórico; os fontes dos conversores continuam no mesmo anexo `FLATPAK-PREVIEW-SOURCES.tar`, também listado nos novos checksums.
 
 ## Reproduzir
 

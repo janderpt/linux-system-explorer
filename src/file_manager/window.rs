@@ -120,7 +120,7 @@ impl Window {
     fn connect(context: &eframe::egui::Context, name: Option<&str>) -> Result<Self, zbus::Error> {
         let (sender, requests) = mpsc::sync_channel(16);
         let connection = zbus::block_on(async {
-            let mut builder = zbus::connection::Builder::session()
+            let mut builder = zbus::connection::Builder::session()?
                 .allow_name_replacements(false)
                 .replace_existing_names(false)
                 .serve_at(
@@ -129,9 +129,9 @@ impl Window {
                         sender,
                         context: context.clone(),
                     },
-                );
+                )?;
             if let Some(name) = name {
-                builder = builder.name(name);
+                builder = builder.name(name)?;
             }
             let connection = builder.build().await?;
             if name.is_none() {
@@ -146,7 +146,7 @@ impl Window {
                 connection
                     .request_name_with_flags(
                         format!("{PREFIX}{suffix}"),
-                        zbus::fdo::RequestNameFlags::DO_NOT_QUEUE,
+                        zbus::fdo::RequestNameFlags::DoNotQueue.into(),
                     )
                     .await?;
             }
@@ -223,11 +223,10 @@ pub fn reuse_folder(folder: &Path, startup_id: &str) -> bool {
         return false;
     };
     zbus::block_on(async {
-        let Ok(connection) = zbus::connection::Builder::session()
-            .method_timeout(Duration::from_secs(3))
-            .build()
-            .await
-        else {
+        let Ok(builder) = zbus::connection::Builder::session() else {
+            return false;
+        };
+        let Ok(connection) = builder.method_timeout(Duration::from_secs(3)).build().await else {
             return false;
         };
         reuse(

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Publish a separate alpha.4 `flatpak-previews-dbus` variant with distribution-proxy compatibility, bundled converters, exact clean application source, both-proxy sandbox validation and dedicated `FLATPAK-DBUS-*` reports/checksums/install notes; preserve the native tag/packages and earlier Flatpak assets.
+
+- Use zbus 5.19's sequential Flatpak authentication to support distribution xdg-dbus-proxy 0.1.5 without a manually installed proxy. Adapt native D-Bus integrations, remove the packaging version gate/custom proxy replacement, and add filtered-proxy regression coverage for portal file descriptors, print confirmation/cancellation and window reuse while retaining sandbox permissions. Previously published bundles remain unchanged.
+
 - Bundle pinned Poppler, LibreOffice and WeasyPrint conversion engines/dependencies in the experimental Flatpak; compile native helpers offline in the Freedesktop SDK, preserve notices and supply corresponding source/build inputs as a separate archive. Verify PDF/Office/HTML/Markdown, thumbnails and print preparation inside the installed sandbox, and retain compatibility with the older native WeasyPrint API. Publish the converter-equipped alpha.4 variant with distinct asset names, exact application source, checksums and revised same-ref upgrade instructions.
 
 - Publish the tested alpha.4 experimental Flatpak as separate GitHub release assets with explicit limitations, prefixed installation/checksum files and source provenance; preserve the existing native packages and immutable tag.

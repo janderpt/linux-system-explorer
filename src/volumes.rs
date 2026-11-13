@@ -6,7 +6,10 @@ use std::{
     path::{Path, PathBuf},
     time::Duration,
 };
-use zbus::{OwnedVariant, Variant, fdo::ManagedObjects};
+use zbus::{
+    fdo::ManagedObjects,
+    zvariant::{OwnedValue as OwnedVariant, Value as Variant},
+};
 
 const DESTINATION: &str = "org.freedesktop.UDisks2";
 const ROOT: &str = "/org/freedesktop/UDisks2";
@@ -111,13 +114,13 @@ fn number(p: &Properties, key: &str) -> u64 {
 }
 fn object(p: &Properties, key: &str) -> String {
     p.get(key)
-        .and_then(|v| <&zbus::ObjectPath>::try_from(v).ok())
+        .and_then(|v| <&zbus::zvariant::ObjectPath>::try_from(v).ok())
         .map(|p| p.to_string())
         .unwrap_or_default()
 }
 fn array<T>(p: &Properties, key: &str) -> Vec<T>
 where
-    for<'a> T: TryFrom<Variant<'a>, Error = zbus::Error>,
+    for<'a> T: TryFrom<Variant<'a>, Error = zbus::zvariant::Error>,
 {
     p.get(key)
         .and_then(|v| v.try_clone().ok())
@@ -289,7 +292,7 @@ async fn system(timeout: u64) -> Result<zbus::Connection> {
     if crate::sandbox::active() {
         return Err(crate::sandbox::host_operation_error().into());
     }
-    Ok(zbus::connection::Builder::system()
+    Ok(zbus::connection::Builder::system()?
         .method_timeout(Duration::from_secs(timeout))
         .build()
         .await?)
@@ -319,7 +322,7 @@ async fn invoke(
     proxy
         .call_with_flags::<_, _, ()>(
             method,
-            zbus::proxy::MethodFlags::ALLOW_INTERACTIVE_AUTH,
+            zbus::proxy::MethodFlags::AllowInteractiveAuth.into(),
             &(options,),
         )
         .await?;
@@ -352,7 +355,7 @@ async fn perform(
             let mounted: String = proxy
                 .call_with_flags(
                     "Mount",
-                    zbus::proxy::MethodFlags::ALLOW_INTERACTIVE_AUTH,
+                    zbus::proxy::MethodFlags::AllowInteractiveAuth.into(),
                     &(HashMap::<&str, Variant<'_>>::new(),),
                 )
                 .await?

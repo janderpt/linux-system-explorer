@@ -35,7 +35,9 @@ image = { version = "0.25.10", default-features = false, features = ["png", "jpe
 resvg = { version = "0.49.0", default-features = false, features = ["text", "raster-images"] }
 roxmltree = "0.21.2"
 tiff = "0.11.3"
-zbus = "6.2.1"
+# zbus 5 keeps the sequential Flatpak authentication needed by distro proxies
+# such as xdg-dbus-proxy 0.1.5. Keep this major until its replacement is compatible.
+zbus = { version = "5.19.0", default-features = false, features = ["async-io"] }
 wayland-client = { version = "0.31.15", features = ["system"] }
 wayland-protocols = { version = "0.32.13", features = ["client", "staging"] }
 portable-pty = "0.9.0"

@@ -22,11 +22,21 @@ jobs:
           components: rustfmt, clippy
       - name: Install Linux dependencies
         timeout-minutes: 10
-        run: sudo env GITHUB_ACTIONS=true python3 scripts/ci-dependencies.py libxkbcommon-dev libwayland-dev desktop-file-utils appstream dbus-daemon poppler-utils libgstreamer1.0-0 libgstreamer-plugins-base1.0-0 gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-libav ffmpeg libreoffice-writer libreoffice-calc libreoffice-impress libreoffice-draw libreoffice-math fonts-liberation weasyprint libarchive13t64
+        run: sudo env GITHUB_ACTIONS=true python3 scripts/ci-dependencies.py libxkbcommon-dev libwayland-dev desktop-file-utils appstream dbus-daemon xdg-dbus-proxy poppler-utils libgstreamer1.0-0 libgstreamer-plugins-base1.0-0 gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-libav ffmpeg libreoffice-writer libreoffice-calc libreoffice-impress libreoffice-draw libreoffice-math fonts-liberation weasyprint libarchive13t64
       - name: Fetch locked dependency sources
         run: cargo fetch --locked
       - run: cargo fmt --all --check
       - run: cargo clippy --locked --all-targets -- -D warnings
       - run: cargo test --locked
+      - name: Test filtered D-Bus with the distribution proxy
+        run: |
+          cargo test --locked --no-run --message-format=json > /tmp/lse-test-artifacts.jsonl
+          python3 - <<'PY'
+          import json, subprocess
+          from pathlib import Path
+          artifacts = [json.loads(line) for line in Path('/tmp/lse-test-artifacts.jsonl').read_text().splitlines()]
+          binary, = [a['executable'] for a in artifacts if a.get('reason') == 'compiler-artifact' and a.get('profile', {}).get('test') and a.get('executable')]
+          subprocess.run(['python3', 'scripts/test-dbus-proxy.py', binary], check=True)
+          PY
       - run: python3 scripts/package.py check
       - run: python3 -m unittest discover -s scripts -p 'test_*.py'

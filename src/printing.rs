@@ -17,7 +17,7 @@ use std::{
     task::{Poll, Waker},
     time::Duration,
 };
-use zbus::{Fd, OwnedObjectPath, OwnedVariant, Variant};
+use zbus::zvariant::{Fd, OwnedObjectPath, OwnedValue as OwnedVariant, Value as Variant};
 pub fn supported(entry: &Entry) -> bool {
     print::supported(entry)
 }
@@ -126,7 +126,7 @@ fn portal(
     cancel: &Arc<AtomicBool>,
 ) -> Result<bool, Box<dyn std::error::Error>> {
     zbus::block_on(async {
-        let connection = zbus::connection::Builder::session()
+        let connection = zbus::connection::Builder::session()?
             .method_timeout(Duration::from_secs(15))
             .build()
             .await?;

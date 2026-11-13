@@ -63,6 +63,7 @@ def stage(destination, binary, converters=None):
     shutil.copyfile(ROOT / 'docs/FLATPAK.md', documentation / 'INSTALL.md')
     shutil.copyfile(ROOT / 'docs/FLATPAK.md', documentation / 'FLATPAK.md')
     shutil.copyfile(ROOT / 'docs/FLATPAK-PREVIEW.md', documentation / 'FLATPAK-PREVIEW.md')
+    shutil.copyfile(ROOT / 'docs/DBUS-COMPATIBILITY.md', documentation / 'DBUS-COMPATIBILITY.md')
     preview = add_converters(install, converters) if converters is not None else None
     PACKAGE.validate(install)
     metadata = {
@@ -132,8 +133,8 @@ def proxy_version():
     executable = os.environ.get('FLATPAK_DBUSPROXY') or 'xdg-dbus-proxy'
     version = run([executable, '--version'], capture_output=True, text=True).stdout.strip()
     number = re.search(r'\b(\d+)\.(\d+)\.(\d+)\b', version)
-    if not number or tuple(map(int, number.groups())) < (0, 1, 9):
-        raise RuntimeError('Use maintained xdg-dbus-proxy 0.1.9+; old proxies cannot handle zbus 6')
+    if not number:
+        raise RuntimeError('Cannot identify xdg-dbus-proxy version: ' + version)
     return version
 
 
@@ -183,7 +184,7 @@ def build(install, work, output):
                         runtime_commit=runtime, app_branch=BRANCH,
                         permissions=PERMISSIONS, capabilities=capabilities,
                         host_tools={'xdg_dbus_proxy': proxy},
-                        minimum_host_xdg_dbus_proxy='0.1.9',
+                        dbus_authentication='sequential-in-flatpak',
                         submission_ready=False, flathub_manifest_included=False,
                         artifacts={name: digest(artifact)})
         artifacts = [artifact]

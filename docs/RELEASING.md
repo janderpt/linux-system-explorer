@@ -38,6 +38,8 @@ See [FLATPAK.md](FLATPAK.md) for the local bundle builder, capability difference
 
 Builds with the [bundled preview payload](FLATPAK-PREVIEW.md) must also attach `FLATPAK-PREVIEW-SOURCES.tar` at the same download location, checksum it, retain the converter lock/report and pass the sandbox PDF/Office/HTML/Markdown/thumbnail/print-preparation tests. Do not replace an older published bundle or its checksum silently. The original alpha.4 experimental asset predates this payload. The converter-equipped variant uses distinct `flatpak-previews` and `FLATPAK-PREVIEW-*` names; retain the original assets/tag and explicitly link the recommended variant from the release notes.
 
+A D-Bus compatibility rebuild uses distinct `flatpak-previews-dbus` and `FLATPAK-DBUS-*` asset names, with `INSTALL-FLATPAK-DBUS.md`. Reuse the unchanged `FLATPAK-PREVIEW-SOURCES.tar` and include its checksum in the new checksum file. Build from an exact clean committed revision, attach its application source, verify both proxy versions and preserve all earlier assets and the native tag.
+
 ## Stable releases and stores
 
 Complete the channel-specific gates in DISTRIBUTION.md. Do not mark this build stable

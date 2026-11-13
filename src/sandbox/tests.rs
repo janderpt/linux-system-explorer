@@ -14,7 +14,7 @@ impl Portal {
     async fn open_file(
         &self,
         _parent: &str,
-        fd: zbus::OwnedFd,
+        fd: zbus::zvariant::OwnedFd,
         options: HashMap<String, OwnedVariant>,
         #[zbus(header)] header: zbus::message::Header<'_>,
         #[zbus(connection)] connection: &zbus::Connection,
@@ -36,7 +36,7 @@ impl Portal {
         );
         connection
             .emit_signal(
-                Some(sender),
+                Some(sender.as_str()),
                 path.as_str(),
                 "org.freedesktop.portal.Request",
                 "Response",
@@ -63,9 +63,11 @@ fn portal_opens_an_fd_supports_chooser_cancellation_and_failure_on_an_isolated_b
     let (stop, stopped) = mpsc::channel();
     let worker = std::thread::spawn(move || {
         let connection = zbus::block_on(
-            zbus::connection::Builder::session()
+            portal_service_builder()
                 .name("org.freedesktop.portal.Desktop")
+                .unwrap()
                 .serve_at("/org/freedesktop/portal/desktop", portal)
+                .unwrap()
                 .build(),
         )
         .unwrap();
@@ -105,6 +107,15 @@ fn portal_opens_an_fd_supports_chooser_cancellation_and_failure_on_an_isolated_b
     drop((first, second));
     stop.send(()).unwrap();
     worker.join().unwrap();
+}
+
+// Only the client goes through the filtered proxy in compatibility tests. The
+// mock portal stays on the private host bus, like a real desktop portal.
+pub(crate) fn portal_service_builder() -> zbus::connection::Builder<'static> {
+    match std::env::var("LSE_TEST_DBUS_SERVICE_ADDRESS") {
+        Ok(address) => zbus::connection::Builder::address(address.as_str()).unwrap(),
+        Err(_) => zbus::connection::Builder::session().unwrap(),
+    }
 }
 
 #[test]

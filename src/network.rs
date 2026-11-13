@@ -65,11 +65,10 @@ fn choose_mount_backend(uri: &str, kde: bool, kio: bool, gvfs: bool) -> Option<B
 }
 fn available_services() -> Vec<String> {
     zbus::block_on(async {
-        let Ok(conn) = zbus::connection::Builder::session()
-            .method_timeout(Duration::from_secs(3))
-            .build()
-            .await
-        else {
+        let Ok(builder) = zbus::connection::Builder::session() else {
+            return vec![];
+        };
+        let Ok(conn) = builder.method_timeout(Duration::from_secs(3)).build().await else {
             return vec![];
         };
         let Ok(proxy) = zbus::fdo::DBusProxy::new(&conn).await else {
@@ -471,6 +470,7 @@ fn connect_kio(uri: &str, cancel: &Cancellation) -> io::Result<PathBuf> {
     // KIO opens its native authentication dialog; credentials never enter preferences.
     zbus::block_on(async {
         let conn = zbus::connection::Builder::session()
+            .map_err(io::Error::other)?
             .method_timeout(Duration::from_secs(120))
             .build()
             .await
@@ -543,6 +543,7 @@ pub fn configure_sharing(path: &Path) -> io::Result<()> {
 fn configure_nautilus(uri: &Url) -> io::Result<()> {
     zbus::block_on(async {
         let conn = zbus::connection::Builder::session()
+            .map_err(io::Error::other)?
             .method_timeout(Duration::from_secs(20))
             .build()
             .await

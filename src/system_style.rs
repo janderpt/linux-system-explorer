@@ -17,6 +17,7 @@ fn detect_accent() -> Option<Color32> {
     }
     zbus::block_on(async {
         let connection = zbus::connection::Builder::session()
+            .ok()?
             .method_timeout(std::time::Duration::from_millis(500))
             .build()
             .await
@@ -32,7 +33,7 @@ fn detect_accent() -> Option<Color32> {
             .await
             .ok()?;
         let body = reply.body();
-        let value: zbus::Variant<'_> = body.deserialize().ok()?;
+        let value: zbus::zvariant::Value<'_> = body.deserialize().ok()?;
         let (r, g, b): (f64, f64, f64) = value.downcast().ok()?;
         if [r, g, b]
             .iter()
