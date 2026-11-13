@@ -6,6 +6,8 @@
 
 - Publish matching alpha.5 DEB, TAR.GZ and experimental Flatpak builds, corresponding sources, SHA-256 checksums and Portuguese/English installation/upgrade instructions. Retain bundled preview converters and zbus 6.2.1 compatibility with proxies 0.1.5/0.1.9; preserve previous releases.
 
+- Allow a bounded ten-minute CI dependency installation budget for large Office/media downloads, within a fifteen-minute workflow step; report timeout diagnostics without skipping checks or changing package verification.
+
 ## Packaging updates after alpha.4
 
 - Publish the alpha.4 `flatpak-previews-dbus6` variant with zbus 6.2.1, verified old-proxy compatibility, bundled preview converters, complete modified dependency/application sources, refreshed checksums and install/upgrade notes. Preserve earlier Flatpak/native assets and the native tag.

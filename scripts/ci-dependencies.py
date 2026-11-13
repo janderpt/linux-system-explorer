@@ -56,9 +56,11 @@ def main():
         options += config
         print("Using a private source/index snapshot and the Ubuntu HTTPS mirror", flush=True)
         subprocess.run([*options, "-o", "APT::Update::Error-Mode=any", "update"], check=True, timeout=240, env=environment)
+        # Office/media runtimes are large; allow ten minutes for slow mirrors.
+        # The workflow step bounds update + install + diagnostics to fifteen minutes.
         try:
-            subprocess.run([*options, "install", "-y", "--no-install-recommends", *sys.argv[1:]], check=True, timeout=240, env=environment)
-        except subprocess.CalledProcessError:
+            subprocess.run([*options, "install", "-y", "--no-install-recommends", *sys.argv[1:]], check=True, timeout=600, env=environment)
+        except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
             subprocess.run(["dpkg", "--print-architecture"], check=False)
             subprocess.run(["apt-cache", *config, "policy", *sys.argv[1:]], check=False)
             subprocess.run([*options, "indextargets", "--format", "$(FILENAME)"], check=False)

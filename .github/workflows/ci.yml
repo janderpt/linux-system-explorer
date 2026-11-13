@@ -14,14 +14,14 @@ concurrency:
 jobs:
   check:
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
       - name: Install Linux dependencies
-        timeout-minutes: 10
+        timeout-minutes: 15
         run: sudo env GITHUB_ACTIONS=true python3 scripts/ci-dependencies.py libxkbcommon-dev libwayland-dev desktop-file-utils appstream dbus-daemon xdg-dbus-proxy poppler-utils libgstreamer1.0-0 libgstreamer-plugins-base1.0-0 gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-libav ffmpeg libreoffice-writer libreoffice-calc libreoffice-impress libreoffice-draw libreoffice-math fonts-liberation weasyprint libarchive13t64
       - name: Fetch locked dependency sources
         run: cargo fetch --locked
