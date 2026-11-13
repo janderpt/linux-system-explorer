@@ -3,6 +3,8 @@ mod app;
 mod applications;
 mod cli;
 mod columns;
+#[cfg(test)]
+mod dbus_compat_tests;
 mod deletions;
 mod desktop;
 mod disk_usage;

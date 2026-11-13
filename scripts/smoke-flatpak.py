@@ -82,6 +82,7 @@ def sandbox_tests(binary, fixtures, converters=False):
             '--command=' + str(binary), APP]
     filters = [
         'transfers::tests::', 'terminal::tests::', 'app::toast::tests::',
+        'dbus_compat_tests::sequential_auth_rejects_invalid_peers_and_honors_fd_refusal',
         'app::search::tests::filter_',
         'app::search::tests::modified_arrows_',
         'app::workspace::split::tests::filter_arrows_',

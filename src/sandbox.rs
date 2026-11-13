@@ -8,7 +8,7 @@ use std::{
     sync::atomic::{AtomicU64, Ordering},
     time::Duration,
 };
-use zbus::zvariant::{Fd, OwnedObjectPath, OwnedValue as OwnedVariant, Value as Variant};
+use zbus::{Fd, OwnedObjectPath, OwnedVariant, Variant};
 
 pub fn active() -> bool {
     std::env::var_os("FLATPAK_ID").is_some() || Path::new("/.flatpak-info").exists()
@@ -55,7 +55,7 @@ fn open(path: &Path, ask: bool) -> Result<(), Box<dyn std::error::Error>> {
         return Err(io::Error::from(io::ErrorKind::InvalidInput).into());
     }
     zbus::block_on(async {
-        let connection = zbus::connection::Builder::session()?
+        let connection = zbus::connection::Builder::session()
             .method_timeout(Duration::from_secs(15))
             .build()
             .await?;

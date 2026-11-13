@@ -44,3 +44,12 @@ Reference: https://rustsec.org/advisories/RUSTSEC-2026-0192.html
 The alpha.4 `flatpak-previews-dbus` variant uses zbus 5.19.0 to retain sequential Flatpak authentication with distribution xdg-dbus-proxy 0.1.5. RustSec reports no known vulnerable locked crates, but additionally reports informational unmaintained notices for the standalone crates `zvariant` 5.15.1 (RUSTSEC-2026-0370), `zbus_names` 4.3.5 (RUSTSEC-2026-0371) and `zvariant_derive` 5.15.1 (RUSTSEC-2026-0372), which upstream merged into zbus 6. These are in addition to the existing `ttf-parser` notice. The full, unsuppressed report accompanies this experimental variant as `FLATPAK-DBUS-RUSTSEC-AUDIT.json`.
 
 This alpha explicitly retains the older dependency family for tested host-proxy compatibility. A maintained long-term D-Bus dependency/compatibility strategy needs review before a stable/store release; the proxy transport regression tests must continue to pass during that migration. A clean RustSec vulnerability result does not mean every dependency is maintained or that native preview engines have been audited.
+
+
+## zbus 6.2.1 compatibility publication
+
+The flatpak-previews-dbus6 lock uses zbus 6.2.1 and no longer contains zbus_names, zvariant or zvariant_derive. A fresh unsuppressed RustSec audit reports none of their three maintenance advisories; the unrelated ttf-parser notice remains. Already published alpha.4 artifacts still describe their original dependency graph and are not retroactively relabeled.
+
+The full official MIT-licensed zbus crate is retained in vendor/zbus. Its crates.io archive SHA-256, upstream revision and per-file hashes are in packaging/third-party/zbus-source.json. Only connection/handshake/client.rs changes: Linux Flatpak authentication waits for AUTH and UNIX_FD negotiation responses, preserving upstream validation and native pipelining. The exact patch is in packaging/patches/zbus-flatpak-auth.patch. CI and packaging verify the source/patch hashes and reject unreviewed changes. Native/Flatpak staging includes the modified crate, original license, README.lse.md, LSE-PROVENANCE.json and LSE-COMPATIBILITY.patch with dependency sources/notices.
+
+This is a locally maintained backport on current upstream source, not an upstream claim of old-proxy support. Track upstream security and maintenance updates, rebase and retest the patch when updating, and remove the override when equivalent upstream support exists. See DBUS-COMPATIBILITY.md for the test and update procedure. Other store readiness requirements remain separate.

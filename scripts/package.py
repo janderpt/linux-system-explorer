@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 import platform
 import re
+import runpy
 import shutil
 import subprocess
 import struct
@@ -105,6 +106,7 @@ def font_copyright(font):
 
 def third_party(destination, target):
     """Inventory metadata and available notices; this is not a legal audit."""
+    patched_zbus = runpy.run_path(str(ROOT / "scripts/check-vendored-zbus.py"))["verify"](ROOT)
     result = run([rust_tool("cargo"), "metadata", "--locked", "--offline", "--format-version", "1",
                   "--filter-platform", target], cwd=ROOT, capture_output=True, text=True)
     metadata = json.loads(result.stdout)
@@ -151,15 +153,23 @@ def third_party(destination, target):
                 texts.append(str(output.relative_to(destination)))
                 upstream.append(notice)
         source_bundle = None
-        if "MPL-2.0" in (package.get("license") or ""):
+        modified_zbus = package["name"] == "zbus" and source.resolve() == (ROOT / patched_zbus["vendor_path"]).resolve()
+        if "MPL-2.0" in (package.get("license") or "") or modified_zbus:
             output = destination / "third-party-sources" / f"{package['name']}-{package['version']}"
             shutil.copytree(source, output)
             source_bundle = str(output.relative_to(destination))
+            if modified_zbus:
+                shutil.copyfile(ROOT / "packaging/third-party/zbus-source.json", output / "LSE-PROVENANCE.json")
+                shutil.copyfile(ROOT / patched_zbus["patch_path"], output / "LSE-COMPATIBILITY.patch")
         inventory.append({
             "name": package["name"], "version": package["version"],
             "license": package.get("license"), "repository": package.get("repository"),
             "source": package.get("source"), "notices": sorted(texts),
             "upstream_notices": upstream, "included_source": source_bundle,
+            "local_modifications": ({"upstream_revision": patched_zbus["upstream_revision"],
+                                     "archive_sha256": patched_zbus["archive_sha256"],
+                                     "patch_sha256": patched_zbus["patch_sha256"]}
+                                    if modified_zbus else None),
         })
     report = {
         "target": target, "review_required": True,
@@ -173,7 +183,7 @@ def third_party(destination, target):
     (destination / "THIRD_PARTY.json").write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n")
     lines = [report["note"], "", f"Target: {target}", ""]
     lines.extend(f"{p['name']} {p['version']}: {p['license'] or 'MISSING LICENSE DECLARATION'}" for p in inventory)
-    lines += ["", "Unmodified MPL-covered source is included alongside these notices:"]
+    lines += ["", "Included dependency sources (MPL crates unmodified; zbus changes documented in its patch):"]
     lines.extend(f"{p['name']} {p['version']}: {p['included_source']}" for p in inventory if p['included_source'])
     (destination / "THIRD_PARTY_NOTICES.txt").write_text("\n".join(lines) + "\n")
     return report

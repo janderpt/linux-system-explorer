@@ -18,7 +18,7 @@ The source repository already exists at `janderpt/linux-system-explorer`. Publis
 ## Before each binary prerelease
 
 - Run formatting, Clippy, all tests and metadata validation.
-- Review RustSec advisories and native runtime dependencies; document remaining issues.
+- Review RustSec advisories and native runtime dependencies; document remaining issues. Verify the vendored zbus source/patch with `python3 scripts/check-vendored-zbus.py`, preserve its modified sources/license/provenance, and repeat the proxy 0.1.5/0.1.9 and authentication-peer regressions when updating it.
 - Review third-party licenses, workspace notices missing from crates, MPL source
   obligations and licenses of embedded fonts. Keep the exact source revision available.
 - Build through the packaging workflow or `cargo build --locked --release` and
@@ -39,6 +39,8 @@ See [FLATPAK.md](FLATPAK.md) for the local bundle builder, capability difference
 Builds with the [bundled preview payload](FLATPAK-PREVIEW.md) must also attach `FLATPAK-PREVIEW-SOURCES.tar` at the same download location, checksum it, retain the converter lock/report and pass the sandbox PDF/Office/HTML/Markdown/thumbnail/print-preparation tests. Do not replace an older published bundle or its checksum silently. The original alpha.4 experimental asset predates this payload. The converter-equipped variant uses distinct `flatpak-previews` and `FLATPAK-PREVIEW-*` names; retain the original assets/tag and explicitly link the recommended variant from the release notes.
 
 A D-Bus compatibility rebuild uses distinct `flatpak-previews-dbus` and `FLATPAK-DBUS-*` asset names, with `INSTALL-FLATPAK-DBUS.md`. Reuse the unchanged `FLATPAK-PREVIEW-SOURCES.tar` and include its checksum in the new checksum file. Build from an exact clean committed revision, attach its application source, verify both proxy versions and preserve all earlier assets and the native tag.
+
+The zbus 6.2.1 compatibility publication uses `flatpak-previews-dbus6` and `FLATPAK-DBUS6-*`, with `INSTALL-FLATPAK-DBUS6.md`. Its exact application-source archive includes the full upstream zbus crate, original MIT license, reviewed patch and provenance. The bundle includes that modified dependency source with notices. Reuse the unchanged converter-source asset and preserve all previous assets and the native tag.
 
 ## Stable releases and stores
 

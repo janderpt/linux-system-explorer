@@ -74,15 +74,10 @@ fn kio_connection_uses_the_desktop_api_and_validates_results_in_an_isolated_bus(
     let worker = std::thread::spawn(move || {
         let connection = zbus::block_on(
             zbus::connection::Builder::session()
-                .unwrap()
                 .name("org.kde.KIOFuse")
-                .unwrap()
                 .name("org.gnome.Nautilus")
-                .unwrap()
                 .serve_at("/org/kde/KIOFuse", fake)
-                .unwrap()
                 .serve_at("/org/freedesktop/FileManager1", nautilus)
-                .unwrap()
                 .build(),
         )
         .unwrap();

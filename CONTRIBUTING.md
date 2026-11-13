@@ -5,6 +5,7 @@ Use Rust 1.95 or newer and a Linux desktop. See README.md for system dependencie
 Before proposing a change, run:
 
 ```sh
+python3 scripts/check-vendored-zbus.py
 cargo fmt --all --check
 cargo clippy --locked --all-targets -- -D warnings
 cargo test --locked

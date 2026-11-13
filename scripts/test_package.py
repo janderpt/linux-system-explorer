@@ -27,6 +27,11 @@ class PreviewRuntimeTests(unittest.TestCase):
                 source = Path(directory) / package["included_source"]
                 self.assertTrue((source / "src/lib.rs").is_file())
                 self.assertTrue((source / "Cargo.toml").is_file())
+            modified = [p for p in report["packages"] if p.get("local_modifications")]
+            self.assertEqual([p["name"] for p in modified], ["zbus"])
+            source = Path(directory) / modified[0]["included_source"]
+            for name in ["LICENSE", "README.lse.md", "LSE-PROVENANCE.json", "LSE-COMPATIBILITY.patch", "src/connection/handshake/client.rs"]:
+                self.assertTrue((source / name).is_file())
 
     def test_dynamic_preview_backends_are_declared_in_debian_dependencies(self):
         with tempfile.TemporaryDirectory() as directory:

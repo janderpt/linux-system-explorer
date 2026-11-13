@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Publish the alpha.4 `flatpak-previews-dbus6` variant with zbus 6.2.1, verified old-proxy compatibility, bundled preview converters, complete modified dependency/application sources, refreshed checksums and install/upgrade notes. Preserve earlier Flatpak/native assets and the native tag.
+
+- Migrate to zbus 6.2.1, removing the retired standalone zbus_names/zvariant/zvariant_derive dependencies and their maintenance advisories. Retain a minimal verified source backport for sequential Flatpak authentication with proxy 0.1.5, upstream authentication/GUID/FD validation and native pipelining. Preserve MIT notices, include modified source/provenance/patch in packages, and add tamper checks plus hostile/limited-peer regressions. Existing published alpha.4 assets are unchanged.
+
 - Publish a separate alpha.4 `flatpak-previews-dbus` variant with distribution-proxy compatibility, bundled converters, exact clean application source, both-proxy sandbox validation and dedicated `FLATPAK-DBUS-*` reports/checksums/install notes; preserve the native tag/packages and earlier Flatpak assets.
 
 - Use zbus 5.19's sequential Flatpak authentication to support distribution xdg-dbus-proxy 0.1.5 without a manually installed proxy. Adapt native D-Bus integrations, remove the packaging version gate/custom proxy replacement, and add filtered-proxy regression coverage for portal file descriptors, print confirmation/cancellation and window reuse while retaining sandbox permissions. Previously published bundles remain unchanged.

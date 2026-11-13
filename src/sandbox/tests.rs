@@ -14,7 +14,7 @@ impl Portal {
     async fn open_file(
         &self,
         _parent: &str,
-        fd: zbus::zvariant::OwnedFd,
+        fd: zbus::OwnedFd,
         options: HashMap<String, OwnedVariant>,
         #[zbus(header)] header: zbus::message::Header<'_>,
         #[zbus(connection)] connection: &zbus::Connection,
@@ -65,9 +65,7 @@ fn portal_opens_an_fd_supports_chooser_cancellation_and_failure_on_an_isolated_b
         let connection = zbus::block_on(
             portal_service_builder()
                 .name("org.freedesktop.portal.Desktop")
-                .unwrap()
                 .serve_at("/org/freedesktop/portal/desktop", portal)
-                .unwrap()
                 .build(),
         )
         .unwrap();
@@ -113,8 +111,8 @@ fn portal_opens_an_fd_supports_chooser_cancellation_and_failure_on_an_isolated_b
 // mock portal stays on the private host bus, like a real desktop portal.
 pub(crate) fn portal_service_builder() -> zbus::connection::Builder<'static> {
     match std::env::var("LSE_TEST_DBUS_SERVICE_ADDRESS") {
-        Ok(address) => zbus::connection::Builder::address(address.as_str()).unwrap(),
-        Err(_) => zbus::connection::Builder::session().unwrap(),
+        Ok(address) => zbus::connection::Builder::address(address.as_str()),
+        Err(_) => zbus::connection::Builder::session(),
     }
 }
 

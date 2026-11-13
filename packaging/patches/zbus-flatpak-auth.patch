@@ -1,0 +1,82 @@
+diff --git a/src/connection/handshake/client.rs b/src/connection/handshake/client.rs
+--- a/src/connection/handshake/client.rs
++++ b/src/connection/handshake/client.rs
+@@ -85,6 +85,37 @@
+         Ok(())
+     }
+ 
++    fn auth_command(&self) -> Result<Command> {
++        let mechanism = self.common.mechanism();
++        trace!("Trying {mechanism} mechanism");
++        Ok(match mechanism {
++            AuthMechanism::Anonymous => Command::Auth(Some(mechanism), Some("zbus".into())),
++            AuthMechanism::External => {
++                Command::Auth(Some(mechanism), Some(self.user_id.clone()?.into_bytes()))
++            }
++        })
++    }
++
++    // Backport the response ordering required by xdg-dbus-proxy 0.1.5. Keep
++    // authentication/GUID validation and FD capability handling in the existing
++    // upstream response readers; only the timing of command writes changes.
++    async fn send_sequential_commands(&mut self) -> Result<()> {
++        self.common
++            .write_commands(&[self.auth_command()?], None)
++            .await?;
++        self.receive_auth_response().await?;
++        if self.common.socket_mut().read_mut().can_pass_unix_fd() {
++            self.common
++                .write_commands(&[Command::NegotiateUnixFD], None)
++                .await?;
++            self.receive_secondary_responses(1).await?;
++        }
++        let hello = self.bus.then(create_hello_method_call);
++        self.common
++            .write_commands(&[Command::Begin], hello.as_ref().map(|m| &**m.data()))
++            .await
++    }
++
+     /// Sends out every command of the handshake at once, followed by the `Hello` call on a bus
+     /// connection.
+     ///
+@@ -96,13 +127,7 @@
+     /// Returns how many answers the server gives to the commands after `AUTH`.
+     #[cfg_attr(feature = "tracing", tracing::instrument(skip(self), level = "trace"))]
+     async fn send_commands(&mut self) -> Result<usize> {
+-        let mechanism = self.common.mechanism();
+-        trace!("Trying {mechanism} mechanism");
+-        let user_id = self.user_id.clone();
+-        let auth_cmd = match mechanism {
+-            AuthMechanism::Anonymous => Command::Auth(Some(mechanism), Some("zbus".into())),
+-            AuthMechanism::External => Command::Auth(Some(mechanism), Some(user_id?.into_bytes())),
+-        };
++        let auth_cmd = self.auth_command()?;
+         let mut commands = Vec::with_capacity(3);
+         commands.push(auth_cmd);
+ 
+@@ -182,12 +207,19 @@
+         #[cfg(any(target_os = "freebsd", target_os = "dragonfly"))]
+         self.send_zero_byte().await?;
+ 
+-        let expected_n_responses = self.send_commands().await?;
+-        self.receive_auth_response().await?;
+-
+-        if expected_n_responses > 0 {
+-            self.receive_secondary_responses(expected_n_responses)
+-                .await?;
++        if cfg!(target_os = "linux")
++            && (std::env::var_os("FLATPAK_ID").is_some()
++                || std::path::Path::new("/.flatpak-info").is_file())
++        {
++            self.send_sequential_commands().await?;
++        } else {
++            let expected_n_responses = self.send_commands().await?;
++            self.receive_auth_response().await?;
++
++            if expected_n_responses > 0 {
++                self.receive_secondary_responses(expected_n_responses)
++                    .await?;
++            }
+         }
+ 
+         trace!("Handshake done");
