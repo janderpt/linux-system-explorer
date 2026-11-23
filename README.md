@@ -2,18 +2,22 @@
 
 [English](README.en.md)
 
-**Código-fonte publicado no GitHub — versão 0.1.0-alpha.5 em desenvolvimento.** O plano por formato e loja está
+**Código-fonte publicado no GitHub — versão 0.1.0-alpha.6 em desenvolvimento.** O plano por formato e loja está
 em [Distribuição](docs/DISTRIBUTION.md), com os passos de revisão em
 [Release](docs/RELEASING.md). Ainda não há aprovação em lojas.
 
 Explorador de arquivos desktop para Linux, escrito em Rust e inspirado na organização e na experiência do Windows Explorer. A primeira versão usa [egui/eframe](https://github.com/emilk/egui) com renderização OpenGL e suporte a Wayland e X11.
 
 
-Pré-release **v0.1.0-alpha.5**: pacotes Ubuntu 24.04+ x86_64, checksums e [instruções de instalação](docs/releases/v0.1.0-alpha.5.md). [Downloads no GitHub](https://github.com/janderpt/linux-system-explorer/releases/tag/v0.1.0-alpha.5).
+Pré-release **v0.1.0-alpha.6**: pacotes Ubuntu 24.04+ x86_64, checksums e [instruções de instalação](docs/releases/v0.1.0-alpha.6.md). [Downloads no GitHub](https://github.com/janderpt/linux-system-explorer/releases/tag/v0.1.0-alpha.6).
 
-A release também oferece um **Flatpak experimental x86_64**, com [instalação e atualização próprias](docs/releases/v0.1.0-alpha.5-flatpak.md) e `FLATPAK-SHA256SUMS`. A variante recomendada inclui os conversores e zbus 6.2.1 com patch de autenticação compatível com o proxy 0.1.5 da distribuição, sem substituição manual. Consulte [Flatpak](docs/FLATPAK.md) para limitações e preparação para o Flathub; ele ainda tem diferenças de recursos em relação aos pacotes nativos.
+A release também oferece um **Flatpak experimental x86_64**, com [instalação e atualização próprias](docs/releases/v0.1.0-alpha.6-flatpak.md) e `FLATPAK-SHA256SUMS`. A variante recomendada inclui os conversores e zbus 6.2.1 com patch de autenticação compatível com o proxy 0.1.5 da distribuição, sem substituição manual. Consulte [Flatpak](docs/FLATPAK.md) para limitações e preparação para o Flathub; ele ainda tem diferenças de recursos em relação aos pacotes nativos.
 
 O botão **Sobre** (ícone de informação, ao lado da engrenagem na toolbar) mostra o ícone oficial, autoria, versão, data de publicação, licença e links para os fontes, downloads e relato de problemas. **Esc** ou **Fechar** dispensam a janela.
+
+## Seleção de itens
+
+**Ctrl+A** seleciona todos os itens exibidos da pasta ou da busca no painel ativo, respeitando o filtro e a exibição de ocultos. Em campos de edição e no terminal, mantém a função de seleção/edição de texto. Para selecionar com o mouse, mantenha o **botão esquerdo pressionado a partir de um item não selecionado** e passe pelos demais; os itens atravessados são adicionados à seleção. **Ctrl** preserva a seleção anterior, **Esc** cancela o gesto e as bordas rolam a lista para alcançar mais itens. Arrastar a partir de um item **já selecionado** continua arrastando a seleção para copiar/mover.
 
 ## Edição de imagens e impressão
 

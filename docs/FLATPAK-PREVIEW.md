@@ -1,6 +1,6 @@
 # Conversores de preview no Flatpak experimental
 
-A [alpha.5 experimental com previews](releases/v0.1.0-alpha.5-flatpak.md) inclui os conversores no próprio pacote e o botão Sobre. Na release do GitHub, escolha o arquivo **flatpak-previews** e `FLATPAK-SHA256SUMS`. As variantes alpha.4 permanecem disponíveis como histórico, sem alterações nos pacotes nem na tag.
+A [alpha.6 experimental com previews](releases/v0.1.0-alpha.6-flatpak.md) inclui os conversores no próprio pacote e o botão Sobre. Na release do GitHub, escolha o arquivo **flatpak-previews** e `FLATPAK-SHA256SUMS`. As variantes alpha.4 permanecem disponíveis como histórico, sem alterações nos pacotes nem na tag.
 
 | Componente incluído | Versão | Uso |
 | --- | --- | --- |
@@ -16,7 +16,7 @@ O motor LibreOffice vem do arquivo binário oficial relocável, sem alterações
 
 Os limites, o cancelamento e as proteções existentes do explorador continuam ativos: perfil temporário separado para Office, macros/conteúdo ativo desativados, originais preservados e apresentação HTML sem JavaScript ou recursos remotos. Arquivos inválidos ou não suportados continuam usando os toasts e ícones de fallback. A paginação pode variar conforme as fontes disponíveis.
 
-A alpha.5 **flatpak-previews** inclui a [correção D-Bus](DBUS-COMPATIBILITY.md), testada com os proxies 0.1.5 e 0.1.9. Os bundles anteriores permanecem disponíveis como histórico; os fontes dos conversores continuam no mesmo anexo `FLATPAK-PREVIEW-SOURCES.tar`, também listado nos novos checksums.
+A alpha.6 **flatpak-previews** inclui a [correção D-Bus](DBUS-COMPATIBILITY.md), testada com os proxies 0.1.5 e 0.1.9. Os bundles anteriores permanecem disponíveis como histórico; os fontes dos conversores continuam no mesmo anexo `FLATPAK-PREVIEW-SOURCES.tar`, também listado nos novos checksums.
 
 ## Reproduzir
 

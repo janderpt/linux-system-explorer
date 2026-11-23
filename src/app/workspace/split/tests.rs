@@ -495,6 +495,7 @@ fn keyboard_copy_paste_and_file_drag_work_between_the_two_visible_panes() {
         let rects = app.split.as_ref().unwrap().rects.unwrap();
         let to = rects[1].center_bottom() - Vec2::new(0.0, 80.0);
         if drag {
+            click(&mut app, &ctx, from);
             render(
                 &mut app,
                 &ctx,
@@ -930,4 +931,88 @@ fn enter_opens_the_selected_folder_only_in_the_active_pane() {
     settle(&mut app);
     assert_eq!(app.tabs[left].current, folder);
     assert_eq!(app.tabs[right].current, root.path());
+}
+
+#[test]
+fn ctrl_a_and_mouse_paint_selection_stay_in_the_active_pane() {
+    let root = tempfile::tempdir().unwrap();
+    for name in ["a.txt", "b.txt", "c.txt"] {
+        std::fs::write(root.path().join(name), "unchanged").unwrap();
+    }
+    let ctx = egui::Context::default();
+    let mut app = workspace(&ctx, root.path().into());
+    app.toggle_split(&ctx);
+    settle(&mut app);
+    let [left, right] = app.split_indices().unwrap();
+    render(&mut app, &ctx, vec![], Modifiers::NONE);
+    let output = render(&mut app, &ctx, vec![], Modifiers::NONE);
+    click(&mut app, &ctx, points(&output, "c.txt")[1]);
+    let ctrl = Modifiers {
+        ctrl: true,
+        command: true,
+        ..Modifiers::NONE
+    };
+    render(
+        &mut app,
+        &ctx,
+        vec![Event::Key {
+            key: Key::A,
+            physical_key: None,
+            pressed: true,
+            repeat: false,
+            modifiers: ctrl,
+        }],
+        ctrl,
+    );
+    assert_eq!(app.active, right);
+    assert_eq!(app.tabs[right].selected.len(), 3);
+    assert!(app.tabs[left].selected.is_empty());
+    let output = render(&mut app, &ctx, vec![], Modifiers::NONE);
+    let start = points(&output, "a.txt")[0];
+    let end = points(&output, "b.txt")[0];
+    render(
+        &mut app,
+        &ctx,
+        vec![
+            Event::PointerMoved(start),
+            Event::PointerButton {
+                pos: start,
+                button: PointerButton::Primary,
+                pressed: true,
+                modifiers: Modifiers::NONE,
+            },
+        ],
+        Modifiers::NONE,
+    );
+    render(
+        &mut app,
+        &ctx,
+        vec![Event::PointerMoved(end)],
+        Modifiers::NONE,
+    );
+    let foreign = points(&output, "a.txt")[1];
+    render(
+        &mut app,
+        &ctx,
+        vec![Event::PointerMoved(foreign)],
+        Modifiers::NONE,
+    );
+    assert_eq!(app.active, left);
+    assert_eq!(app.tabs[right].selected.len(), 3);
+    assert_eq!(
+        app.tabs[left].selected,
+        BTreeSet::from([root.path().join("a.txt"), root.path().join("b.txt")])
+    );
+    render(
+        &mut app,
+        &ctx,
+        vec![Event::PointerButton {
+            pos: foreign,
+            button: PointerButton::Primary,
+            pressed: false,
+            modifiers: Modifiers::NONE,
+        }],
+        Modifiers::NONE,
+    );
+    assert!(app.tabs[left].pointer_selection.is_none() && !app.tabs[left].has_drop_choice());
 }

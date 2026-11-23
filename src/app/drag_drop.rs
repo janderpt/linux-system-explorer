@@ -55,7 +55,8 @@ impl Explorer {
         other.dnd.hover = None;
     }
     pub(super) fn drag_blocks_tabs(&self) -> bool {
-        self.dnd.native_active
+        self.pointer_selection.is_some()
+            || self.dnd.native_active
             || self.dnd.pending.is_some()
             || self.has_drop_choice()
             || self.dnd.completion.is_some()
@@ -221,7 +222,7 @@ impl Explorer {
         }
     }
     pub(super) fn drag_hover_scroll(&self, ui: &egui::Ui) {
-        if self.dnd.paths.is_empty() && self.dnd.hover.is_none() {
+        if self.dnd.paths.is_empty() && self.dnd.hover.is_none() && !self.selecting_with_mouse() {
             return;
         }
         if let Some(position) = self.dnd.hover.or_else(|| ui.ctx().pointer_hover_pos()) {
@@ -283,6 +284,8 @@ impl Explorer {
             self.register_drop_target(ui, response.rect, entry.path.clone());
         }
         if response.drag_started_by(egui::PointerButton::Primary)
+            && self.pointer_selection.is_none()
+            && !ui.input(|i| i.key_pressed(Key::Escape))
             && !self.is_trash()
             && self.file_drop_available()
         {

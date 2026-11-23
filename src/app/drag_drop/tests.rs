@@ -312,6 +312,7 @@ fn dragging_to_a_network_mount_copies_by_default_and_shift_moves_with_matching_f
         complete_navigation(&mut app);
         render(&mut app, &ctx, vec![], vec![], Modifiers::NONE);
         let output = render(&mut app, &ctx, vec![], vec![], Modifiers::NONE);
+        app.selected.insert(file.clone());
         let start = text_center(&output, "upload.txt").unwrap();
         let target = text_center(&output, "FTP destination").unwrap();
         pointer(&mut app, &ctx, start, Some(true), modifiers);
@@ -476,6 +477,7 @@ fn dropping_waits_for_a_click_and_the_chosen_operation_overrides_ctrl_or_shift()
         complete_navigation(&mut app);
         render(&mut app, &ctx, vec![], vec![], Modifiers::NONE);
         let output = render(&mut app, &ctx, vec![], vec![], Modifiers::NONE);
+        app.selected.insert(file.clone());
         let from = text_center(&output, "chosen.txt").unwrap();
         let to = text_center(&output, "Destination").unwrap();
         pointer(&mut app, &ctx, from, Some(true), modifiers);
@@ -560,4 +562,122 @@ fn native_copy_only_drop_cannot_be_changed_into_a_move_and_escape_dismisses_the_
         fs::read_to_string(target.join("source.txt")).unwrap(),
         "keep"
     );
+}
+
+#[test]
+fn dragging_from_an_unselected_item_paints_the_pointer_path_in_every_view() {
+    for view in [View::Details, View::List, View::Icons] {
+        for additive in [false, true] {
+            let root = tempfile::tempdir().unwrap();
+            for name in ["a.txt", "b.txt", "c.txt", "d.txt", "e.txt"] {
+                fs::write(root.path().join(name), name).unwrap();
+            }
+            let ctx = egui::Context::default();
+            let mut app = Explorer::with_context(&ctx, root.path().into());
+            complete_navigation(&mut app);
+            app.view = view;
+            app.selected.insert(root.path().join("e.txt"));
+            render(&mut app, &ctx, vec![], vec![], Modifiers::NONE);
+            let output = render(&mut app, &ctx, vec![], vec![], Modifiers::NONE);
+            let start = text_center(&output, "a.txt").unwrap();
+            let end = text_center(&output, "c.txt").unwrap();
+            let modifiers = if additive {
+                Modifiers::CTRL
+            } else {
+                Modifiers::NONE
+            };
+            pointer(&mut app, &ctx, start, Some(true), modifiers);
+            pointer(&mut app, &ctx, end, None, modifiers);
+            let mut expected =
+                BTreeSet::from(["a.txt", "b.txt", "c.txt"].map(|name| root.path().join(name)));
+            if additive {
+                expected.insert(root.path().join("e.txt"));
+            }
+            assert_eq!(app.selected, expected, "{view:?}");
+            assert!(app.dnd.paths.is_empty() && app.selecting_with_mouse());
+            pointer(&mut app, &ctx, end, Some(false), modifiers);
+            assert_eq!(app.selected, expected);
+            assert!(
+                app.pointer_selection.is_none()
+                    && !app.has_drop_choice()
+                    && app.active_transfer.is_none()
+            );
+            // The selection gesture never writes or transfers its source files.
+            for name in ["a.txt", "b.txt", "c.txt", "d.txt", "e.txt"] {
+                assert_eq!(fs::read_to_string(root.path().join(name)).unwrap(), name);
+            }
+            // A subsequent drag from a selected item still starts file DND.
+            pointer(&mut app, &ctx, start, Some(true), Modifiers::NONE);
+            pointer(
+                &mut app,
+                &ctx,
+                start + Vec2::new(12.0, 0.0),
+                None,
+                Modifiers::NONE,
+            );
+            assert_eq!(app.dnd.paths.len(), expected.len());
+        }
+    }
+}
+
+#[test]
+fn escape_cancels_mouse_selection_and_restores_the_previous_selection() {
+    let root = tempfile::tempdir().unwrap();
+    for name in ["a.txt", "b.txt", "c.txt"] {
+        fs::write(root.path().join(name), "data").unwrap();
+    }
+    let ctx = egui::Context::default();
+    let mut app = Explorer::with_context(&ctx, root.path().into());
+    complete_navigation(&mut app);
+    app.selected.insert(root.path().join("c.txt"));
+    render(&mut app, &ctx, vec![], vec![], Modifiers::NONE);
+    let output = render(&mut app, &ctx, vec![], vec![], Modifiers::NONE);
+    let start = text_center(&output, "a.txt").unwrap();
+    let end = text_center(&output, "b.txt").unwrap();
+    pointer(&mut app, &ctx, start, Some(true), Modifiers::NONE);
+    pointer(&mut app, &ctx, end, None, Modifiers::NONE);
+    render(
+        &mut app,
+        &ctx,
+        vec![InputEvent::Key {
+            key: Key::Escape,
+            physical_key: None,
+            pressed: true,
+            repeat: false,
+            modifiers: Modifiers::NONE,
+        }],
+        vec![],
+        Modifiers::NONE,
+    );
+    assert_eq!(app.selected, BTreeSet::from([root.path().join("c.txt")]));
+    assert!(app.pointer_selection.is_none() && app.dnd.paths.is_empty());
+}
+
+#[test]
+fn mouse_selection_scrolls_to_reach_more_rows_and_stops_on_release() {
+    let root = tempfile::tempdir().unwrap();
+    for n in 0..100 {
+        fs::write(root.path().join(format!("file-{n:03}.txt")), "content").unwrap();
+    }
+    let ctx = egui::Context::default();
+    let mut app = Explorer::with_context(&ctx, root.path().into());
+    complete_navigation(&mut app);
+    render(&mut app, &ctx, vec![], vec![], Modifiers::NONE);
+    let output = render(&mut app, &ctx, vec![], vec![], Modifiers::NONE);
+    let start = text_center(&output, "file-000.txt").unwrap();
+    let edge = egui::pos2(start.x, app.folder_background_area.unwrap().bottom() - 5.0);
+    pointer(&mut app, &ctx, start, Some(true), Modifiers::NONE);
+    pointer(&mut app, &ctx, edge, None, Modifiers::NONE);
+    for _ in 0..90 {
+        render(&mut app, &ctx, vec![], vec![], Modifiers::NONE);
+    }
+    assert!(
+        app.selected.len() > 35,
+        "edge scrolling selects rows beyond the original viewport"
+    );
+    assert!(app.dnd.paths.is_empty());
+    pointer(&mut app, &ctx, edge, Some(false), Modifiers::NONE);
+    let selected = app.selected.clone();
+    pointer(&mut app, &ctx, start, None, Modifiers::NONE);
+    assert_eq!(app.selected, selected);
 }

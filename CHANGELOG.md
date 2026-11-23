@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0-alpha.6 — 2026-11-23
+
+- Add Ctrl+A for all displayed folder/search items in the active pane, retaining text/terminal shortcuts. Paint-select files by holding the left button from an unselected item, with path intersection, Ctrl addition, Escape cancellation, edge scrolling and pane isolation. Keep file drag and drop when starting on an already selected item.
+
+- Update `url` to 2.5.9 to fix RUSTSEC-2026-0592; retain the unsuppressed chrono/ttf-parser maintenance notices. Publish matching DEB, TAR.GZ and converter-equipped experimental Flatpak packages, corresponding sources, checksums and installation/upgrade instructions.
+
 ## 0.1.0-alpha.5 — 2026-11-13
 
 - Add a translated About dialog from the toolbar, with the application icon, author, package version, publication date, MIT license and project/download/issue links. Share the explicit publication date with AppStream metadata instead of inferring it from build time.

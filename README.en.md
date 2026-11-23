@@ -3,14 +3,18 @@
 [Português](README.md)
 
 A Linux desktop file manager written in Rust with egui/eframe, inspired by familiar
-desktop file explorers. **Source published on GitHub; version 0.1.0-alpha.5 remains a development build, without a stable release or store approval.**
+desktop file explorers. **Source published on GitHub; version 0.1.0-alpha.6 remains a development build, without a stable release or store approval.**
 
 
-**v0.1.0-alpha.5** prerelease: Ubuntu 24.04+ x86_64 packages, checksums and [installation notes](docs/releases/v0.1.0-alpha.5.md). [GitHub downloads](https://github.com/janderpt/linux-system-explorer/releases/tag/v0.1.0-alpha.5).
+**v0.1.0-alpha.6** prerelease: Ubuntu 24.04+ x86_64 packages, checksums and [installation notes](docs/releases/v0.1.0-alpha.6.md). [GitHub downloads](https://github.com/janderpt/linux-system-explorer/releases/tag/v0.1.0-alpha.6).
 
-This release also offers an **experimental x86_64 Flatpak**, with [separate installation/upgrade notes](docs/releases/v0.1.0-alpha.5-flatpak.md) and `FLATPAK-SHA256SUMS`. The recommended variant bundles preview converters and zbus 6.2.1 with a verified D-Bus compatibility backport for distribution proxy 0.1.5 without manual proxy replacement. See [Flatpak](docs/FLATPAK.md) for limitations and remaining Flathub work; it does not yet provide all native-package integrations/renderers.
+This release also offers an **experimental x86_64 Flatpak**, with [separate installation/upgrade notes](docs/releases/v0.1.0-alpha.6-flatpak.md) and `FLATPAK-SHA256SUMS`. The recommended variant bundles preview converters and zbus 6.2.1 with a verified D-Bus compatibility backport for distribution proxy 0.1.5 without manual proxy replacement. See [Flatpak](docs/FLATPAK.md) for limitations and remaining Flathub work; it does not yet provide all native-package integrations/renderers.
 
 The **About** button (information icon next to the toolbar settings gear) shows the official icon, author, version, publication date, license and links to source, downloads and issue reporting. **Esc** or **Close** dismisses the dialog.
+
+## Item selection
+
+**Ctrl+A** selects every displayed folder/search item in the active pane, respecting filtering and hidden-item visibility. Text fields and the terminal retain their text editing shortcuts. To paint a selection, hold the **left mouse button starting on an unselected item** and move across other items. **Ctrl** preserves the previous selection, **Esc** cancels the gesture, and viewport edges scroll to reach more items. Dragging an **already selected item** still starts file drag and drop for the selection.
 
 ## Image operations and printing
 

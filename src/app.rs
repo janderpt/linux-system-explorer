@@ -134,6 +134,7 @@ pub struct Explorer {
     last_attempted_preferences: Preferences,
     view: View,
     selected: BTreeSet<PathBuf>,
+    pointer_selection: Option<selection::Gesture>,
     selection_anchor: Option<PathBuf>,
     selection_cursor: Option<PathBuf>,
     type_ahead: type_ahead::State,
@@ -304,6 +305,7 @@ impl Explorer {
             last_attempted_preferences: Preferences::default(),
             view: View::Details,
             selected: BTreeSet::new(),
+            pointer_selection: None,
             selection_anchor: None,
             selection_cursor: None,
             type_ahead: Default::default(),
@@ -350,6 +352,7 @@ impl Explorer {
     }
 
     fn navigate(&mut self, path: PathBuf, navigation: Navigation) {
+        self.pointer_selection = None;
         self.thumbnails.cancel_pending();
         if self.loading {
             return;
@@ -579,6 +582,9 @@ impl Explorer {
             {
                 self.open_terminal(self.current.clone(), ctx);
             }
+            return;
+        }
+        if self.pointer_selection.is_some() {
             return;
         }
         if self.terminal_focused(ctx) {
@@ -1230,6 +1236,7 @@ impl Explorer {
     }
 
     fn contents_ui(&mut self, ui: &mut egui::Ui, visible: &[usize]) {
+        self.prepare_selection_drag(ui.ctx());
         self.folder_item_regions.clear();
         ui.spacing_mut().item_spacing.y = 0.0;
         self.folder_path(ui);
@@ -1298,6 +1305,7 @@ impl Explorer {
                 View::List => self.list(ui, visible),
             }
         });
+        self.finish_selection_drag(ui.ctx());
         // Scroll containers own the hit-test in their empty viewport. Resolve
         // secondary clicks after rows are rendered, excluding items and scrollbars.
         let blank_click = !self.has_dialog()
@@ -1523,6 +1531,7 @@ impl Explorer {
     ) {
         self.folder_item_regions
             .push(response.rect.intersect(ui.clip_rect()));
+        self.selection_drag_response(ui, &response, entry);
         self.file_drag_response(ui, &response, entry, visible);
         let modifiers = response.ctx.input(|i| i.modifiers);
         if response.clicked() {

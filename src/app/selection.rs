@@ -1,4 +1,6 @@
 use super::*;
+mod mouse;
+pub(super) use mouse::Gesture;
 
 impl Explorer {
     pub(super) fn accept_external(
@@ -100,6 +102,7 @@ impl Explorer {
         visible: &[usize],
         modifiers: egui::Modifiers,
     ) {
+        self.pointer_selection = None;
         self.type_ahead = Default::default();
         self.selection_cursor = Some(path.to_path_buf());
         self.reveal_selection = false;
@@ -132,6 +135,7 @@ impl Explorer {
     }
 
     pub(super) fn clear_selection(&mut self) {
+        self.pointer_selection = None;
         self.type_ahead = Default::default();
         self.selected.clear();
         self.selection_anchor = None;
@@ -159,7 +163,40 @@ impl Explorer {
     }
 
     pub(super) fn selection_shortcuts(&mut self, ctx: &egui::Context) {
-        if self.loading || ctx.wants_keyboard_input() || egui::Popup::is_any_open(ctx) {
+        if self.loading
+            || self.drag_blocks_tabs()
+            || ctx.wants_keyboard_input()
+            || egui::Popup::is_any_open(ctx)
+        {
+            return;
+        }
+        let select_all = ctx.input_mut(|input| {
+            let modifiers = input.modifiers;
+            !modifiers.alt
+                && !modifiers.shift
+                && (input.consume_key(egui::Modifiers::CTRL, Key::A)
+                    || input.consume_key(egui::Modifiers::COMMAND, Key::A))
+        });
+        if select_all {
+            let visible = filesystem::visible_entries(
+                &self.entries,
+                &self.query,
+                self.hidden_visible(),
+                self.sort,
+                self.descending,
+            );
+            self.type_ahead = Default::default();
+            self.selected = visible
+                .iter()
+                .map(|&i| self.entries[i].path.clone())
+                .collect();
+            self.selection_cursor = self
+                .selection_cursor
+                .take()
+                .filter(|path| self.selected.contains(path))
+                .or_else(|| visible.first().map(|&i| self.entries[i].path.clone()));
+            self.selection_anchor = self.selection_cursor.clone();
+            self.reveal_selection = false;
             return;
         }
         let keys: Vec<_> = ctx.input(|input| {

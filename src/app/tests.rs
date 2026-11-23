@@ -1,3 +1,4 @@
+mod select_all;
 use super::*;
 use egui::{Event, FullOutput, Modifiers, PointerButton, Pos2, RawInput, Rect};
 use std::process::Command;

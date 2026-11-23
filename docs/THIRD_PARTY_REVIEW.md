@@ -1,6 +1,6 @@
-# Third-party distribution record — 0.1.0-alpha.5
+# Third-party distribution record — 0.1.0-alpha.6
 
-Technical review date: 2026-11-12. This records the packaging work for the Linux x86_64 alpha, not a legal certification or a claim of independent human review. The package inventory is generated from the exact Cargo.lock and active normal/build dependency graph; its lock hash is recorded in THIRD_PARTY.json and BUILD-INFO.json. It deliberately retains `review_required: true` for ongoing maintainer review.
+Technical review date: 2026-11-23. This records the packaging work for the Linux x86_64 alpha, not a legal certification or a claim of independent human review. The package inventory is generated from the exact Cargo.lock and active normal/build dependency graph; its lock hash is recorded in THIRD_PARTY.json and BUILD-INFO.json. It deliberately retains `review_required: true` for ongoing maintainer review.
 
 ## Notices and licensing choices
 
@@ -34,9 +34,9 @@ The build produces **FLATPAK-PREVIEW-SOURCES.tar**, containing the exact LibreOf
 
 ## Security review
 
-cargo-audit 0.23.0 against the RustSec database on 2026-11-12 reported no known vulnerable locked crates. It reports the informational unmaintained notice RUSTSEC-2026-0192 for `ttf-parser` 0.25.1, pulled by egui → epaint → ab_glyph → owned_ttf_parser. This alpha records that upstream maintenance issue; it does not suppress advisories. The release workflow audits again and attaches the current report; any vulnerability failure prevents publication. This is not a full application or native-runtime security audit.
+cargo-audit 0.23.0 against the RustSec database on 2026-11-23 found RUSTSEC-2026-0592 in `url` 2.5.8. Alpha.6 updates the lock to the patched `url` 2.5.9; the refreshed audit must report no known vulnerable locked crates before publication. The unsuppressed report retains informational unmaintained notices for `chrono` 0.4.45 (RUSTSEC-2026-0543) and `ttf-parser` 0.25.1 (RUSTSEC-2026-0192). These maintenance notices remain follow-up work, not vulnerabilities silently ignored by the audit. The release workflow audits again and attaches its exact report; vulnerability failures prevent publication. This is not a full application or native-runtime security audit.
 
-Reference: https://rustsec.org/advisories/RUSTSEC-2026-0192.html
+References: https://rustsec.org/advisories/RUSTSEC-2026-0592.html, https://rustsec.org/advisories/RUSTSEC-2026-0543.html, https://rustsec.org/advisories/RUSTSEC-2026-0192.html
 
 
 ## D-Bus compatibility variant: informational maintenance advisories

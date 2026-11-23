@@ -83,6 +83,11 @@ def sandbox_tests(binary, fixtures, converters=False):
     filters = [
         'transfers::tests::', 'terminal::tests::', 'app::toast::tests::',
         'dbus_compat_tests::sequential_auth_rejects_invalid_peers_and_honors_fd_refusal',
+        'app::tests::select_all::',
+        'app::drag_drop::tests::dragging_from_an_unselected_item_paints_the_pointer_path_in_every_view',
+        'app::drag_drop::tests::escape_cancels_mouse_selection_and_restores_the_previous_selection',
+        'app::drag_drop::tests::mouse_selection_scrolls_to_reach_more_rows_and_stops_on_release',
+        'app::workspace::split::tests::ctrl_a_and_mouse_paint_selection_stay_in_the_active_pane',
         'app::search::tests::filter_',
         'app::search::tests::modified_arrows_',
         'app::workspace::split::tests::filter_arrows_',
